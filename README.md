@@ -11,9 +11,9 @@ It works server side (`cjs` and `module` support) as well as in browsers. This a
 ## Examples
 
 ```javascript
-import t2lib from '@affidaty/t2lib';
+import t2lib from '@affidaty/t2-lib';
 // CommonJS also works:
-// const t2lib = require('@affidaty/t2lib');
+// const t2lib = require('@affidaty/t2-lib');
 
 // account generation
 const acc = new Account();
