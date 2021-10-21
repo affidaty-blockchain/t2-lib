@@ -1,11 +1,10 @@
 import { MerkleTree } from 'merkletreejs';
-import SHA256 from 'crypto-js/sha256';
+import sha256 from 'fast-sha256';
 import * as Errors from './errors';
 import { WebCrypto } from './cryptography/webCrypto';
+import { stringToArrayBuffer } from './binConversions';
 import {
     numRange,
-    objectToBytes,
-    bytesToObject,
 } from './utils';
 import { TKeyGenAlgorithmValidHashValues } from './cryptography/base';
 import {
@@ -69,8 +68,9 @@ function createMerkleTree(
 }
 
 function createLeaf(valueKey: string, value: string, salt: Buffer): Buffer {
-    const leaf = new Uint32Array(SHA256(`${value}${valueKey}${salt.toString('hex')}`).words);
-    return Buffer.from(leaf.buffer);
+    const leafStr = `${value}${valueKey}${salt.toString('hex')}`;
+    const hash = sha256(new Uint8Array(stringToArrayBuffer(leafStr)));
+    return Buffer.from(hash);
 }
 
 /**
@@ -138,7 +138,7 @@ interface IUnnamedCertMainData extends Array<any> {
     [0]: string[]; // fields
     [1]: Buffer; // salt
     [2]: Buffer; // root
-    [3]: IUnnamedCertifier; //certifier
+    [3]: IUnnamedCertifier; // certifier
 }
 
 /**
@@ -205,7 +205,12 @@ export class Certificate extends Signable {
         this._multiProof = [];
     }
 
-    /** Certified fields (keys of data)*/
+    /** Certified fields (keys of data) */
+    public set fields(newFields: string[]) {
+        this._data.fields = newFields;
+    }
+
+    /** Certified fields (keys of data) */
     public get fields(): string[] {
         return this._data.fields;
     }
@@ -250,14 +255,14 @@ export class Certificate extends Signable {
         return this._dataToCertify;
     }
 
-    /** Additional (not signed) data, needed for merkle tree reconstruction in partial (derived) certificates.*/
+    /** Additional (not signed) data, needed for merkle tree reconstruction in partial (derived) certificates. */
     public set multiProof(multiProof: Uint8Array[]) {
         for (let i = 0; i < multiProof.length; i += 1) {
             this._multiProof.push(Buffer.from(multiProof[i]));
         }
     }
 
-    /** Additional (not signed) data, needed for merkle tree reconstruction in partial (derived) certificates.*/
+    /** Additional (not signed) data, needed for merkle tree reconstruction in partial (derived) certificates. */
     public get multiProof(): Uint8Array[] {
         const result: Uint8Array[] = [];
         for (let i = 0; i < this._multiProof.length; i += 1) {
@@ -270,16 +275,18 @@ export class Certificate extends Signable {
      * Creates (or derives) a certificate. If only a subset of keys of the full data is proviided, special 'multiproof' unsigned data will be appended to certificate in order to rebuild merkle tree.
      * @param fields - determines what data need to be provided in clear in orded to successfully verify.
      * @param generateSalt - when true, will generate missing salt automatically.
-     * @returns 
+     * @returns - true, throws otherwise
      */
     public create(fields: string[] = [], generateSalt: boolean = true): boolean {
         const allKeys = Object.keys(this._dataToCertify).sort();
-        if (fields.length === 0) {
-            fields = allKeys;
+        // temp variable
+        let fieldsT = fields;
+        if (fieldsT.length === 0) {
+            fieldsT = allKeys;
         }
         const clearIndexes: number[] = [];
-        for (let i = 0; i < fields.length; i += 1) {
-            const index: number = allKeys.indexOf(fields[i]);
+        for (let i = 0; i < fieldsT.length; i += 1) {
+            const index: number = allKeys.indexOf(fieldsT[i]);
             if (index === -1) {
                 throw new Error(Errors.CERT_WRONG_FIELDS);
             }
@@ -303,6 +310,10 @@ export class Certificate extends Signable {
         return true;
     }
 
+    /**
+     * Converts certificate to a compact object with unnamed members
+     * @returns - object, throws otherwise
+     */
     public toUnnamedObject(): Promise<IUnnamedCert> {
         return new Promise((resolve, reject) => {
             const resultObj: IUnnamedCert = [
@@ -328,7 +339,7 @@ export class Certificate extends Signable {
                 .then((rawKeyBytes: Uint8Array) => {
                     const underscoreIndex = this._data.certifier.paramsId.indexOf('_');
                     if (underscoreIndex > -1) {
-                        resultObj[0][3][0] = this._data.certifier.paramsId.slice(0, underscoreIndex)
+                        resultObj[0][3][0] = this._data.certifier.paramsId.slice(0, underscoreIndex);
                         resultObj[0][3][1] = this._data.certifier.paramsId.slice(underscoreIndex + 1);
                     } else {
                         resultObj[0][3][0] = this._data.certifier.paramsId;
@@ -342,6 +353,78 @@ export class Certificate extends Signable {
         });
     }
 
+    /**
+     * Converts certificate to an object with binary members represented by Buffers
+     * @returns - object, throws otherwise
+     */
+    public toObjectWithBuffers(): Promise<ICertBuffers> {
+        return new Promise((resolve, reject) => {
+            this.toUnnamedObject()
+                .then((unnamedObject: IUnnamedCert) => {
+                    const resultObj: ICertBuffers = {
+                        data: {
+                            fields: unnamedObject[0][0],
+                            salt: unnamedObject[0][1],
+                            root: unnamedObject[0][2],
+                            certifier: {
+                                type: unnamedObject[0][3][0],
+                                curve: unnamedObject[0][3][1],
+                                value: unnamedObject[0][3][2],
+                            },
+                        },
+                        signature: unnamedObject[1],
+                    };
+                    if (unnamedObject.length === 3) {
+                        resultObj.multiProof = unnamedObject[2];
+                    }
+                    return resolve(resultObj);
+                })
+                .catch((error: any) => {
+                    return reject(error);
+                });
+        });
+    }
+
+    /**
+     * Converts certificate to an object with binary members represented by Uint8Array
+     * @returns - object, throws otherwise
+     */
+    public toObject(): Promise<ICert> {
+        return new Promise((resolve, reject) => {
+            this.toObjectWithBuffers()
+                .then((objBuffers: ICertBuffers) => {
+                    const resultObj: ICert = {
+                        data: {
+                            fields: objBuffers.data.fields,
+                            salt: new Uint8Array(objBuffers.data.salt),
+                            root: new Uint8Array(objBuffers.data.root),
+                            certifier: {
+                                type: objBuffers.data.certifier.type,
+                                curve: objBuffers.data.certifier.curve,
+                                value: new Uint8Array(objBuffers.data.certifier.value),
+                            },
+                        },
+                        signature: new Uint8Array(objBuffers.signature),
+                    };
+                    if (typeof objBuffers.multiProof !== 'undefined') {
+                        resultObj.multiProof = [];
+                        objBuffers.multiProof!.forEach((elem) => {
+                            resultObj.multiProof!.push(new Uint8Array(elem));
+                        });
+                    }
+                    return resolve(resultObj);
+                })
+                .catch((error: any) => {
+                    return reject(error);
+                });
+        });
+    }
+
+    /**
+     * Converts a compact object with unnamed members to certificate
+     * @param passedObj - compact object
+     * @returns - true, throws otherwise
+     */
     public fromUnnamedObject(passedObj: IUnnamedCert): Promise<boolean> {
         return new Promise((resolve, reject) => {
             this._data.fields = passedObj[0][0];
@@ -377,37 +460,14 @@ export class Certificate extends Signable {
         });
     }
 
-    public toObjectWithBuffers(): Promise<ICertBuffers> {
-        return new Promise((resolve, reject) => {
-            this.toUnnamedObject()
-                .then((unnamedObject: IUnnamedCert) => {
-                    const resultObj: ICertBuffers = {
-                        data: {
-                            fields: unnamedObject[0][0],
-                            salt: unnamedObject[0][1],
-                            root: unnamedObject[0][2],
-                            certifier: {
-                                type: unnamedObject[0][3][0],
-                                curve: unnamedObject[0][3][1],
-                                value: unnamedObject[0][3][2],
-                            },
-                        },
-                        signature: unnamedObject[1],
-                    };
-                    if (unnamedObject.length === 3) {
-                        resultObj.multiProof = unnamedObject[2];
-                    }
-                    return resolve(resultObj);
-                })
-                .catch((error: any) => {
-                    return reject(error);
-                });
-        });
-    }
-
+    /**
+     * Converts an object with buffers to certificate
+     * @param passedObj - object with buffers
+     * @returns - true, throws otherwise
+     */
     public fromObjectWithBuffers(passedObj: ICertBuffers): Promise<boolean> {
         return new Promise((resolve, reject) => {
-            let unnamedObject: IUnnamedCert = [
+            const unnamedObject: IUnnamedCert = [
                 [
                     passedObj.data.fields,
                     passedObj.data.salt,
@@ -419,7 +479,7 @@ export class Certificate extends Signable {
                     ],
                 ],
                 passedObj.signature,
-            ]
+            ];
             if (typeof passedObj.multiProof !== 'undefined') {
                 unnamedObject.push(passedObj.multiProof);
             }
@@ -433,92 +493,35 @@ export class Certificate extends Signable {
         });
     }
 
-    /** Exports certificate as an easy-to-use javascript object.
-     * Importable with fromObject() method.
-    */
-    public toObject(): Promise<ICert> {
-        return new Promise((resolve, reject) => {
-            this.toUnnamedObject()
-                .then((unnamedObject: IUnnamedCert) => {
-                    const resultObj: ICert = {
-                        data: {
-                            fields: unnamedObject[0][0],
-                            salt: new Uint8Array(unnamedObject[0][1]),
-                            root: new Uint8Array(unnamedObject[0][2]),
-                            certifier: {
-                                type: unnamedObject[0][3][0],
-                                curve: unnamedObject[0][3][1],
-                                value: new Uint8Array(unnamedObject[0][3][2]),
-                            },
-                        },
-                        signature: new Uint8Array(unnamedObject[1]),
-                    };
-                    if (unnamedObject.length === 3) {
-                        resultObj.multiProof = unnamedObject[2];
-                    }
-                    resultObj.multiProof!.forEach((elem, index) => {
-                        resultObj.multiProof![index] = new Uint8Array(elem);
-                    })
-                })
-                .catch((error: any) => {
-                    return reject(error);
-                });
-        });
-    }
-
-    /** Imports certificate from a plain javascript object.
-     * Exportable with toObject() method */
+    /**
+     * Converts an object with Uint8Arrays to certificate
+     * @param passedObj - object with Uint8Arrays
+     * @returns - true, throws otherwise
+     */
     public fromObject(passedObj: ICert): Promise<boolean> {
         return new Promise((resolve, reject) => {
-            let unnamedObject: IUnnamedCert = [
-                [
-                    passedObj.data.fields,
-                    Buffer.from(passedObj.data.salt),
-                    Buffer.from(passedObj.data.root),
-                    [
-                        passedObj.data.certifier.type,
-                        passedObj.data.certifier.curve,
-                        Buffer.from(passedObj.data.certifier.value),
-                    ],
-                ],
-                Buffer.from(passedObj.signature),
-            ]
+            const objBuffers: ICertBuffers = {
+                data: {
+                    fields: passedObj.data.fields,
+                    salt: Buffer.from(passedObj.data.salt),
+                    root: Buffer.from(passedObj.data.root),
+                    certifier: {
+                        type: passedObj.data.certifier.type,
+                        curve: passedObj.data.certifier.curve,
+                        value: Buffer.from(passedObj.data.certifier.value),
+                    },
+                },
+                signature: Buffer.from(passedObj.signature),
+            };
             if (typeof passedObj.multiProof !== 'undefined') {
-                unnamedObject.push(passedObj.multiProof);
+                objBuffers.multiProof = [];
+                passedObj.multiProof.forEach((elem) => {
+                    objBuffers.multiProof!.push(Buffer.from(elem));
+                });
             }
-            this.fromUnnamedObject(unnamedObject)
+            this.fromObjectWithBuffers(objBuffers)
                 .then((result: boolean) => {
                     return resolve(result);
-                })
-                .catch((error: any) => {
-                    return reject(error);
-                });
-        });
-    }
-
-    /** Exports transaction as ready to send bytes.
-     * Importable by fromBytes() method.
-    */
-    public toBytes(): Promise<Uint8Array> {
-        return new Promise((resolve, reject) => {
-            this.toUnnamedObject()
-                .then((unnamedObj: IUnnamedCert) => {
-                    return resolve(objectToBytes(unnamedObj));
-                })
-                .catch((error: any) => {
-                    return reject(error);
-                });
-        });
-    }
-
-    /** Imports transaction from bytes serialized
-     * with toBytes() method */
-    public fromBytes(passedBytes: Uint8Array): Promise<boolean> {
-        return new Promise((resolve, reject) => {
-            const unnamedObj: IUnnamedCert = bytesToObject(passedBytes);
-            this.fromUnnamedObject(unnamedObj)
-                .then(() => {
-                    return resolve(true);
                 })
                 .catch((error: any) => {
                     return reject(error);
@@ -531,6 +534,7 @@ export class Certificate extends Signable {
      * the gived key pair. This also automatically sets
      * certifier of this certificate.
      * @param privateKey - signer's private key
+     * @returns - true, throws otherwise
     */
     public sign(privateKey: BaseECKey): Promise<boolean> {
         return new Promise((resolve, reject) => {
@@ -552,10 +556,9 @@ export class Certificate extends Signable {
     }
 
     /**
-     * Verifies merkle tree and signature validity for provided data.
-     * 
+     * Verifies merkle tree and signature.
      * @param clearData - Provided data.
-     * @returns
+     * @returns - boolean
      */
     public verify(clearData: IDataToCertify = {}): Promise<boolean> {
         return new Promise((resolve, reject) => {
@@ -564,20 +567,17 @@ export class Certificate extends Signable {
                     if (!signatureIsValid) {
                         return resolve(signatureIsValid);
                     }
-                    const clearKeys: string[] = Object.keys(clearData);
-                    if (clearKeys.length === 0) {
-                        if(this._data.fields.length > 0) {
-                            return reject(new Error(Errors.CERT_NO_DATA_VERIFY));
-                        }
-                        return resolve(signatureIsValid);
-                    }
+                    const clearKeys: string[] = Object.keys(clearData).sort();
                     const allKeys = this._data.fields;
                     allKeys.sort();
                     if (
-                        allKeys.length !== clearKeys.length
-                        && this._multiProof.length === 0
+                        clearKeys.length !== allKeys.length
+                        && (
+                            this._multiProof.length === 0
+                            || clearKeys.length === 0
+                        )
                     ) {
-                        return reject(new Error(Errors.CERT_CANNOT_VERIFY));
+                        return resolve(false);
                     }
                     for (let i = 0; i < clearKeys.length; i += 1) {
                         if (allKeys.indexOf(clearKeys[i]) === -1) {
@@ -598,13 +598,18 @@ export class Certificate extends Signable {
                             );
                         }
                     }
-                    const result = verifyMerkleTree(
-                        clearLeaves,
-                        clearIndexes,
-                        calculateSymmetryDepth(allKeys.length),
-                        this._data.root,
-                        this._multiProof,
-                    );
+                    let result = false;
+                    try {
+                        result = verifyMerkleTree(
+                            clearLeaves,
+                            clearIndexes,
+                            calculateSymmetryDepth(allKeys.length),
+                            this._data.root,
+                            this._multiProof,
+                        );
+                    } catch (error) {
+                        result = false;
+                    }
                     return resolve(result);
                 })
                 .catch((error: any) => {
