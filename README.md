@@ -7,13 +7,34 @@ Official Trinci 2 SDK JavaScript library
 This library allows to interact with Trinci nodes and eases the creation, use, management and transcoding of accounts, keys, transactions, connections and everything else needed to successfully operate on a TRINCI blockchain network.
 
 It works server side (`cjs` and `module` support) as well as in browsers. This allows you to manage your accounts ang send transactions directly from a browser avoiding third services altogether. Note that cryptographic part of this library relies on Webcrypto and needs for a browser to support in in order to be fully functional.
+## NPM scripts
+
+```bash
+npm run test             # execute tests
+
+npm run docs             # generate documentation in /docs
+
+npm run lint             # lint code
+
+npm run lint:fix         # lint and fix(where possible)
+
+npm run build-cjs        # build CommonJS sources in /dist/cjs
+
+npm run build-esm        # build ES Modules sources in /dist/esm with type
+                         # declarations types in /dist/types
+
+npm run build-browser    # build browser version in /dist/browser to
+                         # include with <script> tag
+
+npm run build            # build all versions mentioned above
+```
 
 ## Examples
 
 ```javascript
-import t2lib from '@affidaty/t2lib';
+import t2lib from '@affidaty/t2-lib';
 // CommonJS also works:
-// const t2lib = require('@affidaty/t2lib');
+// const t2lib = require('@affidaty/t2-lib');
 
 // account generation
 const acc = new Account();
@@ -73,4 +94,4 @@ For a deeper insight:
    1. Clone repo ([link](https://github.com/Affidaty-spa/T2-lib.git))
    2. Install dependencies with `npm install`
    3. Generate docs with `npm run docs`
-   4. Read docs in html format by opening `<repo_dir>/docs/index.html`
+   4. Read docs in html format from `docs`
