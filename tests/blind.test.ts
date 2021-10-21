@@ -1,7 +1,5 @@
 import { toBigIntBE, toBufferBE } from 'bigint-buffer';
-import * as Defaults from '../src/cryptography/cryptoDefaults';
-import { Subtle } from '../src/cryptography/webCrypto';
-import { RSAKey } from '../src/cryptography/RSAKey';
+import { RSAKeyPair } from '../src/cryptography/RSAKeyPair';
 import {
     getFactor,
     applyBlinding,
@@ -16,29 +14,19 @@ import {
 // !!!!!!!IMPORTANT: salt max safe size in bytes = keySizeBytes - messageSizeBytes -1
 
 describe('testing blind signature', () => {
-    let rsaKeyPair: any;
-    let pubkeySPKI: Uint8Array;
-    let privkeyPKCS8: Uint8Array;
+    const rsaKeyPair = new RSAKeyPair();
 
     const message = new Uint8Array(Buffer.from('122022264e20bc0cf4b49a7e7c9b4a0e427605a2e04a05255ee50cec3666d0cbbc1b', 'hex'));
     // salt that server will apply to blinded message from client before signing it.
     const salt = new Uint8Array(Buffer.from('e52858b19cfe12e4742b55e1ad239e849818fb1c8ff1b47c64dbad50c361e9d2183750a8ca713fe806df5b40f30bca4128d1147412715462df570e144ea3a9ccfd999a677e313d19f1d560bbe9d96baba4fd8e0f92ba587d63c17bb5d9', 'hex'));
 
     it('init', async () => {
-        rsaKeyPair = await Subtle.generateKey(
-            Defaults.RSAOAEP384PrivKeyParams.genAlgorithm,
-            true,
-            Defaults.RSAOAEP384KeyPairParams.usages,
-        );
-        pubkeySPKI = new Uint8Array(await Subtle.exportKey('spki', rsaKeyPair.publicKey));
-        privkeyPKCS8 = new Uint8Array(await Subtle.exportKey('pkcs8', rsaKeyPair.privateKey));
+        await expect(rsaKeyPair.generate()).resolves.toBeTruthy();
     });
-    it('Testing RSA classes', async () => {
+    it('Testing RSA class', async () => {
         // authority keys
-        const pubKey = new RSAKey('public');
-        await pubKey.setSPKI(pubkeySPKI);
-        const privKey = new RSAKey('private');
-        await privKey.setPKCS8(privkeyPKCS8);
+        const pubKey = rsaKeyPair.publicKey;
+        const privKey = rsaKeyPair.privateKey;
 
         // authority sends public key to client
         // client finds a blinding factor using received public key
