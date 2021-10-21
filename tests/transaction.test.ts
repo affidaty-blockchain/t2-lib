@@ -1,66 +1,148 @@
-import { Account } from '../src/account';
-import * as Tx from '../src/transaction';
+import {
+    Transaction, Account, ECDHKeyPair, Errors, Utils,
+} from '../index';
 
-describe('Testing transaction class', () => {
-    it('test1', async () => {
-        const tx0 = new Tx.Transaction();
-        const b58 = '2uBeipg36Qrgwo2kKqyg5ENM6SnTsC7Nvy1sDGCMHPfkQLNtVgp9TYhY4vx8xAgCU28bD6sABkEu4RNsu5jU26gYzd9GJ1kRJaRUyWidiGVEnsu5gd1tPa443RnyU88wswSJqi4u2pcp1p1HRFHwDhaTqFJsGrj3nvWdW5dNNTScTTVWyfghGqNC2918CrzZXLPR25jWTAud9XsvxJA61kAVPtkLpK8fYUgFuXUAgDP27DZhge7cB3n6hCG9hLmk8MDJcuxtyVcQqbGJ2VCWaHxspkzSkaNtKeUnhPMrEZvG3LAoY4QAcbQdYEcGPLpMzXe';
-        await expect(tx0.fromBase58(b58)).resolves.toBeTruthy();
-        const tx1 = new Tx.Transaction();
-        tx1.smartContractMethodArgs = new Uint8Array(Buffer.from('81a66e756d62657203', 'hex'));
-        const acc = new Account();
-        await acc.generate();
-        await tx1.sign(acc.keyPair.privateKey);
-        await expect(tx1.verify()).resolves.toBeTruthy();
-        const testPubKey = await tx1.signerPublicKey.getRaw();
-        const origPubKey = await acc.keyPair.publicKey.getRaw();
-        expect(testPubKey).toEqual(origPubKey);
-        tx1.signerPublicKey = acc.keyPair.publicKey;
-        await expect(tx1.verify()).resolves.toBeTruthy();
+describe('transaction', () => {
+    const ecdh = new ECDHKeyPair();
+    const acc = new Account();
+    const t = new Transaction();
 
-        const txBytes = await tx1.toBytes();
-        const txObj1 = await tx1.toObject();
-        const txObj2 = await tx1.toUnnamedObject();
+    it('init', async () => {
+        await expect(acc.generate()).resolves.toBeTruthy();
+        await expect(ecdh.generate()).resolves.toBeTruthy();
+    });
 
-        const txFromObj2 = new Tx.Transaction();
-        await txFromObj2.fromUnnamedObject(txObj2);
-        await expect(txFromObj2.verify()).resolves.toBeTruthy();
-        txFromObj2.accountId = acc.accountId;
-        await expect(txFromObj2.verify()).resolves.toBeFalsy();
+    it('accessors', async () => {
+        t.accountId = acc.accountId;
+        expect(t.accountId).toEqual(acc.accountId);
+        const net = 'test_network';
+        t.networkName = net;
+        expect(t.networkName).toEqual(net);
+        const method = 'my_sc_method';
+        t.smartContractMethod = method;
+        expect(t.smartContractMethod).toEqual(method);
+        t.signerPublicKey = acc.keyPair.publicKey;
+        expect(t.signerPublicKey).toEqual(acc.keyPair.publicKey);
 
-        tx1.accountId = acc.accountId;
-        await expect(tx1.verify()).resolves.toBeFalsy();
-        const tx2 = new Tx.Transaction();
-        await tx2.fromBytes(txBytes);
-        const tx3 = new Tx.Transaction();
-        await tx3.fromObject(txObj1);
-        const key1 = await tx1.signerPublicKey.getJWK();
-        const key2 = await tx2.signerPublicKey.getJWK();
-        const key3 = await tx3.signerPublicKey.getJWK();
-        expect(key1).toEqual(key2);
-        expect(key1).toEqual(key3);
-        expect(key2).toEqual(key3);
+        const bytes1 = new Uint8Array([0xf0, 0xf1, 0xf2, 0xf3, 0xf4, 0xf5, 0xf6, 0xf7]);
+        const bytesHex1 = Buffer.from(bytes1).toString('hex');
 
-        const txObj3: Tx.ITxObject = {
-            data: {
-                // schema: '',
-                account: '',
-                nonce: new Uint8Array(0),
-                network: '',
-                contract: new Uint8Array(0),
-                method: '',
-                caller: {
-                    type: '',
-                    curve: '',
-                    value: new Uint8Array(0),
-                },
-                args: new Uint8Array(0),
-            },
-            signature: new Uint8Array(0),
+        const bytes2 = new Uint8Array([0xf7, 0xf6, 0xf5, 0xf4, 0xf3, 0xf2, 0xf1, 0xf0]);
+        const bytesHex2 = Buffer.from(bytes2).toString('hex');
+
+        let error = new Error();
+        try {
+            t.nonce = new Uint8Array([0xff, 0xfa]);
+        } catch (tError) {
+            error = tError;
+        }
+        expect(error).toEqual(new Error(Errors.WRONG_TX_NONCE_LENGTH));
+        t.nonce = bytes1;
+        expect(t.nonceHex).toEqual(bytesHex1);
+        error = new Error();
+        try {
+            t.nonce = new Uint8Array([0xff, 0xfa]);
+        } catch (tError) {
+            error = tError;
+        }
+        expect(error).toEqual(new Error(Errors.WRONG_TX_NONCE_LENGTH));
+        t.nonceHex = bytesHex2;
+        expect(t.nonce).toEqual(bytes2);
+
+        t.smartContractHash = bytes1;
+        expect(t.smartContractHashHex).toEqual(bytesHex1);
+        t.smartContractHashHex = bytesHex2;
+        expect(t.smartContractHash).toEqual(bytes2);
+
+        const args = {
+            a: 'string', b: 42, c: true, d: null, e: ['a', true, 0, false],
         };
-        const txFromObj3 = new Tx.Transaction();
-        await txFromObj3.fromObject(txObj3);
-        const testTxObj3 = await txFromObj3.toObject();
-        expect(testTxObj3).toEqual(txObj3);
+        const argsBytes = Utils.objectToBytes(args);
+        const argsHex = Buffer.from(argsBytes).toString('hex');
+
+        t.smartContractMethodArgs = args;
+        expect(t.smartContractMethodArgs).toEqual(args);
+        expect(t.smartContractMethodArgsBytes).toEqual(argsBytes);
+        expect(t.smartContractMethodArgsHex).toEqual(argsHex);
+
+        t.smartContractMethodArgs = {};
+        t.smartContractMethodArgsBytes = argsBytes;
+        expect(t.smartContractMethodArgs).toEqual(args);
+        expect(t.smartContractMethodArgsBytes).toEqual(argsBytes);
+        expect(t.smartContractMethodArgsHex).toEqual(argsHex);
+
+        t.smartContractMethodArgs = {};
+        t.smartContractMethodArgsHex = argsHex;
+        expect(t.smartContractMethodArgs).toEqual(args);
+        expect(t.smartContractMethodArgsBytes).toEqual(argsBytes);
+        expect(t.smartContractMethodArgsHex).toEqual(argsHex);
+    });
+
+    it('methods', async () => {
+        const t2 = new Transaction();
+        t2.genNonce();
+        expect(t2.nonce).toHaveLength(8);
+        const bytes = new Uint8Array([0xf0, 0xf1]);
+        const bytesHex = Buffer.from(bytes).toString('hex');
+        t2.setSmartContractHash(bytes);
+        expect(t2.smartContractHashHex).toEqual(bytesHex);
+        const bytes2 = new Uint8Array([0xf2, 0xf3]);
+        const bytesHex2 = Buffer.from(bytes2).toString('hex');
+        t2.setSmartContractHash(bytesHex2);
+        expect(t2.smartContractHash).toEqual(bytes2);
+    });
+
+    it('sign', async () => {
+        await expect(t.sign(ecdh.privateKey)).rejects.toThrow('Unable to use this key to sign');
+        await expect(t.sign(acc.keyPair.publicKey)).rejects.toThrow(Errors.ONLY_FOR_PRIVKEY);
+        await expect(t.sign(acc.keyPair.privateKey)).resolves.toBeTruthy();
+        await expect(t.verifySignature(t.signerPublicKey)).resolves.toBeTruthy();
+    });
+
+    it('verify', async () => {
+        const acc2 = new Account();
+        await expect(acc2.generate()).resolves.toBeTruthy();
+        const t2 = new Transaction();
+        await expect(t2.verify()).rejects.toThrow(Errors.NO_BASE_KEY_VALUE);
+        await expect(t2.sign(acc2.keyPair.privateKey)).resolves.toBeTruthy();
+        t2.signerPublicKey = acc.keyPair.publicKey;
+        await expect(t2.verify()).resolves.toBeFalsy();
+        await expect(t.verify()).resolves.toBeTruthy();
+    });
+
+    it('to/from object', async () => {
+        const tObj = await t.toObject();
+        const t2 = new Transaction();
+        await expect(t2.fromObject(tObj)).resolves.toBeTruthy();
+        const t2Obj = await t2.toObject();
+        const t3 = new Transaction();
+        await expect(t3.fromObject(t2Obj)).resolves.toBeTruthy();
+        expect(t2).toEqual(t3);
+        await expect(t2.verify()).resolves.toBeTruthy();
+        await expect(t3.verify()).resolves.toBeTruthy();
+    });
+
+    it('to/from bytes', async () => {
+        const tBytes = await t.toBytes();
+        const t2 = new Transaction();
+        await expect(t2.fromBytes(tBytes)).resolves.toBeTruthy();
+        const t2Bytes = await t2.toBytes();
+        const t3 = new Transaction();
+        await expect(t3.fromBytes(t2Bytes)).resolves.toBeTruthy();
+        expect(t2).toEqual(t3);
+        await expect(t2.verify()).resolves.toBeTruthy();
+        await expect(t3.verify()).resolves.toBeTruthy();
+    });
+
+    it('to/from base58', async () => {
+        const tBase58 = await t.toBase58();
+        const t2 = new Transaction();
+        await expect(t2.fromBase58(tBase58)).resolves.toBeTruthy();
+        const t2Base58 = await t2.toBase58();
+        const t3 = new Transaction();
+        await expect(t3.fromBase58(t2Base58)).resolves.toBeTruthy();
+        expect(t2).toEqual(t3);
+        await expect(t2.verify()).resolves.toBeTruthy();
+        await expect(t3.verify()).resolves.toBeTruthy();
     });
 });
