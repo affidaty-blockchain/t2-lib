@@ -396,7 +396,6 @@ export function verifyDataSignature(
     });
 }
 
-
 /**
  * Generic encrypt function.
  * @param params - Encryption params object.

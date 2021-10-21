@@ -100,8 +100,8 @@ const MsgStructs: IMessagesSettings = {
 
 interface TMessageArray extends Array<any> {
     [0]: string;
-    [key:  number]:  any;
-};
+    [key: number]: any;
+}
 
 interface IInternalBody {
     [key: string]: any;

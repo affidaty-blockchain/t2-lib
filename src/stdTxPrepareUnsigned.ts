@@ -1,4 +1,4 @@
-import { toBuffer } from './utils'
+import { toBuffer } from './utils';
 import { Transaction } from './transaction';
 
 function commonPrepare(
@@ -17,8 +17,6 @@ function commonPrepare(
     tx.smartContractMethodArgs = args;
     return tx;
 }
-
-interface IEmptyArgs {}
 
 interface IAssetInitArgs {
     /** Asset name. */
@@ -160,7 +158,7 @@ interface IEscrowInitArgs {
     guarantor: string;
     /** Customer account Id */
     customer: string;
-    /** Merchants account IDs with corresponding amounts*/
+    /** Merchants account IDs with corresponding amounts */
     merchants: {
         [key: string]: number;
     };
@@ -324,8 +322,8 @@ export namespace stdTxPrepareUnsigned {
             network: string,
             contract: Uint8Array | string,
             args: IStorageStoreDataArgs,
-        ){
-            let tempArgs = args;
+        ) {
+            const tempArgs = args;
             tempArgs.data = toBuffer(args.data);
             return commonPrepare(target, network, contract, 'store_data', tempArgs);
         }
@@ -334,7 +332,7 @@ export namespace stdTxPrepareUnsigned {
             target: string,
             network: string,
             args: IStorageLoadDataArgs,
-        ){
+        ) {
             return commonPrepare(target, network, '', 'load_data', args);
         }
 
@@ -342,7 +340,7 @@ export namespace stdTxPrepareUnsigned {
             target: string,
             network: string,
             args: IStorageRemoveDataArgs,
-        ){
+        ) {
             return commonPrepare(target, network, '', 'remove_data', args);
         }
 
@@ -350,7 +348,7 @@ export namespace stdTxPrepareUnsigned {
             target: string,
             network: string,
             args: IStorageTransferArgs,
-        ){
+        ) {
             return commonPrepare(target, network, '', 'transfer', args);
         }
 
@@ -359,7 +357,7 @@ export namespace stdTxPrepareUnsigned {
             network: string,
             contract: Uint8Array | string,
             args: IStorageBalanceArgs,
-        ){
+        ) {
             return commonPrepare(target, network, '', 'balance', args);
         }
     }
@@ -370,14 +368,14 @@ export namespace stdTxPrepareUnsigned {
             network: string,
             contract: Uint8Array | string,
             args: IEscrowInitArgs,
-        ){
+        ) {
             return commonPrepare(target, network, contract, 'init', args);
         }
 
         export function get_info(
             target: string,
             network: string,
-        ){
+        ) {
             return commonPrepare(target, network, '', 'get_info', {});
         }
 
@@ -385,7 +383,7 @@ export namespace stdTxPrepareUnsigned {
             target: string,
             network: string,
             args: IEscrowBalanceArgs,
-        ){
+        ) {
             return commonPrepare(target, network, '', 'balance', args);
         }
 
@@ -393,7 +391,7 @@ export namespace stdTxPrepareUnsigned {
             target: string,
             network: string,
             args: IEscrowUpdateArgs,
-        ){
+        ) {
             return commonPrepare(target, network, '', 'update', args);
         }
     }

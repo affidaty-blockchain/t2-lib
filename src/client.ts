@@ -498,7 +498,6 @@ export class Client {
             const msg = stdTrinciMessages.getAccount(id);
             this.submitTrinciMessage(msg)
                 .then((resultMessage: TrinciMessage) => {
-
                     resultMessage.assertType(MessageTypes.GetAccountResponse);
                     const accDataObj: IAccountData = {
                         accountId: resultMessage.body.accountInfo[0],

@@ -112,7 +112,7 @@ export function getFactor(inKey: RSAKey): Promise<Uint8Array> {
  * @param inData - data to hide from signer
  * @param blindingFactor - Slinding factor
  * @param inKey - Signer's rsa public key
- * @returns 
+ * @returns
  */
 export function applyBlinding(
     inData: Uint8Array,

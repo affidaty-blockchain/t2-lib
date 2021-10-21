@@ -126,7 +126,7 @@ export class Transaction extends Signable {
         return this._data.accountId;
     }
 
-    /** Sets a random 8-bytes value as an anti-replay protection. */
+    /** Random 8-bytes value as an anti-replay protection(Uint8Array). */
     public set nonce(nonce: Uint8Array) {
         if (nonce.byteLength !== 8) {
             throw new Error(Errors.WRONG_TX_NONCE_LENGTH);
@@ -134,12 +134,12 @@ export class Transaction extends Signable {
         this._data.nonce = Buffer.from(nonce);
     }
 
-    /** Gets the nonce currently set for this transaction. */
+    /** Random 8-bytes value as an anti-replay protection(Uint8Array). */
     public get nonce(): Uint8Array {
-        return this._data.nonce;
+        return new Uint8Array(this._data.nonce);
     }
 
-    /** Sets a random 8-bytes value as an anti-replay protection. */
+    /** Random 8-bytes value as an anti-replay protection(hex string). */
     public set nonceHex(nonce: string) {
         if (nonce.length !== 16) { // two chars for each byte
             throw new Error(Errors.WRONG_TX_NONCE_LENGTH);
@@ -147,7 +147,7 @@ export class Transaction extends Signable {
         this._data.nonce = Buffer.from(nonce, 'hex');
     }
 
-    /** Gets the nonce currently set for this transaction. */
+    /** Random 8-bytes value as an anti-replay protection(hex string). */
     public get nonceHex(): string {
         return this._data.nonce.toString('hex');
     }
@@ -159,18 +159,17 @@ export class Transaction extends Signable {
         this._data.nonce = Buffer.from(newNonce);
     }
 
-    /** Sets the name of the network to which the transaction is addressed. */
+    /** Name of the network to which the transaction is addressed. */
     public set networkName(name: string) {
         this._data.networkName = name;
     }
 
-    /** Gets the name of the network to which the transaction is addressed. */
+    /** Name of the network to which the transaction is addressed. */
     public get networkName(): string {
         return this._data.networkName;
     }
 
-    /** Sets smart contract hash, which will be invoked on target account.
-     */
+    /** Smart contract hash, which will be invoked on target account. */
     public set smartContractHash(hash: Uint8Array) {
         if (hash.length > 0) {
             this._data.smartContractHash = Buffer.from(hash);
@@ -179,7 +178,7 @@ export class Transaction extends Signable {
         }
     }
 
-    /** Gets smart contract hash, which will be invoked on target account. */
+    /** Smart contract hash, which will be invoked on target account. */
     public get smartContractHash(): Uint8Array {
         if (this._data.smartContractHash) {
             return new Uint8Array(this._data.smartContractHash);
@@ -187,9 +186,7 @@ export class Transaction extends Signable {
         return new Uint8Array([]);
     }
 
-    /** Sets smart contract hash, which will be invoked on target account.
-     * Accepts hex string
-     */
+    /** Smart contract hash, which will be invoked on target account(hex string). */
     public set smartContractHashHex(hash: string) {
         if (hash.length > 0) {
             this._data.smartContractHash = Buffer.from(hash, 'hex');
@@ -198,7 +195,7 @@ export class Transaction extends Signable {
         }
     }
 
-    /** Gets smart contract hash as hex string. */
+    /** Smart contract hash, which will be invoked on target account(hex string). */
     public get smartContractHashHex(): string {
         if (this._data.smartContractHash) {
             return this._data.smartContractHash.toString('hex');
@@ -206,9 +203,7 @@ export class Transaction extends Signable {
         return '';
     }
 
-    /** Sets smart contract hash, which will be invoked on target account.
-     * Accepts hex string and binary
-     */
+    /** Smart contract hash, which will be invoked on target account. */
     public setSmartContractHash(hash: Uint8Array | string) {
         if (typeof hash === 'string') {
             this.smartContractHashHex = hash;
@@ -217,66 +212,60 @@ export class Transaction extends Signable {
         }
     }
 
-    /** method to call from the invoked smart contract */
+    /** Method to call on the invoked smart contract */
     public set smartContractMethod(method: string) {
         this._data.smartContractMethod = method;
     }
 
+    /** Method to call on the invoked smart contract */
     public get smartContractMethod(): string {
         return this._data.smartContractMethod;
     }
 
-    /** sets signer's public key. This is done
-     * automatically during sign() */
+    /** Signer's public key. This is also done automatically during sign() */
     public set signerPublicKey(publicKey: BaseECKey) {
         this._data.signerPublicKey = publicKey;
     }
 
+    /** Signer's public key. This is also done automatically during sign() */
     public get signerPublicKey(): BaseECKey {
         return this._data.signerPublicKey;
     }
 
-    /** Sets args which will be passed to invoked smart contract
-     * method as a plain json object (of any type. Strings, numbers,
-     * objects, booleans. You name it.). Passed args will be serialized
-     * into an array of bytes. */
+    /** Arguments that will be passed to invoked smart contract method (generic json object) */
     public set smartContractMethodArgs(passedArgs: any) {
         this._data.smartContractMethodArgs = Buffer.from(objectToBytes(passedArgs));
     }
 
-    /** This function tries to decode args bytes to js object before retuurning it. */
+    /** Arguments that will be passed to invoked smart contract method (generic json object) */
     public get smartContractMethodArgs(): any {
         return bytesToObject(new Uint8Array(this._data.smartContractMethodArgs));
     }
 
-    /** Sets args which will be passed to invoked smart contract
-     * method as already constructed array of byttes. This is,
-     * for example, useful when you want to encrypt the data you pass
-     * to the smart contract.
-     */
+    /** Arguments that will be passed to invoked smart contract method (Uint8Array) */
     public set smartContractMethodArgsBytes(passedArgs: Uint8Array) {
         this._data.smartContractMethodArgs = Buffer.from(passedArgs);
     }
 
-    /** this function returns plain args bytes */
+    /** Arguments that will be passed to invoked smart contract method (Uint8Array) */
     public get smartContractMethodArgsBytes(): Uint8Array {
         return new Uint8Array(this._data.smartContractMethodArgs);
     }
 
-    /** Sets args which will be passed to invoked smart contract
-     * method as already constructed array of byttes. This is,
-     * for example, useful when you want to encrypt the data you pass
-     * to the smart contract.
-     */
+    /** Arguments that will be passed to invoked smart contract method (hex string) */
     public set smartContractMethodArgsHex(passedArgs: string) {
         this._data.smartContractMethodArgs = Buffer.from(passedArgs, 'hex');
     }
 
-    /** this function returns plain args bytes */
+    /** Arguments that will be passed to invoked smart contract method (hex string) */
     public get smartContractMethodArgsHex(): string {
         return this._data.smartContractMethodArgs.toString('hex');
     }
 
+    /**
+     * Converts transaction to a compact object with unnamed members
+     * @returns - object, throws otherwise
+     */
     public toUnnamedObject(): Promise<ITxUnnamedObject> {
         return new Promise((resolve, reject) => {
             const resultObj: ITxUnnamedObject = [
@@ -302,7 +291,7 @@ export class Transaction extends Signable {
                 .then((rawKeyBytes: Uint8Array) => {
                     const underscoreIndex = this._data.signerPublicKey.paramsId.indexOf('_');
                     if (underscoreIndex > -1) {
-                        resultObj[0][5][0] = this._data.signerPublicKey.paramsId.slice(0, underscoreIndex)
+                        resultObj[0][5][0] = this._data.signerPublicKey.paramsId.slice(0, underscoreIndex);
                         resultObj[0][5][1] = this._data.signerPublicKey.paramsId.slice(underscoreIndex + 1);
                     } else {
                         resultObj[0][5][0] = this._data.signerPublicKey.paramsId;
@@ -316,6 +305,76 @@ export class Transaction extends Signable {
         });
     }
 
+    /**
+     * Converts transaction to an object with binary members represented by Buffers
+     * @returns - object, throws otherwise
+     */
+    public toObjectWithBuffers(): Promise<ITxObjectWithBuffers> {
+        return new Promise((resolve, reject) => {
+            this.toUnnamedObject()
+                .then((unnamedObject: ITxUnnamedObject) => {
+                    const resultObj: ITxObjectWithBuffers = {
+                        data: {
+                            account: unnamedObject[0][0],
+                            nonce: unnamedObject[0][1],
+                            network: unnamedObject[0][2],
+                            contract: unnamedObject[0][3],
+                            method: unnamedObject[0][4],
+                            caller: {
+                                type: unnamedObject[0][5][0],
+                                curve: unnamedObject[0][5][1],
+                                value: unnamedObject[0][5][2],
+                            },
+                            args: unnamedObject[0][6],
+                        },
+                        signature: unnamedObject[1],
+                    };
+                    return resolve(resultObj);
+                })
+                .catch((error: any) => {
+                    return reject(error);
+                });
+        });
+    }
+
+    /**
+     * Converts transaction to an object with binary members represented by Uint8Array
+     * @returns - object, throws otherwise
+     */
+    public toObject(): Promise<ITxObject> {
+        return new Promise((resolve, reject) => {
+            this.toObjectWithBuffers()
+                .then((objBuffers: ITxObjectWithBuffers) => {
+                    const resultObj: ITxObject = {
+                        data: {
+                            // schema: this._data.schema, // TODO
+                            account: objBuffers.data.account,
+                            nonce: new Uint8Array(objBuffers.data.nonce),
+                            network: objBuffers.data.network,
+                            contract: objBuffers.data.contract ? new Uint8Array(objBuffers.data.contract) : null,
+                            method: objBuffers.data.method,
+                            caller: {
+                                type: objBuffers.data.caller.type,
+                                curve: objBuffers.data.caller.curve,
+                                value: new Uint8Array(objBuffers.data.caller.value),
+                            },
+                            args: new Uint8Array(objBuffers.data.args),
+                        },
+                        signature: new Uint8Array(objBuffers.signature),
+                    };
+                    return resolve(resultObj);
+                })
+                .catch((error: any) => {
+                    return reject(error);
+                });
+        });
+    }
+
+    /**
+     * Converts a compact object with unnamed members to a transaction
+     * @param passedObj - compact object
+     * @returns - true, throws otherwise
+     */
     public fromUnnamedObject(passedObj: ITxUnnamedObject): Promise<boolean> {
         return new Promise((resolve, reject) => {
             this._data.accountId = passedObj[0][0];
@@ -339,8 +398,8 @@ export class Transaction extends Signable {
                 return resolve(true);
             }
             this._data.signerPublicKey.importBin(new Uint8Array(passedObj[0][5][2]))
-                .then(() => {
-                    return resolve(true);
+                .then((result) => {
+                    return resolve(result);
                 })
                 .catch((error: any) => {
                     return reject(error);
@@ -348,43 +407,19 @@ export class Transaction extends Signable {
         });
     }
 
-    public toObjectWithBuffers(): Promise<ITxObjectWithBuffers> {
-        return new Promise((resolve, reject) => {
-            this.toUnnamedObject()
-                .then((unnamedObject: ITxUnnamedObject) => {
-                    const resultObj: ITxObjectWithBuffers = {
-                        data: {
-                            // schema: this._data.schema, // TODO
-                            account: unnamedObject[0][0],
-                            nonce: unnamedObject[0][1],
-                            network: unnamedObject[0][2],
-                            contract: unnamedObject[0][3],
-                            method: unnamedObject[0][4],
-                            caller: {
-                                type: unnamedObject[0][5][0],
-                                curve: unnamedObject[0][5][1],
-                                value: unnamedObject[0][5][2],
-                            },
-                            args: unnamedObject[0][6],
-                        },
-                        signature: unnamedObject[1],
-                    };
-                    return resolve(resultObj);
-                })
-                .catch((error: any) => {
-                    return reject(error);
-                });
-        });
-    }
-
+    /**
+     * Converts an object with buffers to a transaction
+     * @param passedObj - object with buffers
+     * @returns - true, throws otherwise
+     */
     public fromObjectWithBuffers(passedObj: ITxObjectWithBuffers): Promise<boolean> {
         return new Promise((resolve, reject) => {
-            let unnamedObject: ITxUnnamedObject = [
+            const unnamedObject: ITxUnnamedObject = [
                 [
                     passedObj.data.account,
                     passedObj.data.nonce,
                     passedObj.data.network,
-                    passedObj.data.contract,
+                    passedObj.data.contract ? passedObj.data.contract : null,
                     passedObj.data.method,
                     [
                         passedObj.data.caller.type,
@@ -393,7 +428,7 @@ export class Transaction extends Signable {
                     ],
                     passedObj.data.args,
                 ],
-                passedObj.signature
+                passedObj.signature,
             ];
             this.fromUnnamedObject(unnamedObject)
                 .then((result: boolean) => {
@@ -405,91 +440,32 @@ export class Transaction extends Signable {
         });
     }
 
-    /** Exports transaction as an easy-to-use javascript object.
-     * Importable with fromObject() method.
-    */
-    public toObject(): Promise<ITxObject> {
-        return new Promise((resolve, reject) => {
-            this.toUnnamedObject()
-                .then((unnamedObject: ITxUnnamedObject) => {
-                    const resultObj: ITxObject = {
-                        data: {
-                            // schema: this._data.schema, // TODO
-                            account: unnamedObject[0][0],
-                            nonce: new Uint8Array(unnamedObject[0][1]),
-                            network: unnamedObject[0][2],
-                            contract: unnamedObject[0][3] ? new Uint8Array(unnamedObject[0][3]) : null,
-                            method: unnamedObject[0][4],
-                            caller: {
-                                type: unnamedObject[0][5][0],
-                                curve: unnamedObject[0][5][1],
-                                value: new Uint8Array(unnamedObject[0][5][2]),
-                            },
-                            args: new Uint8Array(unnamedObject[0][6]),
-                        },
-                        signature: new Uint8Array(unnamedObject[1]),
-                    };
-                    return resolve(resultObj);
-                })
-                .catch((error: any) => {
-                    return reject(error);
-                })
-        });
-    }
-
-    /** Imports transaction from a plain javascript object.
-     * Exportable with toObject() method */
+    /**
+     * Converts an object with Uint8Arrays to a transaction
+     * @param passedObj - object with Uint8Arrays
+     * @returns - true, throws otherwise
+     */
     public fromObject(passedObj: ITxObject): Promise<boolean> {
         return new Promise((resolve, reject) => {
-            let unnamedObject: ITxUnnamedObject = [
-                [
-                    passedObj.data.account,
-                    Buffer.from(passedObj.data.nonce),
-                    passedObj.data.network,
-                    passedObj.data.contract ? Buffer.from(passedObj.data.contract) : null,
-                    passedObj.data.method,
-                    [
-                        passedObj.data.caller.type,
-                        passedObj.data.caller.curve,
-                        Buffer.from(passedObj.data.caller.value),
-                    ],
-                    Buffer.from(passedObj.data.args),
-                ],
-                Buffer.from(passedObj.signature)
-            ];
-            this.fromUnnamedObject(unnamedObject)
+            const objBuffers: ITxObjectWithBuffers = {
+                data: {
+                    account: passedObj.data.account,
+                    nonce: Buffer.from(passedObj.data.nonce),
+                    network: passedObj.data.network,
+                    contract: passedObj.data.contract ? Buffer.from(passedObj.data.contract) : null,
+                    method: passedObj.data.method,
+                    caller: {
+                        type: passedObj.data.caller.type,
+                        curve: passedObj.data.caller.curve,
+                        value: Buffer.from(passedObj.data.caller.value),
+                    },
+                    args: Buffer.from(passedObj.data.args),
+                },
+                signature: Buffer.from(passedObj.signature),
+            };
+            this.fromObjectWithBuffers(objBuffers)
                 .then((result: boolean) => {
                     return resolve(result);
-                })
-                .catch((error: any) => {
-                    return reject(error);
-                });
-        });
-    }
-
-    /** Exports transaction as ready to send bytes.
-     * Importable by fromBytes() method.
-    */
-    public toBytes(): Promise<Uint8Array> {
-        return new Promise((resolve, reject) => {
-            this.toUnnamedObject()
-                .then((obj: ITxUnnamedObject) => {
-                    return resolve(objectToBytes(obj));
-                })
-                .catch((error: any) => {
-                    return reject(error);
-                });
-        });
-    }
-
-    /** Imports transaction from bytes serialized
-     * with toBytes() method */
-    public fromBytes(passedBytes: Uint8Array): Promise<boolean> {
-        return new Promise((resolve, reject) => {
-            const objWithBuffers: ITxUnnamedObject = bytesToObject(passedBytes);
-            this.fromUnnamedObject(objWithBuffers)
-                .then(() => {
-                    return resolve(true);
                 })
                 .catch((error: any) => {
                     return reject(error);

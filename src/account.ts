@@ -146,7 +146,7 @@ export class Account {
     /**
      * Sets private key. As public key can be derived from private, this method effectively sets the whole account (privatekey, public key and account ID)
      * @param privateKey - Private ECDSA key
-     * @returns 
+     * @returns
      */
     public setPrivateKey(privateKey: BaseECKey): Promise<boolean> {
         return new Promise((resolve, reject) => {
@@ -168,7 +168,7 @@ export class Account {
         });
     }
 
-    /** Generates a new account with a new key pair from scratch.*/
+    /** Generates a new account with a new key pair from scratch. */
     public generate(): Promise<boolean> {
         return new Promise((resolve, reject) => {
             this._keyPair.generate()
