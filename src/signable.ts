@@ -4,8 +4,6 @@ import { signData, verifyDataSignature, TKeyGenAlgorithmValidHashValues } from '
 import { DEF_SIGN_HASH_ALGORITHM as defaultSignHash } from './cryptography/cryptoDefaults';
 import { BaseECKey } from './cryptography/baseECKey';
 
-export const SIGN_HASH_ALGORITHM = 'SHA-384';
-
 /**
  * Structure returned by Signable.toObject() method.
  */
