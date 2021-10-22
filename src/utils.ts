@@ -1,9 +1,19 @@
 import { encode as mpEncode, decode as mpDecode } from 'msgpack-lite';
+import fastSha256 from 'fast-sha256';
 import { bufferToArrayBuffer } from './binConversions';
 import {
     DEF_AES_IV_BYTE_LEN as defIVLength,
     DEF_AES_SALT_BYTE_LEN as defSaltLength,
 } from './cryptography/cryptoDefaults';
+
+/**
+ * Produces sha256 hash of given data.
+ * @param data - data to calculate hash from
+ * @returns - sha256 hash of data
+ */
+export function sha256(data: Uint8Array): Uint8Array {
+    return fastSha256(data);
+};
 
 /**
  * Produces a union of given arrays.

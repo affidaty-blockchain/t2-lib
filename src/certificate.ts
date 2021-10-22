@@ -1,9 +1,9 @@
 import { MerkleTree } from 'merkletreejs';
-import sha256 from 'fast-sha256';
 import * as Errors from './errors';
 import { WebCrypto } from './cryptography/webCrypto';
 import { stringToArrayBuffer } from './binConversions';
 import {
+    sha256,
     numRange,
 } from './utils';
 import { TKeyGenAlgorithmValidHashValues } from './cryptography/base';
