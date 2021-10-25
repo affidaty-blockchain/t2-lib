@@ -66,6 +66,9 @@ describe('certificate', () => {
         await expect(c.verify({ name: 'John', surname: 'Doe' })).resolves.toBeTruthy();
         c.create();
         await expect(c.verify({ name: 'John', surname: 'Doe' })).resolves.toBeFalsy();
+        c.target = 'accIdString';
+        await expect(c.verify(testData)).resolves.toBeFalsy();
+        c.target = '';
         await expect(c.verify(testData)).resolves.toBeTruthy();
     });
 

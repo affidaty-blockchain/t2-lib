@@ -100,6 +100,7 @@ function verifyMerkleTree(
 }
 
 interface ICertMainDataInternal {
+    target: string;
     fields: string[];
     salt: Buffer;
     root: Buffer;
@@ -113,6 +114,7 @@ interface ICertifierBuffers {
 }
 
 interface ICertMainDataBuffers {
+    target: string;
     fields: string[];
     salt: Buffer;
     root: Buffer;
@@ -129,16 +131,17 @@ export interface ICertBuffers {
 }
 
 interface IUnnamedCertifier extends Array<any> {
-    [0]: string; // id of the key type. Es. 'ecdsa_p384r1'
+    [0]: string; // id of the key type. Es. 'ecdsa'
     [1]: string; // curve
     [2]: Buffer; // actual value of the public key as 'raw'
 }
 
 interface IUnnamedCertMainData extends Array<any> {
-    [0]: string[]; // fields
-    [1]: Buffer; // salt
-    [2]: Buffer; // root
-    [3]: IUnnamedCertifier; // certifier
+    [0]: string; // target
+    [1]: string[]; // fields
+    [2]: Buffer; // salt
+    [3]: Buffer; // root
+    [4]: IUnnamedCertifier; // certifier
 }
 
 /**
@@ -157,6 +160,7 @@ interface ICertifier {
 }
 
 interface ICertMainData {
+    target: string;
     fields: string[];
     salt: Uint8Array;
     root: Uint8Array;
@@ -196,6 +200,7 @@ export class Certificate extends Signable {
     ) {
         super(hash);
         this._data = {
+            target: '',
             fields: [],
             salt: Buffer.from([]),
             root: Buffer.from([]),
@@ -243,6 +248,16 @@ export class Certificate extends Signable {
     /** Certifier's public key. Gets set automatically when signed. */
     public get certifier(): BaseECKey {
         return this._data.certifier;
+    }
+
+    /** Id of the account, whose data are getting certified */
+    public set target(target: string) {
+        this._data.target = target;
+    }
+
+    /** Id of the account, whose data are getting certified */
+    public get target(): string {
+        return this._data.target;
     }
 
     /** Full data set with keys and values. Needed only for certificate creation and derivation. */
@@ -318,6 +333,7 @@ export class Certificate extends Signable {
         return new Promise((resolve, reject) => {
             const resultObj: IUnnamedCert = [
                 [
+                    this._data.target,
                     this._data.fields,
                     this._data.salt,
                     this._data.root,
@@ -339,12 +355,12 @@ export class Certificate extends Signable {
                 .then((rawKeyBytes: Uint8Array) => {
                     const underscoreIndex = this._data.certifier.paramsId.indexOf('_');
                     if (underscoreIndex > -1) {
-                        resultObj[0][3][0] = this._data.certifier.paramsId.slice(0, underscoreIndex);
-                        resultObj[0][3][1] = this._data.certifier.paramsId.slice(underscoreIndex + 1);
+                        resultObj[0][4][0] = this._data.certifier.paramsId.slice(0, underscoreIndex);
+                        resultObj[0][4][1] = this._data.certifier.paramsId.slice(underscoreIndex + 1);
                     } else {
-                        resultObj[0][3][0] = this._data.certifier.paramsId;
+                        resultObj[0][4][0] = this._data.certifier.paramsId;
                     }
-                    resultObj[0][3][2] = Buffer.from(rawKeyBytes);
+                    resultObj[0][4][2] = Buffer.from(rawKeyBytes);
                     return resolve(resultObj);
                 })
                 .catch((error: any) => {
@@ -363,13 +379,14 @@ export class Certificate extends Signable {
                 .then((unnamedObject: IUnnamedCert) => {
                     const resultObj: ICertBuffers = {
                         data: {
-                            fields: unnamedObject[0][0],
-                            salt: unnamedObject[0][1],
-                            root: unnamedObject[0][2],
+                            target: unnamedObject[0][0],
+                            fields: unnamedObject[0][1],
+                            salt: unnamedObject[0][2],
+                            root: unnamedObject[0][3],
                             certifier: {
-                                type: unnamedObject[0][3][0],
-                                curve: unnamedObject[0][3][1],
-                                value: unnamedObject[0][3][2],
+                                type: unnamedObject[0][4][0],
+                                curve: unnamedObject[0][4][1],
+                                value: unnamedObject[0][4][2],
                             },
                         },
                         signature: unnamedObject[1],
@@ -395,6 +412,7 @@ export class Certificate extends Signable {
                 .then((objBuffers: ICertBuffers) => {
                     const resultObj: ICert = {
                         data: {
+                            target: objBuffers.data.target,
                             fields: objBuffers.data.fields,
                             salt: new Uint8Array(objBuffers.data.salt),
                             root: new Uint8Array(objBuffers.data.root),
@@ -427,13 +445,14 @@ export class Certificate extends Signable {
      */
     public fromUnnamedObject(passedObj: IUnnamedCert): Promise<boolean> {
         return new Promise((resolve, reject) => {
-            this._data.fields = passedObj[0][0];
-            this._data.salt = passedObj[0][1];
-            this._data.root = passedObj[0][2];
+            this._data.target = passedObj[0][0];
+            this._data.fields = passedObj[0][1];
+            this._data.salt = passedObj[0][2];
+            this._data.root = passedObj[0][3];
 
-            let keyParamsId: string = passedObj[0][3][0];
-            if (passedObj[0][3][1].length > 0) {
-                keyParamsId += `_${passedObj[0][3][1]}`;
+            let keyParamsId: string = passedObj[0][4][0];
+            if (passedObj[0][4][1].length > 0) {
+                keyParamsId += `_${passedObj[0][4][1]}`;
             }
             if (!mKeyPairParams.has(keyParamsId)) {
                 return reject(new Error(Errors.IMPORT_TYPE_ERROR));
@@ -450,7 +469,7 @@ export class Certificate extends Signable {
             if (this._data.certifier.paramsId === EKeyParamsIds.EMPTY) {
                 return resolve(true);
             }
-            this._data.certifier.importBin(new Uint8Array(passedObj[0][3][2]))
+            this._data.certifier.importBin(new Uint8Array(passedObj[0][4][2]))
                 .then(() => {
                     return resolve(true);
                 })
@@ -469,6 +488,7 @@ export class Certificate extends Signable {
         return new Promise((resolve, reject) => {
             const unnamedObject: IUnnamedCert = [
                 [
+                    passedObj.data.target,
                     passedObj.data.fields,
                     passedObj.data.salt,
                     passedObj.data.root,
@@ -502,6 +522,7 @@ export class Certificate extends Signable {
         return new Promise((resolve, reject) => {
             const objBuffers: ICertBuffers = {
                 data: {
+                    target: passedObj.data.target,
                     fields: passedObj.data.fields,
                     salt: Buffer.from(passedObj.data.salt),
                     root: Buffer.from(passedObj.data.root),

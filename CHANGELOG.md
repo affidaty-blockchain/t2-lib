@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
   
 - Added ```t2lib.Utils.sha256()``` function to calculate sha256 hash of given data.
+- Added 'target' member to certificates. it's the ID of the account whose data are getting certified.
 
 ## [1.4.7] - 2021-10-21
  
