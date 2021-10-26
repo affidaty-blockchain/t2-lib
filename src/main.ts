@@ -18,6 +18,7 @@ export { ECDSAKeyPair } from './cryptography/ECDSAKeyPair';
 export { IRSAKeyPair, RSAKeyPair } from './cryptography/RSAKeyPair';
 export { Signable, ISignableObject } from './signable';
 export { getAccountId, Account } from './account';
+export { Delegation } from './delegation';
 export * as BlindRSA from './cryptography/RSABlindSignature';
 export * from './transaction';
 export { stdTxPrepareUnsigned } from './stdTxPrepareUnsigned';

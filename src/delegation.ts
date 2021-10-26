@@ -1,4 +1,4 @@
-// import * as Errors from './errors';
+import * as Errors from './errors';
 import {
     objectToBytes,
     bytesToObject,
@@ -13,29 +13,50 @@ import {
 import { BaseECKey } from './cryptography/baseECKey';
 import {
     Signable,
+    ISignableUnnamedObject
 } from './signable';
 
 const DEF_EXP_AFTER_SECONDS = 2592000; // 2592000 = 30 days
 
-const dlgCapStr = 'delegate'; // capabilities management capability name
-type capsList = { [key: string]: boolean }
 export interface ICapabilities {
-    [key: string]: {
-        [key: string]: undefined | boolean | capsList,
-        [dlgCapStr]?: capsList,
-    };
+    [key: string]: boolean,
 }
 
 interface IDelegationMainDataInternal {
     delegate: string;
     delegator: BaseECKey;
     network: string;
+    target: string;
     expiration: number;
     capabilities: ICapabilities;
 }
 
+interface IUnnamedDelegator extends Array<any> {
+    [0]: string; // id of the key type. Es. 'ecdsa_p384r1'
+    [1]: string; // curve
+    [2]: Buffer; // actual value of the public key as 'raw'
+}
+
+interface IUnnamedDelegationMainData extends Array<any> {
+    [0]: string; // delegate
+    [1]: IUnnamedDelegator; // delegator
+    [2]: string; // network
+    [3]: string; // target
+    [4]: number; // expiration
+    [5]: ICapabilities; // capabilities
+}
+
+/**
+ * Unnamed delegation object meant for transfer.
+ */
+export interface IUnnamedDelegation extends ISignableUnnamedObject {
+    [0]: IUnnamedDelegationMainData; // data
+    [1]: Buffer; // signature
+}
+
 interface IDelegatorBuffers {
-    type: string; // id of the key type. Es. 'ecdsa_p384r1'
+    type: string; // id of the key type. E.g. 'ecdsa'
+    curve: string; // curve variant. E.g. 'secp384r1'
     value: Buffer; // actual value of the public key as 'raw'
 }
 
@@ -43,6 +64,7 @@ interface IDelegationMainDataBuffers {
     delegate: string;
     delegator: IDelegatorBuffers;
     network: string;
+    target: string;
     expiration: number;
     capabilities: ICapabilities;
 }
@@ -50,18 +72,19 @@ interface IDelegationMainDataBuffers {
 export interface IDelegationBuffers {
     data: IDelegationMainDataBuffers;
     signature: Buffer;
-    parent?: IDelegationBuffers;
 }
 
-interface IEntity {
-    type: string; // id of the key type. Es. 'ecdsa_p384r1'
+interface IDelegator {
+    type: string; // id of the key type. E.g. 'ecdsa'
+    curve: string; // curve variant. E.g. 'secp384r1'
     value: Uint8Array; // actual value of the public key as 'raw'
 }
 
 interface IDelegationMainData {
     delegate: string;
-    delegator: IEntity;
+    delegator: IDelegator;
     network: string;
+    target: string;
     expiration: number;
     capabilities: ICapabilities;
 }
@@ -69,85 +92,6 @@ interface IDelegationMainData {
 export interface IDelegation {
     data: IDelegationMainData;
     signature: Uint8Array;
-    parent?: IDelegation;
-}
-
-/**
- * Performs capabilities comparison to check whether an entity with parent
- * capabilities could have assigned child capabilities to another entity
- * @param child - Child capabilities.
- * @param parent - Source capabilities.
- * @return - True if capabilities are consistent, Error(message) otherwise
- */
-export function compareCapabilities(
-    parent: ICapabilities,
-    child: ICapabilities,
-    parentId: string = 'parent',
-    childId: string = 'child',
-) {
-    const cAccs = Object.keys(child); // child accounts array
-    const pAccs = Object.keys(parent); // parent accounts array
-    cAccs.forEach((cAcc) => {
-        if (cAcc === '*') {
-            pAccs.forEach((pAcc) => {
-                if (!Object.prototype.hasOwnProperty.call(child, pAcc)) {
-                    throw new Error(`Capabilities escalation in ${childId}.`);
-                }
-            });
-        }
-        let pAcc: any = null;
-        if (Object.prototype.hasOwnProperty.call(parent, '*')) {
-            pAcc = '*';
-        }
-        if (Object.prototype.hasOwnProperty.call(parent, cAcc)) {
-            pAcc = cAcc;
-        }
-        if (!pAcc || !parent[pAcc]) {
-            throw new Error(`${parentId} has no capabilities for ${cAcc}.`);
-        }
-        const cCaps = Object.keys(child[cAcc]);
-        cCaps.forEach((cCap) => {
-            if (cCap === '*') {
-                if (
-                    !Object.prototype.hasOwnProperty.call(parent[pAcc], dlgCapStr)
-                    || !parent[pAcc][dlgCapStr]
-                ) {
-                    throw new Error(`${parentId} has no delegation capability for ${pAcc}.`);
-                }
-                const pDelegCaps = Object.keys(parent[pAcc][dlgCapStr]!);
-                pDelegCaps.forEach((pDelegCap) => {
-                    if (
-                        !(parent[pAcc][dlgCapStr]![pDelegCap])
-                        && (
-                            typeof child[cAcc][pDelegCap] === 'undefined'
-                            || child[cAcc][pDelegCap]
-                        )
-                    ) {
-                        throw new Error(`Capabilities escalation in ${childId}.`);
-                    }
-                });
-            }
-            let pCap: any = null;
-            if (Object.prototype.hasOwnProperty.call(parent[pAcc], dlgCapStr)) {
-                if (!parent[pAcc][dlgCapStr]) {
-                    throw new Error(`${parentId} has no delegation capability for ${pAcc}.`);
-                }
-                if (Object.prototype.hasOwnProperty.call(parent[pAcc][dlgCapStr], '*')) {
-                    pCap = '*';
-                }
-                if (Object.prototype.hasOwnProperty.call(parent[pAcc][dlgCapStr], cCap)) {
-                    pCap = cCap;
-                }
-                if (!parent[pAcc][dlgCapStr]![pCap]) {
-                    pCap = null;
-                }
-            }
-            if (child[cAcc][cCap] && (!pCap || !parent[pAcc][dlgCapStr]![pCap])) {
-                throw new Error(`${parentId} cannot delegate ${cCap} capability for ${cAcc}`);
-            }
-        });
-    });
-    return true;
 }
 
 /**
@@ -156,8 +100,10 @@ export function compareCapabilities(
 export class Delegation extends Signable {
     protected _data: IDelegationMainDataInternal;
 
-    protected _parent?: Delegation;
-
+    /**
+     * @param customExpiration - custom expiration timestamp. Can be set later using this.expiration()
+     * @param hash - hash algorithm used during sign process
+     */
     constructor(
         customExpiration?: number,
         hash: TKeyGenAlgorithmValidHashValues = defaultSignHash,
@@ -167,6 +113,7 @@ export class Delegation extends Signable {
             delegate: '',
             delegator: new BaseECKey(EmptyKeyParams),
             network: '',
+            target: '',
             expiration: (typeof customExpiration !== 'undefined')
                 ? customExpiration
                 : Math.trunc(new Date().getTime() / 1000) + DEF_EXP_AFTER_SECONDS,
@@ -174,14 +121,17 @@ export class Delegation extends Signable {
         };
     }
 
+    /** Account which can do something with 'target' */
     public set delegate(accountId: string) {
         this._data.delegate = accountId;
     }
 
+    /** Account which can do something with 'target' */
     public get delegate(): string {
         return this._data.delegate;
     }
 
+    /** Account which has given to the delegate capabilities to do something on target 'target'. Gets set automatically during sign() */
     public set delegator(publicKey: BaseECKey) {
         if (publicKey.type !== 'public') {
             throw new Error();
@@ -189,221 +139,91 @@ export class Delegation extends Signable {
         this._data.delegator = publicKey;
     }
 
+    /** Account which has given to the delegate capabilities to do something on target 'target'. Gets set automatically during sign() */
     public get delegator(): BaseECKey {
         return this._data.delegator;
     }
 
+    /** Name of the network on which delegate can do something on target */
     public set network(network: string) {
         this._data.network = network;
     }
 
+    /** Name of the network on which delegate can do something on target */
     public get network(): string {
         return this._data.network;
     }
 
+    /** Account on which delegate can perform actions defined in 'capabilities' */
+    public set target(target: string) {
+        this._data.target = target;
+    }
+
+    /** Account on which delegate can perform actions defined in 'capabilities' */
+    public get target(): string {
+        return this._data.target;
+    }
+
+    /** Delegation expiration date as Unix Time Stamp */
     public set expiration(timeStamp: number) {
         this._data.expiration = timeStamp;
     }
 
+    /** Delegation expiration date as Unix Time Stamp */
     public get expiration(): number {
         return this._data.expiration;
     }
 
+    /** Methods which delegate can invoke on 'target' account */
     public set capabilities(caps: ICapabilities) {
         this._data.capabilities = caps;
     }
 
+    /** Methods which delegate can invoke on 'target' account */
     public get capabilities(): ICapabilities {
         return this._data.capabilities;
     }
 
-    public set parent(parent: Delegation | undefined) {
-        this._parent = parent;
+    /**
+     * Check whether current delegation has expired.
+     * @param timestamp - Unix Time Stamp. If not passed then current time is used.
+     * @returns
+     */
+    public isExpired(timestamp: number = -1): boolean {
+        let ctrlTimeStamp = timestamp >= 0 ? timestamp : Math.trunc(new Date().getTime() / 1000);
+        return this._data.expiration < ctrlTimeStamp;
     }
 
-    public get parent(): Delegation | undefined {
-        return this._parent;
+    /**
+     * Check whether 'delegate' has a certain capability on 'target' account.
+     * @param method - capability you are looking for.
+     * @returns
+     */
+    public hasCapability(method: string): boolean {
+        // lets see if we can find a corresponding capability
+        let result: boolean = false;
+        if ( // if capabilities has '*' and it's true
+            Object.prototype.hasOwnProperty.call(this._data.capabilities, '*')
+            && this._data.capabilities['*']
+        ) {
+            result = true;
+        }
+
+        // specific capability always wins against generic '*'
+        // therefore it's checked after
+        if (
+            Object.prototype.hasOwnProperty.call(this._data.capabilities, method)
+        ) {
+            result = this._data.capabilities[method] ? true : false;
+        }
+        return result;
     }
 
-    public toObjectWithBuffers(): Promise<IDelegationBuffers> {
-        return new Promise((resolve, reject) => {
-            const resultObj: IDelegationBuffers = {
-                data: {
-                    delegate: this._data.delegate,
-                    delegator: {
-                        type: '',
-                        value: Buffer.from([]),
-                    },
-                    network: this._data.network,
-                    expiration: this._data.expiration,
-                    capabilities: this._data.capabilities,
-                },
-                signature: this._signature,
-            };
-            let exportKey = false;
-            let keyIdx = 0;
-            const promises: Promise<any>[] = [];
-            if (this._data.delegator.paramsId !== EKeyParamsIds.EMPTY) {
-                exportKey = true;
-                promises.push(this._data.delegator.getRaw());
-                keyIdx = promises.length - 1;
-            }
-            let exportParent = false;
-            let parentIdx = 0;
-            if (typeof this._parent !== 'undefined') {
-                exportParent = true;
-                promises.push(this._parent.toObjectWithBuffers());
-                parentIdx = promises.length - 1;
-            }
-            Promise.all(promises)
-                .then((resolved: any[]) => {
-                    if (exportKey) {
-                        resultObj.data.delegator.type = this._data.delegator.paramsId;
-                        resultObj.data.delegator.value = Buffer.from(resolved[keyIdx]);
-                    }
-                    if (exportParent) {
-                        resultObj.parent = resolved[parentIdx];
-                    }
-                    return resolve(resultObj);
-                })
-                .catch((error: any) => {
-                    return reject(error);
-                });
-        });
-    }
-
-    public fromObjectWithBuffers(passedObj: IDelegationBuffers): Promise<boolean> {
-        return new Promise((resolve, reject) => {
-            this._data.delegate = passedObj.data.delegate;
-            this._data.delegator = new BaseECKey(
-                mKeyPairParams.get(passedObj.data.delegator.type)!.publicKey,
-            );
-            this._data.network = passedObj.data.network;
-            this._data.expiration = passedObj.data.expiration;
-            this._data.capabilities = passedObj.data.capabilities;
-            this._signature = passedObj.signature;
-            const promises: Promise<any>[] = [];
-            if (this._data.delegator.paramsId !== EKeyParamsIds.EMPTY) {
-                promises.push(
-                    this._data.delegator.setRaw(new Uint8Array(passedObj.data.delegator.value)),
-                );
-            }
-            if (typeof passedObj.parent !== 'undefined') {
-                this._parent = new Delegation();
-                promises.push(this._parent.fromObjectWithBuffers(passedObj.parent!));
-            }
-            Promise.all(promises)
-                .then(() => {
-                    return resolve(true);
-                })
-                .catch((error: any) => {
-                    return reject(error);
-                });
-        });
-    }
-
-    public toObject(): Promise<IDelegation> {
-        return new Promise((resolve, reject) => {
-            const resultObj: IDelegation = {
-                data: {
-                    delegate: this._data.delegate,
-                    delegator: {
-                        type: '',
-                        value: new Uint8Array(0),
-                    },
-                    network: this._data.network,
-                    expiration: this._data.expiration,
-                    capabilities: this._data.capabilities,
-                },
-                signature: new Uint8Array(this._signature),
-            };
-            let exportKey = false;
-            let keyIdx = 0;
-            const promises: Promise<any>[] = [];
-            if (this._data.delegator.paramsId !== EKeyParamsIds.EMPTY) {
-                exportKey = true;
-                promises.push(this._data.delegator.getRaw());
-                keyIdx = promises.length - 1;
-            }
-            let exportParent = false;
-            let parentIdx = 0;
-            if (typeof this._parent !== 'undefined') {
-                exportParent = true;
-                promises.push(this._parent.toObject());
-                parentIdx = promises.length - 1;
-            }
-            Promise.all(promises)
-                .then((resolved: any[]) => {
-                    if (exportKey) {
-                        resultObj.data.delegator.type = this._data.delegator.paramsId;
-                        resultObj.data.delegator.value = new Uint8Array(resolved[keyIdx]);
-                    }
-                    if (exportParent) {
-                        resultObj.parent = resolved[parentIdx];
-                    }
-                    return resolve(resultObj);
-                })
-                .catch((error: any) => {
-                    return reject(error);
-                });
-        });
-    }
-
-    public fromObject(passedObj: IDelegation): Promise<boolean> {
-        return new Promise((resolve, reject) => {
-            this._data.delegate = passedObj.data.delegate;
-            this._data.delegator = new BaseECKey(
-                mKeyPairParams.get(passedObj.data.delegator.type)!.publicKey,
-            );
-            this._data.network = passedObj.data.network;
-            this._data.expiration = passedObj.data.expiration;
-            this._data.capabilities = passedObj.data.capabilities;
-            this._signature = Buffer.from(passedObj.signature);
-            const promises: Promise<any>[] = [];
-            if (this._data.delegator.paramsId !== EKeyParamsIds.EMPTY) {
-                promises.push(
-                    this._data.delegator.setRaw(passedObj.data.delegator.value),
-                );
-            }
-            if (typeof passedObj.parent !== 'undefined') {
-                this._parent = new Delegation();
-                promises.push(this._parent.fromObject(passedObj.parent!));
-            }
-            Promise.all(promises)
-                .then(() => {
-                    return resolve(true);
-                })
-                .catch((error: any) => {
-                    return reject(error);
-                });
-        });
-    }
-
-    public toBytes(): Promise<Uint8Array> {
-        return new Promise((resolve, reject) => {
-            this.toObjectWithBuffers()
-                .then((obj: IDelegationBuffers) => {
-                    return resolve(objectToBytes(obj));
-                })
-                .catch((error: any) => {
-                    return reject(error);
-                });
-        });
-    }
-
-    public fromBytes(passedBytes: Uint8Array): Promise<boolean> {
-        return new Promise((resolve, reject) => {
-            const objWithBuffers: IDelegationBuffers = bytesToObject(passedBytes);
-            this.fromObjectWithBuffers(objWithBuffers)
-                .then(() => {
-                    return resolve(true);
-                })
-                .catch((error: any) => {
-                    return reject(error);
-                });
-        });
-    }
-
+    /**
+     * Signs delegation and automatilla sets 'delegator'
+     * @param privateKey - delegator's private key
+     * @returns
+     */
     public sign(privateKey: BaseECKey): Promise<boolean> {
         return new Promise((resolve, reject) => {
             privateKey.extractPublic()
@@ -423,37 +243,229 @@ export class Delegation extends Signable {
         });
     }
 
-    // private verifyRecursively(rootCAId: string, delegate: string, network): Promise<boolean> {
-    //     return new Promise((resolve, reject) => {
-    //         super.verifySignature(this._data.delegator)
-    //             .then((signatureIsValid: boolean) => {
-    //                 // TODO:
-    //                 // capabilities verification,
-    //                 // check delegator against passed/default rootCA
-    //                 // check delegate against targed(passed)
-    //                 // recursive if parent is defined
-    //                 return resolve(signatureIsValid);
-    //             })
-    //             .catch((error: any) => {
-    //                 return reject(error);
-    //             });
-    //     });
-    // }
+    /**
+     * checks if delegation is valid (signed and not expired)
+     * @param timestamp - Unix Time Stamp. If not passed then current time is used
+     * @returns 
+     */
+    public verify(timestamp: number = -1): Promise<boolean> {
+        return new Promise((resolve, reject) => {
+            super.verifySignature(this._data.delegator)
+                .then((signatureIsValid: boolean) => {
+                    if (signatureIsValid) {
+                        return resolve(!this.isExpired(timestamp));
+                    } else {
+                        return resolve(signatureIsValid);
+                    }
+                })
+                .catch((error: any) => {
+                    return reject(error);
+                });
+        });
+    }
 
-    // public verify(rootCAId: string = ''): Promise<boolean> {
-    //     return new Promise((resolve, reject) => {
-    //         this.verifyRecursively(this._data.delegator)
-    //             .then((signatureIsValid: boolean) => {
-    //                 // TODO:
-    //                 // capabilities verification,
-    //                 // check delegator against passed/default rootCA
-    //                 // check delegate against targed(passed)
-    //                 // recursive if parent is defined
-    //                 return resolve(signatureIsValid);
-    //             })
-    //             .catch((error: any) => {
-    //                 return reject(error);
-    //             });
-    //     });
-    // }
+    /**
+     * Converts delegation to a compact object with unnamed members
+     * @returns - object, throws otherwise
+     */
+    public toUnnamedObject(): Promise<IUnnamedDelegation> {
+        return new Promise((resolve, reject) => {
+            const resultObj: IUnnamedDelegation = [
+                [
+                    this._data.delegate,
+                    [
+                        '',
+                        '',
+                        Buffer.from([]),
+                    ],
+                    this._data.network,
+                    this._data.target,
+                    this._data.expiration,
+                    this._data.capabilities,
+                ],
+                this._signature,
+            ];
+            if (this._data.delegator.paramsId === EKeyParamsIds.EMPTY) {
+                return resolve(resultObj);
+            }
+            this._data.delegator.getRaw()
+                .then((rawKeyBytes: Uint8Array) => {
+                    const underscoreIndex = this._data.delegator.paramsId.indexOf('_');
+                    if (underscoreIndex > -1) {
+                        resultObj[0][1][0] = this._data.delegator.paramsId.slice(0, underscoreIndex);
+                        resultObj[0][1][1] = this._data.delegator.paramsId.slice(underscoreIndex + 1);
+                    } else {
+                        resultObj[0][1][0] = this._data.delegator.paramsId;
+                    }
+                    resultObj[0][1][2] = Buffer.from(rawKeyBytes);
+                    return resolve(resultObj);
+                })
+                .catch((error: any) => {
+                    return reject(error);
+                });
+        });
+    }
+
+    /**
+     * Converts delegation to an object with binary members represented by Buffers
+     * @returns - object, throws otherwise
+     */
+    public toObjectWithBuffers(): Promise<IDelegationBuffers> {
+        return new Promise((resolve, reject) => {
+            this.toUnnamedObject()
+                .then((unnamedObject: IUnnamedDelegation) => {
+                    const resultObj: IDelegationBuffers = {
+                        data: {
+                            delegate: unnamedObject[0][0],
+                            delegator: {
+                                type: unnamedObject[0][1][0],
+                                curve: unnamedObject[0][1][1],
+                                value: unnamedObject[0][1][2],
+                            },
+                            network: unnamedObject[0][2],
+                            target: unnamedObject[0][3],
+                            expiration: unnamedObject[0][4],
+                            capabilities: unnamedObject[0][5],
+                        },
+                        signature: unnamedObject[1],
+                    };
+                    return resolve(resultObj);
+                })
+                .catch((error: any) => {
+                    return reject(error);
+                });
+        });
+    }
+
+    /**
+     * Converts delegation to an object with binary members represented by Uint8Array
+     * @returns - object, throws otherwise
+     */
+    public toObject(): Promise<IDelegation> {
+        return new Promise((resolve, reject) => {
+            this.toObjectWithBuffers()
+                .then((objBuffers: IDelegationBuffers) => {
+                    const resultObj: IDelegation = {
+                        data: {
+                            delegate: objBuffers.data.delegate,
+                            delegator: {
+                                type: objBuffers.data.delegator.type,
+                                curve: objBuffers.data.delegator.curve,
+                                value: new Uint8Array(objBuffers.data.delegator.value),
+                            },
+                            network: objBuffers.data.network,
+                            target: objBuffers.data.target,
+                            expiration: objBuffers.data.expiration,
+                            capabilities: objBuffers.data.capabilities,
+                        },
+                        signature: new Uint8Array(objBuffers.signature),
+                    };
+                    return resolve(resultObj);
+                })
+                .catch((error: any) => {
+                    return reject(error);
+                });
+        });
+    }
+
+    /**
+     * Converts a compact object with unnamed members to delegation
+     * @param passedObj - compact object
+     * @returns - true, throws otherwise
+     */
+     public fromUnnamedObject(passedObj: IUnnamedDelegation): Promise<boolean> {
+        return new Promise((resolve, reject) => {
+            this._data.delegate = passedObj[0][0];
+            this._data.network = passedObj[0][2];
+            this._data.target = passedObj[0][3];
+            this._data.expiration = passedObj[0][4];
+            this._data.capabilities = passedObj[0][5]
+
+            let keyParamsId: string = passedObj[0][1][0];
+            if (passedObj[0][1][1].length > 0) {
+                keyParamsId += `_${passedObj[0][1][1]}`;
+            }
+            if (!mKeyPairParams.has(keyParamsId)) {
+                return reject(new Error(Errors.IMPORT_TYPE_ERROR));
+            }
+            this._data.delegator = new BaseECKey(
+                mKeyPairParams.get(keyParamsId)!.publicKey,
+            );
+            this._signature = passedObj[1];
+            if (this._data.delegator.paramsId === EKeyParamsIds.EMPTY) {
+                return resolve(true);
+            }
+            this._data.delegator.importBin(new Uint8Array(passedObj[0][1][2]))
+                .then(() => {
+                    return resolve(true);
+                })
+                .catch((error: any) => {
+                    return reject(error);
+                });
+        });
+    }
+
+    /**
+     * Converts an object with buffers to delegation
+     * @param passedObj - object with buffers
+     * @returns - true, throws otherwise
+     */
+    public fromObjectWithBuffers(passedObj: IDelegationBuffers): Promise<boolean> {
+        return new Promise((resolve, reject) => {
+            const unnamedObject: IUnnamedDelegation = [
+                [
+                    passedObj.data.delegate,
+                    [
+                        passedObj.data.delegator.type,
+                        passedObj.data.delegator.curve,
+                        passedObj.data.delegator.value,
+                    ],
+                    passedObj.data.network,
+                    passedObj.data.target,
+                    passedObj.data.expiration,
+                    passedObj.data.capabilities,
+                ],
+                passedObj.signature,
+            ];
+            this.fromUnnamedObject(unnamedObject)
+                .then((result: boolean) => {
+                    return resolve(result);
+                })
+                .catch((error: any) => {
+                    return reject(error);
+                });
+        });
+    }
+
+    /**
+     * Converts an object with Uint8Arrays to delegation
+     * @param passedObj - object with Uint8Arrays
+     * @returns - true, throws otherwise
+     */
+    public fromObject(passedObj: IDelegation): Promise<boolean> {
+        return new Promise((resolve, reject) => {
+            const objBuffers: IDelegationBuffers = {
+                data: {
+                    delegate: passedObj.data.delegate,
+                    delegator: {
+                        type: passedObj.data.delegator.type,
+                        curve: passedObj.data.delegator.curve,
+                        value: Buffer.from(passedObj.data.delegator.value),
+                    },
+                    network: passedObj.data.network,
+                    target: passedObj.data.target,
+                    expiration: passedObj.data.expiration,
+                    capabilities: passedObj.data.capabilities,
+                },
+                signature: Buffer.from(passedObj.signature),
+            };
+            this.fromObjectWithBuffers(objBuffers)
+                .then((result: boolean) => {
+                    return resolve(result);
+                })
+                .catch((error: any) => {
+                    return reject(error);
+                });
+        });
+    }
 }
