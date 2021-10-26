@@ -58,6 +58,7 @@ export class RSAKey extends BaseKey {
     protected _clear(): void {
         this._spki = new Uint8Array(0);
         this._pkcs8 = new Uint8Array(0);
+        this._clearBase();
     }
 
     /**

@@ -188,9 +188,13 @@ export class BaseKey {
 
     private _jwk?: IJwk;
 
-    protected _clear(): void {
+    protected _clearBase(): void {
         this._cryptoKey = undefined;
         this._jwk = undefined;
+    }
+
+    protected _clear(): void {
+        this._clearBase();
     }
 
     constructor(passedKeyParams: IKeyParams = EmptyKeyParams) {
