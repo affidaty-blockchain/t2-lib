@@ -12,7 +12,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Added ```t2lib.Utils.sha256()``` function to calculate sha256 hash of given data.
 - Added 'target' member to certificates. it's the ID of the account whose data are getting certified.
 - Added delegations.
-- client.accountData() now also accepts a list of data keys
+- client.accountData() now also accepts a list of data keys.
+
+### Fixed
+ 
+- Fixed issue where subsequent calls to account.generate() didn't properly clear the previous value therefore didn't produce a valid signature.
 
 ## [1.4.7] - 2021-10-21
  
