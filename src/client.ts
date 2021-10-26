@@ -485,9 +485,10 @@ export class Client {
     /**
      * This method returns info of an account, if found.
      * @param account - Account as an account ID or Account class object.
+     * @param keysArray - view account data under certain keys
      * @returns - Account info.
      */
-    accountData(account: string | Account): Promise<IAccountData> {
+    accountData(account: string | Account, keysArray: string[] = []): Promise<IAccountData> {
         return new Promise((resolve, reject) => {
             let id: string;
             if (typeof account === 'string') {
@@ -495,7 +496,7 @@ export class Client {
             } else {
                 id = account.accountId;
             }
-            const msg = stdTrinciMessages.getAccount(id);
+            const msg = stdTrinciMessages.getAccount(id, keysArray);
             this.submitTrinciMessage(msg)
                 .then((resultMessage: TrinciMessage) => {
                     resultMessage.assertType(MessageTypes.GetAccountResponse);
