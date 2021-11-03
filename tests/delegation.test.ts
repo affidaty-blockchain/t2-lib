@@ -7,7 +7,6 @@ describe('delegation', () => {
     const ecdh = new ECDHKeyPair();
     const d = new Delegation();
 
-
     it('init', async () => {
         await expect(ecdsa.generate()).resolves.toBeTruthy();
         await expect(ecdh.generate()).resolves.toBeTruthy();
@@ -41,7 +40,7 @@ describe('delegation', () => {
     });
 
     it('verify', async () => {
-        let expTemp = d.expiration;
+        const expTemp = d.expiration;
         d.expiration = 0;
         await expect(d.verify((Math.trunc(new Date().getTime() / 1000) + 1000000000))).resolves.toBeFalsy();
         d.expiration = expTemp;

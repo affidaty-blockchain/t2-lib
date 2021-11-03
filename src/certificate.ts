@@ -272,9 +272,11 @@ export class Certificate extends Signable {
 
     /** Additional (not signed) data, needed for merkle tree reconstruction in partial (derived) certificates. */
     public set multiProof(multiProof: Uint8Array[]) {
+        const temp: Buffer[] = [];
         for (let i = 0; i < multiProof.length; i += 1) {
-            this._multiProof.push(Buffer.from(multiProof[i]));
+            temp.push(Buffer.from(multiProof[i]));
         }
+        this._multiProof = temp;
     }
 
     /** Additional (not signed) data, needed for merkle tree reconstruction in partial (derived) certificates. */
@@ -319,9 +321,19 @@ export class Certificate extends Signable {
         for (let i = 0; i < allKeys.length; i += 1) {
             leaves.push(createLeaf(allKeys[i], this._dataToCertify[allKeys[i]], this._data.salt));
         }
+
+        let missingFields = 0;
+        for (let i = 0; i < this._data.fields.length; i += 1) {
+            if (fieldsT.indexOf(this._data.fields[i]) < 0) {
+                missingFields += 1;
+            }
+        }
         const merkleData = createMerkleTree(leaves, clearIndexes);
         this._data.root = merkleData.root;
-        this._multiProof = merkleData.multiProof;
+        this._multiProof = [];
+        if (missingFields > 0) {
+            this._multiProof = merkleData.multiProof;
+        }
         return true;
     }
 
@@ -607,8 +619,9 @@ export class Certificate extends Signable {
                     }
                     const clearLeaves: Buffer[] = [];
                     const clearIndexes: number[] = [];
+                    let missingFields = 0;
                     for (let i = 0; i < allKeys.length; i += 1) {
-                        if (clearKeys.indexOf(allKeys[i]) !== -1) {
+                        if (clearKeys.indexOf(allKeys[i]) >= 0) {
                             clearIndexes.push(i);
                             clearLeaves.push(
                                 createLeaf(
@@ -617,8 +630,22 @@ export class Certificate extends Signable {
                                     this._data.salt,
                                 ),
                             );
+                        } else {
+                            missingFields += 1;
                         }
                     }
+
+                    if (missingFields === 0
+                        && this._multiProof.length === 0
+                    ) {
+                        const missingSymLeaves = missingSymmetryLeaves(clearLeaves.length);
+                        const leafToDublicate = clearLeaves.length - 1;
+                        for (let i = 0; i < missingSymLeaves; i += 1) {
+                            clearLeaves.push(clearLeaves[leafToDublicate]);
+                            clearIndexes.push(clearLeaves.length - 1);
+                        }
+                    }
+
                     let result = false;
                     try {
                         result = verifyMerkleTree(

@@ -13,7 +13,7 @@ import {
  */
 export function sha256(data: Uint8Array): Uint8Array {
     return fastSha256(data);
-};
+}
 
 /**
  * Produces a union of given arrays.

@@ -1,8 +1,4 @@
 import * as Errors from './errors';
-import {
-    objectToBytes,
-    bytesToObject,
-} from './utils';
 import { TKeyGenAlgorithmValidHashValues } from './cryptography/base';
 import {
     DEF_SIGN_HASH_ALGORITHM as defaultSignHash,
@@ -13,7 +9,7 @@ import {
 import { BaseECKey } from './cryptography/baseECKey';
 import {
     Signable,
-    ISignableUnnamedObject
+    ISignableUnnamedObject,
 } from './signable';
 
 const DEF_EXP_AFTER_SECONDS = 2592000; // 2592000 = 30 days
@@ -190,7 +186,7 @@ export class Delegation extends Signable {
      * @returns
      */
     public isExpired(timestamp: number = -1): boolean {
-        let ctrlTimeStamp = timestamp >= 0 ? timestamp : Math.trunc(new Date().getTime() / 1000);
+        const ctrlTimeStamp = timestamp >= 0 ? timestamp : Math.trunc(new Date().getTime() / 1000);
         return this._data.expiration < ctrlTimeStamp;
     }
 
@@ -214,7 +210,7 @@ export class Delegation extends Signable {
         if (
             Object.prototype.hasOwnProperty.call(this._data.capabilities, method)
         ) {
-            result = this._data.capabilities[method] ? true : false;
+            result = !!this._data.capabilities[method];
         }
         return result;
     }
@@ -246,7 +242,7 @@ export class Delegation extends Signable {
     /**
      * checks if delegation is valid (signed and not expired)
      * @param timestamp - Unix Time Stamp. If not passed then current time is used
-     * @returns 
+     * @returns
      */
     public verify(timestamp: number = -1): Promise<boolean> {
         return new Promise((resolve, reject) => {
@@ -254,9 +250,8 @@ export class Delegation extends Signable {
                 .then((signatureIsValid: boolean) => {
                     if (signatureIsValid) {
                         return resolve(!this.isExpired(timestamp));
-                    } else {
-                        return resolve(signatureIsValid);
                     }
+                    return resolve(signatureIsValid);
                 })
                 .catch((error: any) => {
                     return reject(error);
@@ -373,13 +368,13 @@ export class Delegation extends Signable {
      * @param passedObj - compact object
      * @returns - true, throws otherwise
      */
-     public fromUnnamedObject(passedObj: IUnnamedDelegation): Promise<boolean> {
+    public fromUnnamedObject(passedObj: IUnnamedDelegation): Promise<boolean> {
         return new Promise((resolve, reject) => {
             this._data.delegate = passedObj[0][0];
             this._data.network = passedObj[0][2];
             this._data.target = passedObj[0][3];
             this._data.expiration = passedObj[0][4];
-            this._data.capabilities = passedObj[0][5]
+            this._data.capabilities = passedObj[0][5];
 
             let keyParamsId: string = passedObj[0][1][0];
             if (passedObj[0][1][1].length > 0) {

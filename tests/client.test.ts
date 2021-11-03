@@ -88,7 +88,6 @@ describe('Testing transaction class', () => {
         expect(accountAssets.indexOf(assetAcc.accountId)).not.toEqual(-1);
 
         // Uncomment following lines to test asset registration
-        // This is a 
         // const assetRegTx = stdTxPrepareUnsigned.service.asset_registration(
         //     defServiceAccountID,
         //     client.network,

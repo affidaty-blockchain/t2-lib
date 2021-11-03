@@ -46,9 +46,9 @@ describe('certificate', () => {
         expect(c.salt.byteLength).toBeGreaterThan(0);
         expect(c.root.byteLength).toBeGreaterThan(0);
         expect(c.fields).toEqual(Object.keys(testData).sort());
-        expect(c.multiProof.length).toEqual(2);
+        expect(c.multiProof.length).toEqual(0);
         c.create(['name', 'sex']);
-        expect(c.multiProof.length).toBeGreaterThan(0);
+        expect(c.multiProof.length).toEqual(3);
     });
 
     it('sign', async () => {

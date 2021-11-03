@@ -4,7 +4,13 @@ All notable changes to this project will be documented in this file.
  
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
- 
+
+## [1.5.1] - 2021-11-03
+
+### Fixed
+- Certificate.multiProof setter fixed.
+- Fixed multiproof getting added even if certificate.create() is being called with no args or all the fields
+
 ## [1.5.0] - 2021-10-29
  
 ### Added
