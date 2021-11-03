@@ -6,6 +6,7 @@ describe('certificate', () => {
     const ecdsa = new ECDSAKeyPair();
     const ecdh = new ECDHKeyPair();
     const c = new Certificate();
+    const t = 'target';
     const testData = {
         name: 'John',
         surname: 'Doe',
@@ -24,6 +25,8 @@ describe('certificate', () => {
         const bytes = new Uint8Array([0xff, 0xfa]);
         const ecdsa2 = new ECDSAKeyPair();
         const c2 = new Certificate();
+        c2.target = t;
+        expect(c2.target).toEqual(t);
         c2.fields = fields;
         expect(c2.fields).toEqual(fields);
         c2.salt = bytes;
@@ -42,6 +45,7 @@ describe('certificate', () => {
 
     it('create', async () => {
         c.dataToCertify = testData;
+        c.target = t;
         c.create();
         expect(c.salt.byteLength).toBeGreaterThan(0);
         expect(c.root.byteLength).toBeGreaterThan(0);
@@ -68,7 +72,7 @@ describe('certificate', () => {
         await expect(c.verify({ name: 'John', surname: 'Doe' })).resolves.toBeFalsy();
         c.target = 'accIdString';
         await expect(c.verify(testData)).resolves.toBeFalsy();
-        c.target = '';
+        c.target = t;
         await expect(c.verify(testData)).resolves.toBeTruthy();
     });
 
