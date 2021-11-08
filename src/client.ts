@@ -27,6 +27,9 @@ export interface ITxReceiptData {
     /** Transaction index inside the block */
     txIdx: number;
 
+    /** Amount of fuel burned during this transaction execution */
+    burnedFuel: number
+
     /** Whether transaction was successfully executed by smart contract. */
     success: boolean;
 
@@ -436,8 +439,9 @@ export class Client {
                     const txReceiptObject: ITxReceiptData = {
                         blockIdx: resultMessage.body.receipt[0],
                         txIdx: resultMessage.body.receipt[1],
-                        success: resultMessage.body.receipt[2],
-                        result: new Uint8Array(resultMessage.body.receipt[3]),
+                        burnedFuel: resultMessage.body.receipt[2],
+                        success: resultMessage.body.receipt[3],
+                        result: new Uint8Array(resultMessage.body.receipt[4]),
                     };
                     return resolve(txReceiptObject);
                 })
