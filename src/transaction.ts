@@ -23,20 +23,24 @@ interface ITxUnnamedPublicKeyObject extends Array<any> {
 }
 
 export interface IUnnamedData extends Array<any> {
-    /** target AccountId */
+    /** Transaction schema reference */
     [0]: string;
+    /** Target AccountId */
+    [1]: string;
+    /** Max fuel that consumable by this transaction */
+    [2]: number;
     /** Nonce */
-    [1]: Buffer;
+    [3]: Buffer;
     /** Network name */
-    [2]: string;
-    /** Smart contract hash */
-    [3]: Buffer | null;
-    /** Smart contract method */
     [4]: string;
+    /** Smart contract hash */
+    [5]: Buffer | null;
+    /** Smart contract method */
+    [6]: string;
     /** Signer's public key */
-    [5]: ITxUnnamedPublicKeyObject;
+    [7]: ITxUnnamedPublicKeyObject;
     /** Msgpacked smart contract args */
-    [6]: Buffer;
+    [8]: Buffer;
 }
 
 export interface ITxUnnamedObject extends ISignableUnnamedObject {
@@ -53,7 +57,9 @@ interface ITxPublicKeyObjectWithBuffers {
 // exported for usage in Client class
 export interface ITxObjectWithBuffers extends ISignableObjectWithBuffer {
     data: {
+        schema: string; // transaction schema
         account: string; // accountId
+        maxFuel: number; // max fuel consumable by transaction
         nonce: Buffer; // nonce
         network: string; // networkName
         contract: Buffer | null; // smartContractHash
@@ -75,7 +81,9 @@ interface ITxPublicKeyObject {
  */
 export interface ITxObject extends ISignableObject {
     data: {
+        schema: string; // transaction schema
         account: string; // accountId
+        maxFuel: number; // max fuel consumable by transaction
         nonce: Uint8Array; // nonce
         network: string; // networkName
         contract: Uint8Array | null; // smartContractHash
@@ -88,7 +96,9 @@ export interface ITxObject extends ISignableObject {
 
 // Just for internal usage
 interface IInternalTxDataStructure {
+    schema: string; // transaction schema
     accountId: string;
+    maxFuel: number; // max fuel consumable by transaction
     nonce: Buffer;
     networkName: string;
     smartContractHash: Buffer | null;
@@ -106,7 +116,9 @@ export class Transaction extends Signable {
     constructor(hash: TKeyGenAlgorithmValidHashValues = defaultSignHash) {
         super(hash);
         this._data = {
+            schema: '',
             accountId: '',
+            maxFuel: 0,
             nonce: Buffer.from([]),
             networkName: '',
             smartContractHash: null,
@@ -117,6 +129,16 @@ export class Transaction extends Signable {
     }
 
     /** Account ID of the target (receiving account) of the transaction. */
+    public set schema(schema: string) {
+        this._data.schema = schema;
+    }
+
+    /** Account ID of the target (receiving account) of the transaction. */
+    public get schema(): string {
+        return this._data.schema;
+    }
+
+    /** Account ID of the target (receiving account) of the transaction. */
     public set accountId(id: string) {
         this._data.accountId = id;
     }
@@ -124,6 +146,16 @@ export class Transaction extends Signable {
     /** Account ID of the target (receiving account) of the transaction. */
     public get accountId(): string {
         return this._data.accountId;
+    }
+
+    /** Account ID of the target (receiving account) of the transaction. */
+    public set maxFuel(maxFuel: number) {
+        this._data.maxFuel = maxFuel;
+    }
+
+    /** Account ID of the target (receiving account) of the transaction. */
+    public get maxFuel(): number {
+        return this._data.maxFuel;
     }
 
     /** Random 8-bytes value as an anti-replay protection(Uint8Array). */
@@ -270,7 +302,9 @@ export class Transaction extends Signable {
         return new Promise((resolve, reject) => {
             const resultObj: ITxUnnamedObject = [
                 [
+                    this._data.schema,
                     this._data.accountId,
+                    this._data.maxFuel,
                     this._data.nonce,
                     this._data.networkName,
                     this._data.smartContractHash,
@@ -291,12 +325,12 @@ export class Transaction extends Signable {
                 .then((rawKeyBytes: Uint8Array) => {
                     const underscoreIndex = this._data.signerPublicKey.paramsId.indexOf('_');
                     if (underscoreIndex > -1) {
-                        resultObj[0][5][0] = this._data.signerPublicKey.paramsId.slice(0, underscoreIndex);
-                        resultObj[0][5][1] = this._data.signerPublicKey.paramsId.slice(underscoreIndex + 1);
+                        resultObj[0][7][0] = this._data.signerPublicKey.paramsId.slice(0, underscoreIndex);
+                        resultObj[0][7][1] = this._data.signerPublicKey.paramsId.slice(underscoreIndex + 1);
                     } else {
-                        resultObj[0][5][0] = this._data.signerPublicKey.paramsId;
+                        resultObj[0][7][0] = this._data.signerPublicKey.paramsId;
                     }
-                    resultObj[0][5][2] = Buffer.from(rawKeyBytes);
+                    resultObj[0][7][2] = Buffer.from(rawKeyBytes);
                     return resolve(resultObj);
                 })
                 .catch((error: any) => {
@@ -315,17 +349,19 @@ export class Transaction extends Signable {
                 .then((unnamedObject: ITxUnnamedObject) => {
                     const resultObj: ITxObjectWithBuffers = {
                         data: {
-                            account: unnamedObject[0][0],
-                            nonce: unnamedObject[0][1],
-                            network: unnamedObject[0][2],
-                            contract: unnamedObject[0][3],
-                            method: unnamedObject[0][4],
+                            schema: unnamedObject[0][0],
+                            account: unnamedObject[0][1],
+                            maxFuel: unnamedObject[0][2],
+                            nonce: unnamedObject[0][3],
+                            network: unnamedObject[0][4],
+                            contract: unnamedObject[0][5],
+                            method: unnamedObject[0][6],
                             caller: {
-                                type: unnamedObject[0][5][0],
-                                curve: unnamedObject[0][5][1],
-                                value: unnamedObject[0][5][2],
+                                type: unnamedObject[0][7][0],
+                                curve: unnamedObject[0][7][1],
+                                value: unnamedObject[0][7][2],
                             },
-                            args: unnamedObject[0][6],
+                            args: unnamedObject[0][8],
                         },
                         signature: unnamedObject[1],
                     };
@@ -347,8 +383,9 @@ export class Transaction extends Signable {
                 .then((objBuffers: ITxObjectWithBuffers) => {
                     const resultObj: ITxObject = {
                         data: {
-                            // schema: this._data.schema, // TODO
+                            schema: this._data.schema, // TODO
                             account: objBuffers.data.account,
+                            maxFuel: objBuffers.data.maxFuel,
                             nonce: new Uint8Array(objBuffers.data.nonce),
                             network: objBuffers.data.network,
                             contract: objBuffers.data.contract ? new Uint8Array(objBuffers.data.contract) : null,
@@ -377,14 +414,16 @@ export class Transaction extends Signable {
      */
     public fromUnnamedObject(passedObj: ITxUnnamedObject): Promise<boolean> {
         return new Promise((resolve, reject) => {
-            this._data.accountId = passedObj[0][0];
-            this._data.nonce = passedObj[0][1];
-            this._data.networkName = passedObj[0][2];
-            this._data.smartContractHash = passedObj[0][3];
-            this._data.smartContractMethod = passedObj[0][4];
-            let keyParamsId: string = passedObj[0][5][0];
-            if (passedObj[0][5][1].length > 0) {
-                keyParamsId += `_${passedObj[0][5][1]}`;
+            this._data.schema = passedObj[0][0];
+            this._data.accountId = passedObj[0][1];
+            this._data.maxFuel = passedObj[0][2];
+            this._data.nonce = passedObj[0][3];
+            this._data.networkName = passedObj[0][4];
+            this._data.smartContractHash = passedObj[0][5];
+            this._data.smartContractMethod = passedObj[0][6];
+            let keyParamsId: string = passedObj[0][7][0];
+            if (passedObj[0][7][1].length > 0) {
+                keyParamsId += `_${passedObj[0][7][1]}`;
             }
             if (!mKeyPairParams.has(keyParamsId)) {
                 return reject(new Error(Errors.IMPORT_TYPE_ERROR));
@@ -392,12 +431,12 @@ export class Transaction extends Signable {
             this._data.signerPublicKey = new BaseECKey(
                 mKeyPairParams.get(keyParamsId)!.publicKey,
             );
-            this._data.smartContractMethodArgs = passedObj[0][6];
+            this._data.smartContractMethodArgs = passedObj[0][8];
             this._signature = passedObj[1];
             if (keyParamsId === EKeyParamsIds.EMPTY) {
                 return resolve(true);
             }
-            this._data.signerPublicKey.importBin(new Uint8Array(passedObj[0][5][2]))
+            this._data.signerPublicKey.importBin(new Uint8Array(passedObj[0][7][2]))
                 .then((result) => {
                     return resolve(result);
                 })
@@ -416,7 +455,9 @@ export class Transaction extends Signable {
         return new Promise((resolve, reject) => {
             const unnamedObject: ITxUnnamedObject = [
                 [
+                    passedObj.data.schema,
                     passedObj.data.account,
+                    passedObj.data.maxFuel,
                     passedObj.data.nonce,
                     passedObj.data.network,
                     passedObj.data.contract ? passedObj.data.contract : null,
@@ -449,7 +490,9 @@ export class Transaction extends Signable {
         return new Promise((resolve, reject) => {
             const objBuffers: ITxObjectWithBuffers = {
                 data: {
+                    schema: passedObj.data.schema,
                     account: passedObj.data.account,
+                    maxFuel: passedObj.data.maxFuel,
                     nonce: Buffer.from(passedObj.data.nonce),
                     network: passedObj.data.network,
                     contract: passedObj.data.contract ? Buffer.from(passedObj.data.contract) : null,

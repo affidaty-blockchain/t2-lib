@@ -13,6 +13,12 @@ describe('transaction', () => {
     });
 
     it('accessors', async () => {
+        let schema = 'test_schema';
+        t.schema = schema;
+        expect(t.schema).toEqual(schema);
+        let fuel = 26;
+        t.maxFuel = fuel;
+        expect(t.maxFuel).toEqual(fuel);
         t.accountId = acc.accountId;
         expect(t.accountId).toEqual(acc.accountId);
         const net = 'test_network';
