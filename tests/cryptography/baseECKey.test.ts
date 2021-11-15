@@ -118,9 +118,6 @@ describe('Testing elliptic curve cryptography implementations', () => {
             testBaseECKey = new EllipticCurve.BaseECKey(Defaults.ECDSAP384R1PubKeyParams);
             await testBaseECKey.setJWK(ecdsaPublicKeyJwk);
             expect(testBaseECKey.type).toEqual('public');
-            await expect(testBaseECKey.getCryptoKey()).resolves.toEqual(
-                ecdsaKeyPair.publicKey,
-            );
             await expect(testBaseECKey.getJWK()).resolves.toEqual(
                 ecdsaPublicKeyJwk,
             );
@@ -134,9 +131,6 @@ describe('Testing elliptic curve cryptography implementations', () => {
             testBaseECKey = new EllipticCurve.BaseECKey(Defaults.ECDSAP384R1PubKeyParams);
             await testBaseECKey.setRaw(new Uint8Array(ecdsaPublicKeyRaw));
             expect(testBaseECKey.type).toEqual('public');
-            await expect(testBaseECKey.getCryptoKey()).resolves.toEqual(
-                ecdsaKeyPair.publicKey,
-            );
             await expect(testBaseECKey.getJWK()).resolves.toEqual(
                 ecdsaPublicKeyJwk,
             );
@@ -150,9 +144,6 @@ describe('Testing elliptic curve cryptography implementations', () => {
             testBaseECKey = new EllipticCurve.BaseECKey(Defaults.ECDSAP384R1PubKeyParams);
             await testBaseECKey.setSPKI(new Uint8Array(ecdsaPublicKeySPKI));
             expect(testBaseECKey.type).toEqual('public');
-            await expect(testBaseECKey.getCryptoKey()).resolves.toEqual(
-                ecdsaKeyPair.publicKey,
-            );
             await expect(testBaseECKey.getJWK()).resolves.toEqual(
                 ecdsaPublicKeyJwk,
             );
@@ -179,9 +170,6 @@ describe('Testing elliptic curve cryptography implementations', () => {
             testBaseECKey = new EllipticCurve.BaseECKey(Defaults.ECDSAP384R1PrivKeyParams);
             await testBaseECKey.setJWK(ecdsaPrivateKeyJwk);
             expect(testBaseECKey.type).toEqual('private');
-            await expect(testBaseECKey.getCryptoKey()).resolves.toEqual(
-                ecdsaKeyPair.privateKey,
-            );
             await expect(testBaseECKey.getJWK()).resolves.toEqual(
                 ecdsaPrivateKeyJwk,
             );
@@ -192,9 +180,6 @@ describe('Testing elliptic curve cryptography implementations', () => {
             testBaseECKey = new EllipticCurve.BaseECKey(Defaults.ECDSAP384R1PrivKeyParams);
             await testBaseECKey.setPKCS8(new Uint8Array(ecdsaPrivateKeyPKCS8));
             expect(testBaseECKey.type).toEqual('private');
-            await expect(testBaseECKey.getCryptoKey()).resolves.toEqual(
-                ecdsaKeyPair.privateKey,
-            );
             await expect(testBaseECKey.getJWK()).resolves.toEqual(
                 ecdsaPrivateKeyJwk,
             );

@@ -67,12 +67,6 @@ describe('Testing base cryptography implementations', () => {
                 ecdsaPublicKeyJwk,
             );
             testBaseKey.setJWK(ecdsaPublicKeyJwk);
-            await expect(testBaseKey.getCryptoKey()).resolves.toEqual(
-                ecdsaKeyPair.publicKey,
-            );
-            await expect(testBaseKey.getCryptoKey()).resolves.toEqual(
-                ecdsaKeyPair.publicKey,
-            );
             await expect(testBaseKey.getJWK()).resolves.toEqual(
                 ecdsaPublicKeyJwk,
             );
@@ -90,12 +84,6 @@ describe('Testing base cryptography implementations', () => {
             );
 
             testBaseKey.setJWK(ecdsaPrivateKeyJwk);
-            await expect(testBaseKey.getCryptoKey()).resolves.toEqual(
-                ecdsaKeyPair.privateKey,
-            );
-            await expect(testBaseKey.getCryptoKey()).resolves.toEqual(
-                ecdsaKeyPair.privateKey,
-            );
             await expect(testBaseKey.getJWK()).resolves.toEqual(
                 ecdsaPrivateKeyJwk,
             );
