@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/).
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [1.6.1] - 2021-11-23
+
+### Added
+
+- Added ecdsa_secp256r1 keys default parameters (```t2lib.CryptoDefaults.ECDSAP256R1KeyPairParams```)
+
 ## [1.6.0] - 2021-11-08
 
 ### Changed
