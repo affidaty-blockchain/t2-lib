@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/).
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [1.6.2] - 2021-11-23
+
+### Changed
+
+- Nothing. 1.6.0 was published again on NPM as 1.6.1 by mistake. Now to publish the new code on NPM we need to increment the version again, even if nothing has actually changed.
+
 ## [1.6.1] - 2021-11-23
 
 ### Added
