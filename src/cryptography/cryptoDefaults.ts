@@ -17,6 +17,7 @@ export const EKeyParamsIds = {
     AESGCM256: 'aesgcm_256',
     HMACSHA384: 'hmac_sha384',
     ECDSAP384R1: 'ecdsa_secp384r1',
+    ECDSAP256R1: 'ecdsa_secp256r1',
     ECDHP384R1: 'ecdh_secp384r1',
     RSAOAEP384: 'rsa_oaep_384',
     EMPTY: '',
@@ -65,6 +66,37 @@ export const ECDSAP384R1PrivKeyParams: IKeyParams = {
 export const ECDSAP384R1KeyPairParams: IKeyPairParams = {
     publicKey: ECDSAP384R1PubKeyParams,
     privateKey: ECDSAP384R1PrivKeyParams,
+    get usages(): TKeyUsages {
+        return arrayUnion([this.publicKey.usages!, this.privateKey.usages!]);
+    },
+};
+
+/** Params set for ECDSA P-256 public key */
+export const ECDSAP256R1PubKeyParams: IKeyParams = {
+    paramsId: EKeyParamsIds.ECDSAP256R1,
+    genAlgorithm: {
+        name: 'ECDSA',
+        namedCurve: 'P-256',
+    },
+    usages: ['verify'],
+    type: 'public',
+};
+
+/** Params set for ECDSA P-256 private key */
+export const ECDSAP256R1PrivKeyParams: IKeyParams = {
+    paramsId: EKeyParamsIds.ECDSAP256R1,
+    genAlgorithm: {
+        name: 'ECDSA',
+        namedCurve: 'P-256',
+    },
+    usages: ['sign'],
+    type: 'private',
+};
+
+/** Params set for ECDSA P-256 key pair */
+export const ECDSAP256R1KeyPairParams: IKeyPairParams = {
+    publicKey: ECDSAP256R1PubKeyParams,
+    privateKey: ECDSAP256R1PrivKeyParams,
     get usages(): TKeyUsages {
         return arrayUnion([this.publicKey.usages!, this.privateKey.usages!]);
     },
@@ -162,6 +194,7 @@ export const HMACSHA384KeyParams: IKeyParams = {
 export const mKeyPairParams: ReadonlyMap<string, IKeyPairParams> = new Map([
     [EKeyParamsIds.EMPTY, EmptyKeyPairParams],
     [EKeyParamsIds.ECDSAP384R1, ECDSAP384R1KeyPairParams],
+    [EKeyParamsIds.ECDSAP256R1, ECDSAP256R1KeyPairParams],
     [EKeyParamsIds.ECDHP384R1, ECDHP384R1KeyPairParams],
     [EKeyParamsIds.RSAOAEP384, RSAOAEP384KeyPairParams],
 ]);
