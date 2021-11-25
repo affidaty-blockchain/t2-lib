@@ -1,14 +1,17 @@
 {
     "$schema": "https://json.schemastore.org/package.json",
     "name": "@affidaty/t2-lib",
-    "version": "1.6.2",
+    "version": "1.6.3",
     "description": "Official Trinci 2 SDK JavaScript library",
     "main": "dist/cjs/index.js",
     "module": "dist/esm/index.js",
     "browser": "dist/browser/t2lib.min.js",
     "types": "dist/types/index.d.ts",
     "files": [
-        "dist/"
+        "dist/",
+        "LICENSE",
+        "CHANGELOG.md",
+        "README.md"
     ],
     "directories": {
         "test": "tests",
@@ -77,5 +80,5 @@
         "Sovereign Identity"
     ],
     "author": "Affidaty S.p.A",
-    "license": "MIT"
+    "license": "AGPL-3.0-only"
 }
