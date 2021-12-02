@@ -1,9 +1,16 @@
 
 # Change Log
+
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/).
 and this project adheres to [Semantic Versioning](http://semver.org/).
+
+## [1.6.4] - 2021-12-02
+
+### Added
+
+- List of events fired by smart contract added to transaction receipt.
 
 ## [1.6.3] - 2021-11-25
 
