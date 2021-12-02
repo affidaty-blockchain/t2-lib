@@ -1,6 +1,7 @@
 // IMPORTANT! A fully operational trinci node is needed to perform tests below
 // also some initial configuration required
 // please set the correct node url, network name and asset smart contract hash
+import util from 'util';
 
 import { Account } from '../src/account';
 import { Transaction } from '../src/transaction';
@@ -9,11 +10,11 @@ import { Client } from '../src/client';
 
 describe('Testing transaction class', () => {
     // Asset smart contract hash
-    const assetSc = '1220ea1ccb01d6f36dfef8269e3c7d62858f2dff2b8ebc91d32981333d72faf0947d';
+    const assetSc = '1220183aeeb591efe03a1f9513342ecfa733cde08dbd8f477a3a7e2b7b8c764f690a';
     // node URL
-    const url = '';
+    const url = 'http://localhost:8000/';
     // node network name
-    const network = '';
+    const network = 'skynet';
 
     const client = new Client(url, network);
 
@@ -22,109 +23,7 @@ describe('Testing transaction class', () => {
     }
 
     it('test1', async () => {
-        expect(url.length).not.toEqual(0);
-        expect(network.length).not.toEqual(0);
-        const nonExistAcc = new Account();
-        await nonExistAcc.generate();
-        await expect(client.accountData(nonExistAcc)).rejects.toBeDefined();
-
-        const acc1 = new Account();
-        await acc1.generate();
-
-        const blockData = await client.blockData(0, true);
-        expect(blockData!.info.prevHash).toEqual('0000');
-
-        const contractsList = await client.registeredContractsList();
-        const contractsListKeys = Object.keys(contractsList);
-        expect(contractsListKeys.length).toBeGreaterThan(0);
-
-        const assetAcc = new Account();
-        await assetAcc.generate();
-        const assetInitTx = stdTxPrepareUnsigned.asset.init(
-            assetAcc.accountId,
-            client.network,
-            assetSc,
-            {
-                name: 'newAsset',
-                description: 'This is a new test asset.',
-                url: 'https://www.my.domain.com/',
-                max_units: 10000,
-                authorized: [],
-            },
-        );
-        await assetInitTx.sign(assetAcc.keyPair.privateKey);
-        const initTicket = await client.signAndSubmitTx(assetInitTx, assetAcc.keyPair.privateKey);
-        const initReceipt = await client.waitForTicket(initTicket, 10, 1000);
-        expect(initReceipt.success).toBeTruthy();
-
-        const assetStatsTx = stdTxPrepareUnsigned.asset.stats(
-            assetAcc.accountId,
-            client.network,
-        );
-        const statsTicket = await client.signAndSubmitTx(assetStatsTx, assetAcc.keyPair.privateKey);
-        const statsReceipt = await client.waitForTicket(statsTicket, 10, 1000);
-        expect(statsReceipt.success).toBeTruthy();
-
-        const mintTicket = await client.prepareAndSubmitTx(
-            assetAcc.accountId,
-            '',
-            'mint',
-            {
-                to: acc1.accountId,
-                units: 50,
-            },
-            assetAcc.keyPair.privateKey,
-        );
-
-        const mintTx = await client.txData(mintTicket);
-        await expect(mintTx.verify()).resolves.toEqual(true);
-        expect(mintTx.smartContractMethod).toEqual('mint');
-
-        const mintReceipt = await client.waitForTicket(mintTicket, 10, 1000);
-        expect(mintReceipt.success).toBeTruthy();
-
-        const accountData = await client.accountData(acc1);
-        const accountAssets = Object.keys(accountData!.assets);
-        expect(accountAssets.indexOf(assetAcc.accountId)).not.toEqual(-1);
-
-        // Uncomment following lines to test asset registration
-        // const assetRegTx = stdTxPrepareUnsigned.service.asset_registration(
-        //     defServiceAccountID,
-        //     client.network,
-        //     {
-        //         id: assetAcc.accountId,
-        //         name: 'testAsset',
-        //         url: 'https://www.example.com/',
-        //         contract: basicAssetSc,
-        //     },
-        // );
-        // await assetRegTx.sign(assetAcc.keyPair.privateKey);
-        // const regTicket = await client.signAndSubmitTx(assetRegTx, assetAcc.keyPair.privateKey);
-        // const regReceipt = await client.waitForTicket(regTicket, 10, 1000);
-        // expect(regReceipt.success).toBeTruthy();
-
-        const assetsList = await client.registeredAssetsList();
-        const assetsListKeys = Object.keys(assetsList);
-        expect(assetsListKeys.length).toBeGreaterThan(0);
-
-        const txArray: Transaction[] = [];
-        for (let i = 0; i < 5; i += 1) {
-            txArray.push(await client.prepareTx(
-                assetAcc.accountId,
-                '',
-                'mint',
-                {
-                    to: acc1.accountId,
-                    units: 50,
-                },
-                assetAcc.keyPair.privateKey,
-            ));
-        }
-
-        const ticketArray = await client.submitTxArray(txArray);
-        const receiptArray = await client.waitForTicketArray(ticketArray);
-        for (let i = 0; i < receiptArray.length; i += 1) {
-            expect(receiptArray[i]!).toBeTruthy();
-        }
+        let receipt = await client.txReceipt('12207d59a632efe7cb972919eb55618009dd83cb7aec70efcb6186eb302817be0472');
+        console.log(util.inspect(receipt, {showHidden: false, depth: null, colors: true}));
     }, 30000);
 });

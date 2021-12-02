@@ -17,6 +17,26 @@ type TReqMethod = 'get' | 'GET' | 'post' | 'POST'
 const submitMessaggePath = '/api/v1/message';
 
 /**
+ * Transaction event.
+ */
+ export interface ITxEvent {
+
+    /** Identifier of the transaction which produced this event. */
+    eventTx: string,
+
+    /** Identifier of the Account which produced this event. */
+    emitterAccount: string,
+
+    /** Identifier of the smart contract which produced this event. */
+    emitterSmartContract: string,
+
+    /** Event name. */
+    eventName: String,
+
+    event_data: Uint8Array,
+}
+
+/**
  * Transaction receipt.
  */
 export interface ITxReceiptData {
@@ -35,6 +55,9 @@ export interface ITxReceiptData {
 
     /** Smart contract execution result. */
     result: Uint8Array;
+
+    // /** Event fired during smart contract execution. */
+    events: ITxEvent[];
 }
 
 /**
@@ -442,7 +465,20 @@ export class Client {
                         burnedFuel: resultMessage.body.receipt[2],
                         success: resultMessage.body.receipt[3],
                         result: new Uint8Array(resultMessage.body.receipt[4]),
+                        events: [],
                     };
+                    if (resultMessage.body.receipt.length === 6) {
+                        for (let i = 0; i < resultMessage.body.receipt[5].length; i++) {
+                            txReceiptObject.events.push({
+                                eventTx: resultMessage.body.receipt[5][i][0].toString('hex'),
+                                emitterAccount: resultMessage.body.receipt[5][i][1],
+                                emitterSmartContract: resultMessage.body.receipt[5][i][2].toString('hex'),
+                                eventName: resultMessage.body.receipt[5][i][3],
+                                event_data: new Uint8Array(resultMessage.body.receipt[5][i][4]),
+                            })
+                            
+                        }
+                    }
                     return resolve(txReceiptObject);
                 })
                 .catch((error: any) => {
