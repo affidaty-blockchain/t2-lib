@@ -5,51 +5,47 @@ import { ECDSAP384R1KeyPairParams as defaultKeyPairParams, EKeyParamsIds, mKeyPa
 import { BaseECKey } from './cryptography/baseECKey';
 import { BaseECKeyPair } from './cryptography/baseECKeyPair';
 
+const PROTOBUF_HEADER = new Uint8Array([
+    0x08, 0x03, // Algorythm type identifier (ECDSA)
+    0x12, 0x78, // Content length
+]);
+
+const ASN1_HEADER = new Uint8Array([
+    0x30, 0x76, // byte count
+    0x30, 0x10, // byte len
+    0x06, 0x07, 0x2a, 0x86, 0x48, 0xce, 0x3d, 0x02, 0x01, // EC Public key OID
+    0x06, 0x05, 0x2b, 0x81, 0x04, 0x00, 0x22, // secp384r1 curve OID
+    0x03, 0x62, 0x00, // bitstring (bytes count)
+]);
+
+const MULTIHASH_HEADER = new Uint8Array([
+    0x12, // hash algorithm identifier (SHA256)
+    0x20, // hash length  (32)
+]);
+
 /**
  * Calculates Account ID from public key
- * @param publicKey - account's public key
+ * @param input - public key or a custom string to derive accountId from
  * @returns - account ID
  */
-export function getAccountId(publicKey: BaseECKey): Promise<string> {
+export function getAccountId(input: BaseECKey): Promise<string> {
     return new Promise((resolve, reject) => {
-        publicKey.getRaw()
+        input.getRaw()
             .then((keyBytes: Uint8Array) => {
-                // prepend ASN.1 header
-                const asn1 = new Uint8Array([
-                    0x30, 0x76, // byte count
-                    0x30, 0x10, // byte len
-                    0x06, 0x07, 0x2a, 0x86, 0x48, 0xce, 0x3d, 0x02, 0x01, // EC Public key OID
-                    0x06, 0x05, 0x2b, 0x81, 0x04, 0x00, 0x22, // secp384r1 curve OID
-                    0x03, 0x62, 0x00, // bitstring (bytes count)
-                ]);
-                const asnKey = new Uint8Array(keyBytes.byteLength + asn1.byteLength);
-                asnKey.set(asn1, 0);
-                asnKey.set(keyBytes, asn1.byteLength);
+                const PROTO_KEY = new Uint8Array(PROTOBUF_HEADER.byteLength + ASN1_HEADER.byteLength + keyBytes.byteLength);
+                PROTO_KEY.set(PROTOBUF_HEADER, 0);
+                PROTO_KEY.set(ASN1_HEADER, PROTOBUF_HEADER.byteLength);
+                PROTO_KEY.set(keyBytes, PROTOBUF_HEADER.byteLength + ASN1_HEADER.byteLength);
 
-                // prepend proto buf header
-                const protobuf = new Uint8Array([
-                    0x08, 0x03, // Algorythm type identifier (ECDSA)
-                    0x12, 0x78, // Content length
-                ]);
-                const protoKey = new Uint8Array(asnKey.byteLength + protobuf.byteLength);
-                protoKey.set(protobuf, 0);
-                protoKey.set(asnKey, protobuf.byteLength);
-
-                Subtle.digest('SHA-256', protoKey)
+                Subtle.digest('SHA-256', PROTO_KEY)
                     .then((hashed: ArrayBuffer) => {
                         const hashBytes = new Uint8Array(hashed);
-                        // prepend multihash header
-                        const multihash = new Uint8Array([
-                            0x12, // hash algorithm identifier (SHA256)
-                            0x20, // hash length  (32)
-                        ]);
-
                         const accountId = new Uint8Array(
-                            hashBytes.byteLength
-                            + multihash.byteLength,
+                            MULTIHASH_HEADER.byteLength
+                            + hashBytes.byteLength,
                         );
-                        accountId.set(multihash, 0);
-                        accountId.set(hashBytes, multihash.byteLength);
+                        accountId.set(MULTIHASH_HEADER, 0);
+                        accountId.set(hashBytes, MULTIHASH_HEADER.byteLength);
 
                         // return base58
                         return resolve(arrayBufferToBase58(accountId.buffer));
