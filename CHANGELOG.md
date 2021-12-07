@@ -6,6 +6,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/).
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [1.6.5] - UNPUBLISHED
+
+### Changed
+
+- event data member name changed from ```event_data``` to ```eventData``` inside receipt's events to respect project's casing rules.
+
 ## [1.6.4] - 2021-12-02
 
 ### Added

@@ -33,7 +33,7 @@ const submitMessaggePath = '/api/v1/message';
     /** Event name. */
     eventName: String,
 
-    event_data: Uint8Array,
+    eventData: Uint8Array,
 }
 
 /**
@@ -474,9 +474,8 @@ export class Client {
                                 emitterAccount: resultMessage.body.receipt[5][i][1],
                                 emitterSmartContract: resultMessage.body.receipt[5][i][2].toString('hex'),
                                 eventName: resultMessage.body.receipt[5][i][3],
-                                event_data: new Uint8Array(resultMessage.body.receipt[5][i][4]),
+                                eventData: new Uint8Array(resultMessage.body.receipt[5][i][4]),
                             })
-                            
                         }
                     }
                     return resolve(txReceiptObject);
