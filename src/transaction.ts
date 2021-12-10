@@ -1,6 +1,6 @@
 import * as Errors from './errors';
 import { WebCrypto } from './cryptography/webCrypto';
-import { objectToBytes, bytesToObject } from './utils';
+import { objectToBytes, bytesToObject, sha256 } from './utils';
 import { TKeyGenAlgorithmValidHashValues } from './cryptography/base';
 import {
     DEF_SIGN_HASH_ALGORITHM as defaultSignHash,
@@ -547,6 +547,27 @@ export class Transaction extends Signable {
             super.verifySignature(this._data.signerPublicKey)
                 .then((result: boolean) => {
                     return resolve(result);
+                })
+                .catch((error: any) => {
+                    return reject(error);
+                });
+        });
+    }
+
+    /**
+     * Computes the transaction ticket which would be returned by blockchain itself on transaction submission
+     * @returns - ticket string
+     */
+     public getTicket(): Promise<string> {
+        return new Promise((resolve, reject) => {
+            this.toUnnamedObject()
+                .then((unnamedTx: ITxUnnamedObject) => {
+                    try {
+                        let dataHash = sha256(objectToBytes(unnamedTx[0]));
+                        return resolve(`1220${Buffer.from(dataHash).toString('hex')}`);
+                    } catch (error) {
+                        return reject(error);
+                    }
                 })
                 .catch((error: any) => {
                     return reject(error);
