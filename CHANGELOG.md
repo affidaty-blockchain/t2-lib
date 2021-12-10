@@ -6,11 +6,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/).
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## [1.6.5] - UNPUBLISHED
+## [1.7.0] - UNPUBLISHED
 
 ### Changed
 
 - event data member name changed from ```event_data``` to ```eventData``` inside receipt's events to respect project's casing rules.
+
+### Added
+
+- added Transaction.getTicket() method, which computes transaction ticket without submitting it to the blockchain.
 
 ## [1.6.4] - 2021-12-02
 
