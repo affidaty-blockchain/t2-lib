@@ -1,6 +1,8 @@
 import { objectToBytes, sha256 } from '../utils';
 import { TTxSchemaType } from './txTypes';
 
+const DEFAULT_SCHEMA: TTxSchemaType = '';
+
 export interface ICommonParentTxDataUnnamedObject extends Array<any> {
     [0]: TTxSchemaType;
 }
@@ -28,21 +30,23 @@ export class CommonParentTxData implements ICommonParentTxDataInternal {
     protected _schema: TTxSchemaType;
     
     constructor(schema: TTxSchemaType = '') {
-        this.schema = schema;
+        this._schema = schema;
     }
 
-    public static getConstructor(): CommonParentTxData {
-        return new this('');
+    public static get constructor(): CommonParentTxData {
+        return new this;
     }
 
-    public static defaultSchema(): TTxSchemaType {
-        return '';
+    public static get defaultSchema(): TTxSchemaType {
+        return DEFAULT_SCHEMA;
     }
 
+    /** Reference to the schema used in this transaction. */
     public get schema(): TTxSchemaType {
         return this.schema;
     }
 
+    /** Reference to the schema used in this transaction. */
     public set schema(schema: TTxSchemaType) {
         this._schema = schema;
     }
