@@ -33,3 +33,4 @@ export const CERT_NO_DATA_VERIFY = 'No data provided.';
 export const REQUEST_UNSUPPORTED_METHOD = 'Unsupported request method.';
 export const KEY_IMPORT_CLASS_NOT_INIT = 'Key class object must be initialized first.';
 export const KEY_IMPORT_UNKNOWN_FORMAT = 'Could not determine the key format.';
+export const INVALID_SCHEMA = 'Invalid transaction schema.';
