@@ -103,8 +103,6 @@ export class BaseTxData extends CommonParentTxData implements IBaseTxDataInterna
 
     protected _method: string;
 
-    protected _caller: BaseECKey;
-
     protected _args: Buffer;
 
     public static get defaultSchema(): string {
@@ -119,7 +117,6 @@ export class BaseTxData extends CommonParentTxData implements IBaseTxDataInterna
         this._network = '';
         this._contract = null;
         this._method = '';
-        this._caller = new BaseECKey(EmptyKeyParams);
         this._args = Buffer.from([]);
     }
 
@@ -239,16 +236,6 @@ export class BaseTxData extends CommonParentTxData implements IBaseTxDataInterna
         return this._method;
     }
 
-    /** Signer's public key. This is also done automatically during sign() */
-    public set signerPublicKey(publicKey: BaseECKey) {
-        this._caller = publicKey;
-    }
-
-    /** Signer's public key. This is also done automatically during sign() */
-    public get signerPublicKey(): BaseECKey {
-        return this._caller;
-    }
-
     /** Arguments that will be passed to invoked smart contract method (generic json object) */
     public set smartContractMethodArgs(passedArgs: any) {
         this._args = Buffer.from(objectToBytes(passedArgs));
@@ -296,17 +283,17 @@ export class BaseTxData extends CommonParentTxData implements IBaseTxDataInterna
                 ],
                 this._args,
             ];
-            if (this._caller.paramsId === EKeyParamsIds.EMPTY) {
+            if (this._signerPubKey.paramsId === EKeyParamsIds.EMPTY) {
                 return resolve(resultObj);
             }
-            this._caller.getRaw()
+            this._signerPubKey.getRaw()
                 .then((rawKeyBytes: Uint8Array) => {
-                    const underscoreIndex = this._caller.paramsId.indexOf('_');
+                    const underscoreIndex = this._signerPubKey.paramsId.indexOf('_');
                     if (underscoreIndex > -1) {
-                        resultObj[7][0] = this._caller.paramsId.slice(0, underscoreIndex);
-                        resultObj[7][1] = this._caller.paramsId.slice(underscoreIndex + 1);
+                        resultObj[7][0] = this._signerPubKey.paramsId.slice(0, underscoreIndex);
+                        resultObj[7][1] = this._signerPubKey.paramsId.slice(underscoreIndex + 1);
                     } else {
-                        resultObj[7][0] = this._caller.paramsId;
+                        resultObj[7][0] = this._signerPubKey.paramsId;
                     }
                     resultObj[7][2] = Buffer.from(rawKeyBytes);
                     return resolve(resultObj);
@@ -387,14 +374,14 @@ export class BaseTxData extends CommonParentTxData implements IBaseTxDataInterna
             if (!mKeyPairParams.has(keyParamsId)) {
                 return reject(new Error(Errors.IMPORT_TYPE_ERROR));
             }
-            this._caller = new BaseECKey(
+            this._signerPubKey = new BaseECKey(
                 mKeyPairParams.get(keyParamsId)!.publicKey,
             );
             this._args = passedObj[8];
             if (keyParamsId === EKeyParamsIds.EMPTY) {
                 return resolve(true);
             }
-            this._caller.importBin(new Uint8Array(passedObj[7][2]))
+            this._signerPubKey.importBin(new Uint8Array(passedObj[7][2]))
                 .then((result) => {
                     return resolve(result);
                 })

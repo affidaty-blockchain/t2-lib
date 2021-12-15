@@ -64,12 +64,12 @@ export class CommonParentTxData implements ICommonParentTxDataInternal {
         this._schema = schema;
     }
 
-    /** Signer's public key. This is also done automatically during sign() */
+    /** Signer's public key. */
     public set signerPublicKey(publicKey: BaseECKey) {
         this._signerPubKey = publicKey;
     }
 
-    /** Signer's public key. This is also done automatically during sign() */
+    /** Signer's public key. */
     public get signerPublicKey(): BaseECKey {
         return this._signerPubKey;
     }
