@@ -1,7 +1,11 @@
 import { Subtle } from './cryptography/webCrypto';
 import { arrayBufferToBase58 } from './binConversions';
 import { IKeyPairParams } from './cryptography/base';
-import { ECDSAP384R1KeyPairParams as defaultKeyPairParams, EKeyParamsIds, mKeyPairParams } from './cryptography/cryptoDefaults';
+import {
+    ECDSAP384R1KeyPairParams as defaultKeyPairParams,
+    EKeyParamsIds,
+    mKeyPairParams,
+} from './cryptography/cryptoDefaults';
 import { BaseECKey } from './cryptography/baseECKey';
 import { BaseECKeyPair } from './cryptography/baseECKeyPair';
 
@@ -32,7 +36,11 @@ export function getAccountId(input: BaseECKey): Promise<string> {
     return new Promise((resolve, reject) => {
         input.getRaw()
             .then((keyBytes: Uint8Array) => {
-                const PROTO_KEY = new Uint8Array(PROTOBUF_HEADER.byteLength + ASN1_HEADER.byteLength + keyBytes.byteLength);
+                const PROTO_KEY = new Uint8Array(
+                    PROTOBUF_HEADER.byteLength
+                    + ASN1_HEADER.byteLength
+                    + keyBytes.byteLength,
+                );
                 PROTO_KEY.set(PROTOBUF_HEADER, 0);
                 PROTO_KEY.set(ASN1_HEADER, PROTOBUF_HEADER.byteLength);
                 PROTO_KEY.set(keyBytes, PROTOBUF_HEADER.byteLength + ASN1_HEADER.byteLength);
@@ -140,7 +148,8 @@ export class Account {
     }
 
     /**
-     * Sets private key. As public key can be derived from private, this method effectively sets the whole account (privatekey, public key and account ID)
+     * Sets private key. As public key can be derived from private, this method effectively sets
+     * the whole account (privatekey, public key and account ID)
      * @param privateKey - Private ECDSA key
      * @returns
      */

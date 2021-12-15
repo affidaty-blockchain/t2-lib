@@ -191,7 +191,8 @@ export class Certificate extends Signable {
     protected _multiProof: Buffer[];
 
     /**
-     * @param dataToCertify - Full data set with keys and values. Needed only for certificate creation and derivation. Can be set later.
+     * @param dataToCertify - Full data set with keys and values. Needed only for certificate
+     * creation and derivation. Can be set later.
      * @param hash - hash algorithm used during merkletree creation
      */
     constructor(
@@ -270,7 +271,8 @@ export class Certificate extends Signable {
         return this._dataToCertify;
     }
 
-    /** Additional (not signed) data, needed for merkle tree reconstruction in partial (derived) certificates. */
+    /** Additional (not signed) data, needed for merkle tree reconstruction in partial (derived)
+     * certificates. */
     public set multiProof(multiProof: Uint8Array[]) {
         const temp: Buffer[] = [];
         for (let i = 0; i < multiProof.length; i += 1) {
@@ -279,7 +281,8 @@ export class Certificate extends Signable {
         this._multiProof = temp;
     }
 
-    /** Additional (not signed) data, needed for merkle tree reconstruction in partial (derived) certificates. */
+    /** Additional (not signed) data, needed for merkle tree reconstruction in partial (derived)
+     * certificates. */
     public get multiProof(): Uint8Array[] {
         const result: Uint8Array[] = [];
         for (let i = 0; i < this._multiProof.length; i += 1) {
@@ -289,8 +292,11 @@ export class Certificate extends Signable {
     }
 
     /**
-     * Creates (or derives) a certificate. If only a subset of keys of the full data is proviided, special 'multiproof' unsigned data will be appended to certificate in order to rebuild merkle tree.
-     * @param fields - determines what data need to be provided in clear in orded to successfully verify.
+     * Creates (or derives) a certificate. If only a subset of keys of the full data is provided,
+     * special 'multiproof' unsigned data will be appended to certificate
+     * in order to rebuild merkle tree.
+     * @param fields - determines what data need to be provided in clear in orded to successfully
+     * verify.
      * @param generateSalt - when true, will generate missing salt automatically.
      * @returns - true, throws otherwise
      */
@@ -365,10 +371,10 @@ export class Certificate extends Signable {
             }
             this._data.certifier.getRaw()
                 .then((rawKeyBytes: Uint8Array) => {
-                    const underscoreIndex = this._data.certifier.paramsId.indexOf('_');
-                    if (underscoreIndex > -1) {
-                        resultObj[0][4][0] = this._data.certifier.paramsId.slice(0, underscoreIndex);
-                        resultObj[0][4][1] = this._data.certifier.paramsId.slice(underscoreIndex + 1);
+                    const undrscrIndex = this._data.certifier.paramsId.indexOf('_');
+                    if (undrscrIndex > -1) {
+                        resultObj[0][4][0] = this._data.certifier.paramsId.slice(0, undrscrIndex);
+                        resultObj[0][4][1] = this._data.certifier.paramsId.slice(undrscrIndex + 1);
                     } else {
                         resultObj[0][4][0] = this._data.certifier.paramsId;
                     }

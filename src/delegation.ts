@@ -97,7 +97,8 @@ export class Delegation extends Signable {
     protected _data: IDelegationMainDataInternal;
 
     /**
-     * @param customExpiration - custom expiration timestamp. Can be set later using this.expiration()
+     * @param customExpiration - custom expiration timestamp.
+     * Can be set later using this.expiration()
      * @param hash - hash algorithm used during sign process
      */
     constructor(
@@ -127,7 +128,8 @@ export class Delegation extends Signable {
         return this._data.delegate;
     }
 
-    /** Account which has given to the delegate capabilities to do something on target 'target'. Gets set automatically during sign() */
+    /** Account which has given to the delegate capabilities to do something on target 'target'.
+     * Gets set automatically during sign() */
     public set delegator(publicKey: BaseECKey) {
         if (publicKey.type !== 'public') {
             throw new Error();
@@ -135,7 +137,8 @@ export class Delegation extends Signable {
         this._data.delegator = publicKey;
     }
 
-    /** Account which has given to the delegate capabilities to do something on target 'target'. Gets set automatically during sign() */
+    /** Account which has given to the delegate capabilities to do something on target 'target'.
+     * Gets set automatically during sign() */
     public get delegator(): BaseECKey {
         return this._data.delegator;
     }
@@ -287,8 +290,14 @@ export class Delegation extends Signable {
                 .then((rawKeyBytes: Uint8Array) => {
                     const underscoreIndex = this._data.delegator.paramsId.indexOf('_');
                     if (underscoreIndex > -1) {
-                        resultObj[0][1][0] = this._data.delegator.paramsId.slice(0, underscoreIndex);
-                        resultObj[0][1][1] = this._data.delegator.paramsId.slice(underscoreIndex + 1);
+                        resultObj[0][1][0] = this._data.delegator.paramsId.slice(
+                            0,
+                            underscoreIndex,
+                        );
+                        resultObj[0][1][1] = this._data.delegator.paramsId.slice(
+                            underscoreIndex
+                            + 1,
+                        );
                     } else {
                         resultObj[0][1][0] = this._data.delegator.paramsId;
                     }

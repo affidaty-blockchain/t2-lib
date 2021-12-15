@@ -26,7 +26,7 @@ interface IAssetInitArgs {
     /** Creator's URL. */
     url: string;
     /** Max mintable units. */
-    max_units: number;
+    max_units: number; // eslint-disable-line camelcase
     /** Authorized accounts */
     authorized: string[];
 }
@@ -94,7 +94,7 @@ interface IServiceAssetRegistrationArgs {
 
 interface IServiceAssetInformationArgs {
     /** Asset's account ID. */
-    asset_id: string;
+    asset_id: string; // eslint-disable-line camelcase
 }
 
 interface IServiceAliasArgs {
@@ -117,7 +117,7 @@ interface IServiceOracleRegistrationArgs {
 
 interface IServiceOracleInformationArgs {
     /** Oracle ID */
-    oracle_id: string;
+    oracle_id: string; // eslint-disable-line camelcase
 }
 
 interface IStorageStoreDataArgs {
@@ -234,7 +234,7 @@ export namespace stdTxPrepareUnsigned {
     }
 
     export namespace service {
-        export function contract_registration(
+        export function contract_registration( // eslint-disable-line camelcase
             target: string,
             network: string,
             args: IServiceContractRegistration,
@@ -248,7 +248,7 @@ export namespace stdTxPrepareUnsigned {
             });
         }
 
-        export function get_contract_information(
+        export function get_contract_information( // eslint-disable-line camelcase
             target: string,
             network: string,
             args: IServiceGetContractInformationArgs,
@@ -256,7 +256,7 @@ export namespace stdTxPrepareUnsigned {
             return commonPrepare(target, network, '', 'get_contract_information', args);
         }
 
-        export function asset_registration(
+        export function asset_registration( // eslint-disable-line camelcase
             target: string,
             network: string,
             args: IServiceAssetRegistrationArgs,
@@ -265,7 +265,7 @@ export namespace stdTxPrepareUnsigned {
             tempArgs.contract = toBuffer(args.contract);
             return commonPrepare(target, network, '', 'asset_registration', tempArgs);
         }
-        export function get_asset_information(
+        export function get_asset_information( // eslint-disable-line camelcase
             target: string,
             network: string,
             args: IServiceAssetInformationArgs,
@@ -273,7 +273,7 @@ export namespace stdTxPrepareUnsigned {
             return commonPrepare(target, network, '', 'get_asset_information', args);
         }
 
-        export function alias_registration(
+        export function alias_registration( // eslint-disable-line camelcase
             target: string,
             network: string,
             args: IServiceAliasArgs,
@@ -281,7 +281,7 @@ export namespace stdTxPrepareUnsigned {
             return commonPrepare(target, network, '', 'alias_registration', args);
         }
 
-        export function alias_lookup(
+        export function alias_lookup( // eslint-disable-line camelcase
             target: string,
             network: string,
             args: IServiceAliasArgs,
@@ -289,7 +289,7 @@ export namespace stdTxPrepareUnsigned {
             return commonPrepare(target, network, '', 'alias_lookup', args);
         }
 
-        export function alias_deletion(
+        export function alias_deletion( // eslint-disable-line camelcase
             target: string,
             network: string,
             args: IServiceAliasArgs,
@@ -297,7 +297,7 @@ export namespace stdTxPrepareUnsigned {
             return commonPrepare(target, network, '', 'alias_deletion', args);
         }
 
-        export function oracle_registration(
+        export function oracle_registration( // eslint-disable-line camelcase
             target: string,
             network: string,
             args: IServiceOracleRegistrationArgs,
@@ -307,7 +307,7 @@ export namespace stdTxPrepareUnsigned {
             return commonPrepare(target, network, '', 'oracle_registration', args);
         }
 
-        export function get_oracle_information(
+        export function get_oracle_information( // eslint-disable-line camelcase
             target: string,
             network: string,
             args: IServiceOracleInformationArgs,
@@ -317,7 +317,7 @@ export namespace stdTxPrepareUnsigned {
     }
 
     export namespace storage {
-        export function store_data(
+        export function store_data( // eslint-disable-line camelcase
             target: string,
             network: string,
             contract: Uint8Array | string,
@@ -328,7 +328,7 @@ export namespace stdTxPrepareUnsigned {
             return commonPrepare(target, network, contract, 'store_data', tempArgs);
         }
 
-        export function load_data(
+        export function load_data( // eslint-disable-line camelcase
             target: string,
             network: string,
             args: IStorageLoadDataArgs,
@@ -336,7 +336,7 @@ export namespace stdTxPrepareUnsigned {
             return commonPrepare(target, network, '', 'load_data', args);
         }
 
-        export function remove_data(
+        export function remove_data( // eslint-disable-line camelcase
             target: string,
             network: string,
             args: IStorageRemoveDataArgs,
@@ -344,7 +344,7 @@ export namespace stdTxPrepareUnsigned {
             return commonPrepare(target, network, '', 'remove_data', args);
         }
 
-        export function transfer(
+        export function transfer( // eslint-disable-line camelcase
             target: string,
             network: string,
             args: IStorageTransferArgs,
@@ -352,7 +352,7 @@ export namespace stdTxPrepareUnsigned {
             return commonPrepare(target, network, '', 'transfer', args);
         }
 
-        export function balance(
+        export function balance( // eslint-disable-line camelcase
             target: string,
             network: string,
             contract: Uint8Array | string,
@@ -372,7 +372,7 @@ export namespace stdTxPrepareUnsigned {
             return commonPrepare(target, network, contract, 'init', args);
         }
 
-        export function get_info(
+        export function get_info( // eslint-disable-line camelcase
             target: string,
             network: string,
         ) {

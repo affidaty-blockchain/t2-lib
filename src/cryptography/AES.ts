@@ -54,7 +54,8 @@ function PBKDF2ToAES(pbkdf2: CryptoKey, salt: Uint8Array): Promise<CryptoKey> {
  * Encrypts data with password using AES cryptography
  * @param password - String to use as encryption key.
  * @param plainData - Binary data to encrypt.
- * @param customInitVector - Custom initialization vector (gets generatet is not provided, DO NOT USE SAME VALUE TWICE!).
+ * @param customInitVector - Custom initialization vector
+ * (gets generatet is not provided, DO NOT USE SAME VALUE TWICE!).
  * @param customSalt - Custom salt value. Gets generated if not provided.
  */
 

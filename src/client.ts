@@ -19,7 +19,7 @@ const submitMessaggePath = '/api/v1/message';
 /**
  * Transaction event.
  */
- export interface ITxEvent {
+export interface ITxEvent {
 
     /** Identifier of the transaction which produced this event. */
     eventTx: string,
@@ -193,8 +193,10 @@ export class Client {
 
     /**
      * @param baseUrl - Base URL to connect to (e.g. 'https://my.server.net:8000/')
-     * @param networkName - Name of the TRINCI network (a network will not accept transactions created for a differennt network)
-     * @param customServiceAcc - Account ID hosting service smart contract. Set this only if your blockchain's default service account was changed
+     * @param networkName - Name of the TRINCI network (a network will not accept transactions
+     * created for a differennt network)
+     * @param customServiceAcc - Account ID hosting service smart contract. Set this only if
+     * your blockchain's default service account was changed
      */
     constructor(baseUrl: string = '', networkName: string = '', customServiceAcc: string = defServiceAccountID) {
         let lastIdx = 0;
@@ -229,12 +231,14 @@ export class Client {
         return this.t2CoreNetworkName;
     }
 
-    /** Account ID hosting service smart contract. Set this only if your blockchain's default service account was changed */
+    /** Account ID hosting service smart contract. Set this only if your blockchain's default
+     * service account was changed */
     public get serviceAccount(): string {
         return this._serviceAccount;
     }
 
-    /** Account ID hosting service smart contract. Set this only if your blockchain's default service account was changed */
+    /** Account ID hosting service smart contract. Set this only if your blockchain's default
+     * service account was changed */
     public set serviceAccount(customServiceAccount: string) {
         this._serviceAccount = customServiceAccount;
     }
@@ -468,14 +472,14 @@ export class Client {
                         events: [],
                     };
                     if (resultMessage.body.receipt.length === 6) {
-                        for (let i = 0; i < resultMessage.body.receipt[5].length; i++) {
+                        for (let i = 0; i < resultMessage.body.receipt[5].length; i += 1) {
                             txReceiptObject.events.push({
                                 eventTx: resultMessage.body.receipt[5][i][0].toString('hex'),
                                 emitterAccount: resultMessage.body.receipt[5][i][1],
                                 emitterSmartContract: resultMessage.body.receipt[5][i][2].toString('hex'),
                                 eventName: resultMessage.body.receipt[5][i][3],
                                 eventData: new Uint8Array(resultMessage.body.receipt[5][i][4]),
-                            })
+                            });
                         }
                     }
                     return resolve(txReceiptObject);

@@ -18,6 +18,7 @@ describe('Testing transaction class', () => {
     const client = new Client(url, network);
 
     if (url.length === 0 || network.length === 0) {
+        /* eslint-disable-next-line no-console */
         console.log('Please, provide a trinci node URL and network name');
     }
 

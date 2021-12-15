@@ -25,6 +25,7 @@ interface IRsaOtherPrimesInfo {
 
 /** JWK Interface */
 export interface IJwk {
+    /* eslint-disable-next-line camelcase */
     key_ops?: TKeyUsages,
     ext?: boolean;
     kty: string;
