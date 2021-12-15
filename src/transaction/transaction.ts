@@ -57,10 +57,14 @@ export class Transaction extends Signable {
     ) {
         super(hash);
         if (SCHEMA_MAP.has(schema)) {
-            this._data = SCHEMA_MAP.get(schema)();
+            this._data = SCHEMA_MAP.get(schema)!();
         } else {
             this._data = new CommonParentTxData(schema);
         }
+    }
+
+    public get data(): CommonParentTxData {
+        return this._data;
     }
 
     /**
@@ -136,7 +140,7 @@ export class Transaction extends Signable {
             if (!SCHEMA_MAP.has(passedObj[0][0])) {
                 return reject(new Error(Errors.INVALID_SCHEMA));
             }
-            this._data = SCHEMA_MAP.get(passedObj[0][0])();
+            this._data = SCHEMA_MAP.get(passedObj[0][0])!();
             this._data.fromUnnamedObject(passedObj[0])
                 .then((result: boolean) => {
                     if (result) {
@@ -160,7 +164,7 @@ export class Transaction extends Signable {
             if (!SCHEMA_MAP.has(passedObj.data.schema)) {
                 return reject(new Error(Errors.INVALID_SCHEMA));
             }
-            this._data = SCHEMA_MAP.get(passedObj.data.schema)();
+            this._data = SCHEMA_MAP.get(passedObj.data.schema)!();
             this._data.fromObjectWithBuffers(passedObj.data)
                 .then((result: boolean) => {
                     if (result) {
@@ -184,7 +188,7 @@ export class Transaction extends Signable {
             if (!SCHEMA_MAP.has(passedObj.data.schema)) {
                 return reject(new Error(Errors.INVALID_SCHEMA));
             }
-            this._data = SCHEMA_MAP.get(passedObj.data.schema)();
+            this._data = SCHEMA_MAP.get(passedObj.data.schema)!();
             this._data.fromObject(passedObj.data)
                 .then((result: boolean) => {
                     if (result) {
