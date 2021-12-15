@@ -7,8 +7,9 @@ import {
     mKeyPairParams,
 } from '../cryptography/cryptoDefaults';
 import { BaseECKey } from '../cryptography/baseECKey';
-import { TxTypes, TTxSchemaType } from './txTypes';
 import {
+    TxSchemas,
+    TTxSchemaType,
     ICommonParentTxDataInternal,
     CommonParentTxData,
     ICommonParentTxDataUnnamedObject,
@@ -16,7 +17,7 @@ import {
     ICommonParentTxDataObject,
 } from './commonParentTxData';
 
-const DEFAULT_SCHEMA = TxTypes.ATOMIC_TX;
+const DEFAULT_SCHEMA = TxSchemas.ATOMIC_TX;
 
 interface IBaseTxDataPublicKeyUnnamedObject extends Array<any> {
     [0]: string; // algorithm type. E.g. 'ecdsa'
@@ -91,12 +92,19 @@ interface IBaseTxDataInternal extends ICommonParentTxDataInternal {
 
 export class BaseTxData extends CommonParentTxData implements IBaseTxDataInternal {
     protected _account: string;
+
     protected _maxFuel: number;
+
     protected _nonce: Buffer;
+
     protected _network: string;
+
     protected _contract: Buffer | null;
+
     protected _method: string;
+
     protected _caller: BaseECKey;
+
     protected _args: Buffer;
 
     public static get defaultSchema(): string {
@@ -169,8 +177,8 @@ export class BaseTxData extends CommonParentTxData implements IBaseTxDataInterna
     }
 
     /** Name of the network to which the transaction is addressed. */
-    public set networkName(name: string) {
-        this._network;
+    public set networkName(networkName: string) {
+        this._network = networkName;
     }
 
     /** Name of the network to which the transaction is addressed. */
@@ -190,7 +198,7 @@ export class BaseTxData extends CommonParentTxData implements IBaseTxDataInterna
     /** Smart contract hash, which will be invoked on target account. */
     public get smartContractHash(): Buffer {
         if (this._contract) {
-            this._contract;
+            return this._contract;
         }
         return Buffer.from([]);
     }
