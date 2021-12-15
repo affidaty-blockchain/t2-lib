@@ -325,8 +325,14 @@ export class Transaction extends Signable {
                 .then((rawKeyBytes: Uint8Array) => {
                     const underscoreIndex = this._data.signerPublicKey.paramsId.indexOf('_');
                     if (underscoreIndex > -1) {
-                        resultObj[0][7][0] = this._data.signerPublicKey.paramsId.slice(0, underscoreIndex);
-                        resultObj[0][7][1] = this._data.signerPublicKey.paramsId.slice(underscoreIndex + 1);
+                        resultObj[0][7][0] = this._data.signerPublicKey.paramsId.slice(
+                            0,
+                            underscoreIndex,
+                        );
+                        resultObj[0][7][1] = this._data.signerPublicKey.paramsId.slice(
+                            underscoreIndex
+                            + 1,
+                        );
                     } else {
                         resultObj[0][7][0] = this._data.signerPublicKey.paramsId;
                     }
@@ -388,7 +394,9 @@ export class Transaction extends Signable {
                             maxFuel: objBuffers.data.maxFuel,
                             nonce: new Uint8Array(objBuffers.data.nonce),
                             network: objBuffers.data.network,
-                            contract: objBuffers.data.contract ? new Uint8Array(objBuffers.data.contract) : null,
+                            contract: objBuffers.data.contract
+                                ? new Uint8Array(objBuffers.data.contract)
+                                : null,
                             method: objBuffers.data.method,
                             caller: {
                                 type: objBuffers.data.caller.type,
@@ -555,15 +563,16 @@ export class Transaction extends Signable {
     }
 
     /**
-     * Computes the transaction ticket which would be returned by blockchain itself on transaction submission
+     * Computes the transaction ticket which would be returned by blockchain itself
+     * on transaction submission
      * @returns - ticket string
      */
-     public getTicket(): Promise<string> {
+    public getTicket(): Promise<string> {
         return new Promise((resolve, reject) => {
             this.toUnnamedObject()
                 .then((unnamedTx: ITxUnnamedObject) => {
                     try {
-                        let dataHash = sha256(objectToBytes(unnamedTx[0]));
+                        const dataHash = sha256(objectToBytes(unnamedTx[0]));
                         return resolve(`1220${Buffer.from(dataHash).toString('hex')}`);
                     } catch (error) {
                         return reject(error);
