@@ -13,7 +13,7 @@ import {
     ICommonParentTxDataObject,
 } from './commonParentTxData';
 
-const DEFAULT_SCHEMA = TxSchemas.ATOMIC_TX;
+const DEFAULT_SCHEMA = TxSchemas.UNITARY_TX;
 
 interface IBaseTxDataPublicKeyUnnamedObject extends Array<any> {
     /** Public key algorithm type. E.g. "ecdsa". */

@@ -7,7 +7,7 @@ export type TTxSchemaType = string;
 
 export namespace TxSchemas {
     export const EMPTY_TX: TTxSchemaType = '';
-    export const ATOMIC_TX: TTxSchemaType = 'atomicTxSchema';
+    export const UNITARY_TX: TTxSchemaType = 'unitaryTxSchema';
     export const BULK_TX: TTxSchemaType = 'bulkTxSchema';
     export const BULK_ROOT_TX: TTxSchemaType = 'bulkRootTxSchema';
     export const BULK_NODE_TX: TTxSchemaType = 'bulkNodeTxSchema';
