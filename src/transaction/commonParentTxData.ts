@@ -1,4 +1,6 @@
-import { objectToBytes, sha256 } from '../utils';
+import * as Errors from '../errors';
+import { WebCrypto } from '../cryptography/webCrypto';
+import { objectToBytes, bytesToObject, sha256 } from '../utils';
 import { BaseECKey } from '../cryptography/baseECKey';
 
 export type TTxSchemaType = string;
@@ -33,9 +35,33 @@ export class CommonParentTxData {
 
     protected _signerPubKey: BaseECKey;
 
+    protected _account: string;
+
+    protected _maxFuel: number;
+
+    protected _nonce: Buffer;
+
+    protected _network: string;
+
+    protected _contract: Buffer | null;
+
+    protected _method: string;
+
+    protected _args: Buffer;
+
+    protected _dependsOn: Buffer;
+
     constructor(schema: TTxSchemaType = DEFAULT_SCHEMA) {
         this._schema = schema;
         this._signerPubKey = new BaseECKey();
+        this._account = '';
+        this._maxFuel = 0;
+        this._nonce = Buffer.from([]);
+        this._network = '';
+        this._contract = null;
+        this._method = '';
+        this._args = Buffer.from([]);
+        this._dependsOn = Buffer.from([]);
     }
 
     /** Reference to the default schema used in this data type. */
@@ -51,6 +77,172 @@ export class CommonParentTxData {
     /** Reference to the schema used in this data type. */
     public set schema(schema: TTxSchemaType) {
         this._schema = schema;
+    }
+
+    /** Account ID of the target (receiving account) of the transaction. */
+    public set accountId(id: string) {
+        this._account = id;
+    }
+
+    /** Account ID of the target (receiving account) of the transaction. */
+    public get accountId(): string {
+        return this._account;
+    }
+
+    /** Maximum amount of fuel that sender is ready to burn for this transaction. */
+    public set maxFuel(maxFuel: number) {
+        this._maxFuel = maxFuel;
+    }
+
+    /** Maximum amount of fuel that sender is ready to burn for this transaction. */
+    public get maxFuel(): number {
+        return this._maxFuel;
+    }
+
+    /** Random 8-bytes value as an anti-replay protection(Uint8Array). */
+    public set nonce(nonce: Buffer) {
+        if (nonce.byteLength !== 8) {
+            throw new Error(Errors.WRONG_TX_NONCE_LENGTH);
+        }
+        this._nonce = nonce;
+    }
+
+    /** Random 8-bytes value as an anti-replay protection(Uint8Array). */
+    public get nonce(): Buffer {
+        return this._nonce;
+    }
+
+    /** Random 8-bytes value as an anti-replay protection(hex string). */
+    public set nonceHex(nonce: string) {
+        if (nonce.length !== 16) { // two chars for each byte
+            throw new Error(Errors.WRONG_TX_NONCE_LENGTH);
+        }
+        this._nonce = Buffer.from(nonce, 'hex');
+    }
+
+    /** Random 8-bytes value as an anti-replay protection(hex string). */
+    public get nonceHex(): string {
+        return this._nonce.toString('hex');
+    }
+
+    /** Automatically generates and sets new random nonce. */
+    public genNonce(): void {
+        const newNonce = new Uint8Array(8);
+        WebCrypto.getRandomValues(newNonce);
+        this._nonce = Buffer.from(newNonce);
+    }
+
+    /** Name of the network to which the transaction is addressed. */
+    public set networkName(networkName: string) {
+        this._network = networkName;
+    }
+
+    /** Name of the network to which the transaction is addressed. */
+    public get networkName(): string {
+        return this._network;
+    }
+
+    /** Smart contract hash, which will be invoked on target account. */
+    public set smartContractHash(hash: Uint8Array) {
+        if (hash.byteLength > 0) {
+            this._contract = Buffer.from(hash);
+        } else {
+            this._contract = null;
+        }
+    }
+
+    /** Smart contract hash, which will be invoked on target account. */
+    public get smartContractHash(): Uint8Array {
+        if (this._contract) {
+            return new Uint8Array(this._contract);
+        }
+        return Buffer.from([]);
+    }
+
+    /** Smart contract hash, which will be invoked on target account(hex string). */
+    public set smartContractHashHex(hash: string) {
+        if (hash.length > 0) {
+            this._contract = Buffer.from(hash, 'hex');
+        } else {
+            this._contract = null;
+        }
+    }
+
+    /** Smart contract hash, which will be invoked on target account(hex string). */
+    public get smartContractHashHex(): string {
+        if (this._contract) {
+            return this._contract.toString('hex');
+        }
+        return '';
+    }
+
+    /** Smart contract hash, which will be invoked on target account. */
+    public setSmartContractHash(hash: Buffer | string) {
+        if (typeof hash === 'string') {
+            this.smartContractHashHex = hash;
+        } else {
+            this.smartContractHash = hash;
+        }
+    }
+
+    /** Method to call on the invoked smart contract */
+    public set smartContractMethod(method: string) {
+        this._method = method;
+    }
+
+    /** Method to call on the invoked smart contract */
+    public get smartContractMethod(): string {
+        return this._method;
+    }
+
+    /** Arguments that will be passed to invoked smart contract method (generic json object) */
+    public set smartContractMethodArgs(passedArgs: any) {
+        this._args = Buffer.from(objectToBytes(passedArgs));
+    }
+
+    /** Arguments that will be passed to invoked smart contract method (generic json object) */
+    public get smartContractMethodArgs(): any {
+        return bytesToObject(new Uint8Array(this._args));
+    }
+
+    /** Arguments that will be passed to invoked smart contract method (Uint8Array) */
+    public set smartContractMethodArgsBytes(passedArgs: Uint8Array) {
+        this._args = Buffer.from(passedArgs);
+    }
+
+    /** Arguments that will be passed to invoked smart contract method (Uint8Array) */
+    public get smartContractMethodArgsBytes(): Uint8Array {
+        return new Uint8Array(this._args);
+    }
+
+    /** Arguments that will be passed to invoked smart contract method (hex string) */
+    public set smartContractMethodArgsHex(passedArgs: string) {
+        this._args = Buffer.from(passedArgs, 'hex');
+    }
+
+    /** Arguments that will be passed to invoked smart contract method (hex string) */
+    public get smartContractMethodArgsHex(): string {
+        return this._args.toString('hex');
+    }
+
+    /** Hash of the bulk root transaction on which this one depends. */
+    public set dependsOn(hash: Uint8Array) {
+        this._dependsOn = Buffer.from(hash);
+    }
+
+    /** Hash of the bulk root transaction on which this one depends. */
+    public get dependsOn(): Uint8Array {
+        return new Uint8Array(this._dependsOn);
+    }
+
+    /** Hash of the bulk root transaction on which this one depends as hex string. */
+    public set dependsOnHex(hash: string) {
+        this._dependsOn = Buffer.from(hash, 'hex');
+    }
+
+    /** Hash of the bulk root transaction on which this one depends as hex string. */
+    public get dependsOnHex(): string {
+        return this._dependsOn.toString('hex');
     }
 
     /** Signer's public key. */
