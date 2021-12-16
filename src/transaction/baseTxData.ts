@@ -2,7 +2,6 @@ import * as Errors from '../errors';
 import { WebCrypto } from '../cryptography/webCrypto';
 import { objectToBytes, bytesToObject } from '../utils';
 import {
-    EmptyKeyParams,
     EKeyParamsIds,
     mKeyPairParams,
 } from '../cryptography/cryptoDefaults';
@@ -10,7 +9,6 @@ import { BaseECKey } from '../cryptography/baseECKey';
 import {
     TxSchemas,
     TTxSchemaType,
-    ICommonParentTxDataInternal,
     CommonParentTxData,
     ICommonParentTxDataUnnamedObject,
     ICommonParentTxDataObjectWithBuffers,
@@ -25,7 +23,7 @@ interface IBaseTxDataPublicKeyUnnamedObject extends Array<any> {
     [2]: Buffer; // actual value of the public key as 'raw'
 }
 
-interface IBaseTxDataUnnamedObject extends ICommonParentTxDataUnnamedObject {
+export interface IBaseTxDataUnnamedObject extends ICommonParentTxDataUnnamedObject {
     /** Target AccountId */
     [1]: string;
     /** Max fuel that consumable by this transaction */
@@ -50,7 +48,7 @@ interface IBaseTxDataPublicKeyObjectWithBuffers {
     value: Buffer; // actual value of the public key as 'raw'
 }
 
-interface IBaseTxDataObjectWithBuffers extends ICommonParentTxDataObjectWithBuffers {
+export interface IBaseTxDataObjectWithBuffers extends ICommonParentTxDataObjectWithBuffers {
     account: string; // accountId
     maxFuel: number; // max fuel consumable by transaction
     nonce: Buffer; // nonce
@@ -68,7 +66,7 @@ interface IBaseTxDataPublicKeyObject {
 }
 
 /** Structure returned by toObject() method. */
-interface IBaseTxDataObject extends ICommonParentTxDataObject {
+export interface IBaseTxDataObject extends ICommonParentTxDataObject {
     account: string; // accountId
     maxFuel: number; // max fuel consumable by transaction
     nonce: Uint8Array; // nonce
@@ -79,18 +77,7 @@ interface IBaseTxDataObject extends ICommonParentTxDataObject {
     args: Uint8Array; // msgpacked smartContractMethodArgs
 }
 
-interface IBaseTxDataInternal extends ICommonParentTxDataInternal {
-    accountId: string;
-    maxFuel: number; // max fuel consumable by transaction
-    nonce: Buffer;
-    networkName: string;
-    smartContractHash: Buffer | null;
-    smartContractMethod: string;
-    signerPublicKey: BaseECKey;
-    smartContractMethodArgs: Buffer,
-}
-
-export class BaseTxData extends CommonParentTxData implements IBaseTxDataInternal {
+export class BaseTxData extends CommonParentTxData {
     protected _account: string;
 
     protected _maxFuel: number;
@@ -184,18 +171,18 @@ export class BaseTxData extends CommonParentTxData implements IBaseTxDataInterna
     }
 
     /** Smart contract hash, which will be invoked on target account. */
-    public set smartContractHash(hash: Buffer) {
-        if (hash.length > 0) {
-            this._contract = hash;
+    public set smartContractHash(hash: Uint8Array) {
+        if (hash.byteLength > 0) {
+            this._contract = Buffer.from(hash);
         } else {
             this._contract = null;
         }
     }
 
     /** Smart contract hash, which will be invoked on target account. */
-    public get smartContractHash(): Buffer {
+    public get smartContractHash(): Uint8Array {
         if (this._contract) {
-            return this._contract;
+            return new Uint8Array(this._contract);
         }
         return Buffer.from([]);
     }

@@ -28,23 +28,13 @@ export interface ICommonParentTxDataObject extends Object {
     schema: string;
 }
 
-export interface ICommonParentTxDataInternal extends Object{
-    schema: TTxSchemaType;
-    toUnnamedObject(): Promise<ICommonParentTxDataUnnamedObject>;
-    toObjectWithBuffers(): Promise<ICommonParentTxDataObjectWithBuffers>;
-    toObject(): Promise<ICommonParentTxDataObject>;
-    fromUnnamedObject(unnamedObj: ICommonParentTxDataUnnamedObject): Promise<boolean>;
-    fromObjectWithBuffers(objWithBuffers: ICommonParentTxDataObjectWithBuffers): Promise<boolean>;
-    fromObject(obj: ICommonParentTxDataObject): Promise<boolean>;
-    sha256(): Promise<Uint8Array>;
-}
-
-export class CommonParentTxData implements ICommonParentTxDataInternal {
+export class CommonParentTxData {
     protected _schema: TTxSchemaType;
 
     protected _signerPubKey: BaseECKey;
 
     constructor(schema: TTxSchemaType = DEFAULT_SCHEMA) {
+        console.log('parent');
         this._schema = schema;
         this._signerPubKey = new BaseECKey();
     }
