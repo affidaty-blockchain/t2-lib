@@ -30,15 +30,15 @@ const SCHEMA_MAP: Map<TTxSchemaType, ()=>CommonParentTxData> = new Map();
 SCHEMA_MAP.set(BaseTxData.defaultSchema, () => { return new BaseTxData(); });
 SCHEMA_MAP.set(BulkNodeTxData.defaultSchema, () => { return new BulkNodeTxData(); });
 
-interface IBaseTxUnnamedObject extends ISignableUnnamedObject {
+export interface IBaseTxUnnamedObject extends ISignableUnnamedObject {
     [0]: ICommonParentTxDataUnnamedObject,
-    [1]: Buffer;
+    [1]?: Buffer;
 }
 
 // exported for usage in Client class
 export interface IBaseTxObjectWithBuffers extends ISignableObjectWithBuffer {
     data: ICommonParentTxDataObjectWithBuffers,
-    signature: Buffer;
+    signature?: Buffer;
 }
 
 /**
@@ -46,7 +46,7 @@ export interface IBaseTxObjectWithBuffers extends ISignableObjectWithBuffer {
  */
 export interface IBaseTxObject extends ISignableObject {
     data: ICommonParentTxDataObject,
-    signature: Uint8Array;
+    signature?: Uint8Array;
 }
 
 /**
@@ -71,6 +71,11 @@ export class Transaction extends Signable {
         return this._data;
     }
 
+    /** Automatically generates and sets new random nonce. */
+    public genNonce(): void {
+        this._data.genNonce();
+    }
+
     /**
      * Exports transaction to a compact object with unnamed members,
      * ready to be encoded with msgpack
@@ -83,8 +88,10 @@ export class Transaction extends Signable {
                 .then((unnamedData: ICommonParentTxDataUnnamedObject) => {
                     const resultObj: IBaseTxUnnamedObject = [
                         unnamedData,
-                        this._signature,
                     ];
+                    if (this._signature.byteLength > 0) {
+                        resultObj[1] = this._signature;
+                    }
                     return resolve(resultObj);
                 })
                 .catch((error: any) => {
@@ -104,8 +111,10 @@ export class Transaction extends Signable {
                 .then((dataObj: ICommonParentTxDataObjectWithBuffers) => {
                     const resultObj: IBaseTxObjectWithBuffers = {
                         data: dataObj,
-                        signature: this._signature,
                     };
+                    if (this._signature.byteLength > 0) {
+                        resultObj.signature = this._signature;
+                    }
                     return resolve(resultObj);
                 })
                 .catch((error: any) => {
@@ -125,8 +134,10 @@ export class Transaction extends Signable {
                 .then((dataObj: ICommonParentTxDataObject) => {
                     const resultObj: IBaseTxObject = {
                         data: dataObj,
-                        signature: new Uint8Array(this._signature),
                     };
+                    if (this._signature.byteLength > 0) {
+                        resultObj.signature = new Uint8Array(this._signature);
+                    }
                     return resolve(resultObj);
                 })
                 .catch((error: any) => {
@@ -147,7 +158,7 @@ export class Transaction extends Signable {
             this._data = SCHEMA_MAP.get(passedObj[0][0])!();
             this._data.fromUnnamedObject(passedObj[0])
                 .then((result: boolean) => {
-                    if (result) {
+                    if (result && passedObj[1]) {
                         this._signature = passedObj[1];
                     }
                     return resolve(result);
@@ -171,7 +182,7 @@ export class Transaction extends Signable {
             this._data = SCHEMA_MAP.get(passedObj.data.schema)!();
             this._data.fromObjectWithBuffers(passedObj.data)
                 .then((result: boolean) => {
-                    if (result) {
+                    if (result && passedObj.signature) {
                         this._signature = passedObj.signature;
                     }
                     return resolve(result);
@@ -195,7 +206,7 @@ export class Transaction extends Signable {
             this._data = SCHEMA_MAP.get(passedObj.data.schema)!();
             this._data.fromObject(passedObj.data)
                 .then((result: boolean) => {
-                    if (result) {
+                    if (result && passedObj.signature) {
                         this._signature = Buffer.from(passedObj.signature);
                     }
                     return resolve(result);

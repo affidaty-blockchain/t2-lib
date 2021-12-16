@@ -9,18 +9,18 @@ import { BaseECKey } from './cryptography/baseECKey';
  */
 export interface ISignableObject {
     data: any,
-    signature: Uint8Array;
+    signature?: Uint8Array;
 }
 
 // exported for usage in Client class
 export interface ISignableObjectWithBuffer {
     data: any,
-    signature: Buffer;
+    signature?: Buffer;
 }
 
 export interface ISignableUnnamedObject extends Array<any> {
     [0]: any,
-    [1]: Buffer;
+    [1]?: Buffer;
 }
 
 /**
@@ -59,10 +59,10 @@ export class Signable {
 
     protected toUnnamedObject(): Promise<ISignableUnnamedObject> {
         return new Promise((resolve) => {
-            const resultObj: ISignableUnnamedObject = [
-                this._data,
-                this._signature,
-            ];
+            const resultObj: ISignableUnnamedObject = [ this._data ];
+            if (this._signature.byteLength > 0) {
+                resultObj[1] = this._signature;
+            }
             return resolve(resultObj);
         });
     }
@@ -103,10 +103,13 @@ export class Signable {
         return new Promise((resolve, reject) => {
             this.toUnnamedObject()
                 .then((unnamedObj: ISignableUnnamedObject) => {
-                    return resolve({
+                    let resultObj: ISignableObjectWithBuffer = {
                         data: unnamedObj[0],
-                        signature: unnamedObj[1],
-                    });
+                    };
+                    if (unnamedObj[1]) {
+                        resultObj.signature = unnamedObj[1];
+                    }
+                    return resolve(resultObj);
                 })
                 .catch((error: any) => {
                     return reject(error);
@@ -122,10 +125,13 @@ export class Signable {
         return new Promise((resolve, reject) => {
             this.toObjectWithBuffers()
                 .then((withBuffers: ISignableObjectWithBuffer) => {
-                    return resolve({
+                    let resultObj: ISignableObject = {
                         data: withBuffers.data,
-                        signature: new Uint8Array(withBuffers.signature),
-                    });
+                    };
+                    if (withBuffers.signature) {
+                        resultObj.signature = new Uint8Array(withBuffers.signature)
+                    }
+                    return resolve(resultObj);
                 })
                 .catch((error: any) => {
                     return reject(error);
@@ -136,7 +142,9 @@ export class Signable {
     protected fromUnnamedObject(passedObj: ISignableUnnamedObject): Promise<boolean> {
         return new Promise((resolve) => {
             this._data = passedObj[0];
-            this._signature = passedObj[1];
+            if (passedObj[1]) {
+                this._signature = passedObj[1];
+            }
             return resolve(true);
         });
     }
@@ -178,12 +186,13 @@ export class Signable {
 
     protected fromObjectWithBuffers(passedObj: ISignableObjectWithBuffer): Promise<boolean> {
         return new Promise((resolve, reject) => {
-            this.fromUnnamedObject(
-                [
-                    passedObj.data,
-                    passedObj.signature,
-                ],
-            )
+            let unnamedArg: ISignableUnnamedObject = [
+                passedObj.data,
+            ];
+            if (passedObj.signature) {
+                unnamedArg[1] = passedObj.signature;
+            };
+            this.fromUnnamedObject(unnamedArg)
                 .then((result: boolean) => {
                     return resolve(result);
                 })
@@ -200,12 +209,13 @@ export class Signable {
      */
     public fromObject(object: ISignableObject): Promise<boolean> {
         return new Promise((resolve, reject) => {
-            this.fromObjectWithBuffers(
-                {
-                    data: object.data,
-                    signature: Buffer.from(object.signature),
-                },
-            )
+            let withBuffersArg: ISignableObjectWithBuffer = {
+                data: object.data,
+            }
+            if (object.signature) {
+                withBuffersArg.signature = Buffer.from(object.signature);
+            }
+            this.fromObjectWithBuffers(withBuffersArg)
                 .then((result: boolean) => {
                     return resolve(result);
                 })
