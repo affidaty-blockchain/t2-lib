@@ -46,7 +46,7 @@ export class CommonParentTxData {
 
     /** Reference to the schema used in this data type. */
     public get schema(): TTxSchemaType {
-        return this.schema;
+        return this._schema;
     }
 
     /** Reference to the schema used in this data type. */
