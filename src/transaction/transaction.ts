@@ -16,6 +16,9 @@ import {
     BaseTxData,
 } from './baseTxData';
 import {
+    BulkNodeTxData,
+} from './bulkNodeTxData';
+import {
     Signable,
     ISignableObject,
     ISignableObjectWithBuffer,
@@ -23,8 +26,9 @@ import {
 } from '../signable';
 
 const SCHEMA_MAP: Map<TTxSchemaType, ()=>CommonParentTxData> = new Map();
-SCHEMA_MAP.set(CommonParentTxData.defaultSchema, () => { return new CommonParentTxData(); });
+// SCHEMA_MAP.set(CommonParentTxData.defaultSchema, () => { return new CommonParentTxData(); });
 SCHEMA_MAP.set(BaseTxData.defaultSchema, () => { return new BaseTxData(); });
+SCHEMA_MAP.set(BulkNodeTxData.defaultSchema, () => { return new BulkNodeTxData(); });
 
 interface IBaseTxUnnamedObject extends ISignableUnnamedObject {
     [0]: ICommonParentTxDataUnnamedObject,
@@ -52,14 +56,14 @@ export class Transaction extends Signable {
     protected _data: CommonParentTxData;
 
     constructor(
-        schema: TTxSchemaType = CommonParentTxData.defaultSchema,
+        schema: TTxSchemaType = BaseTxData.defaultSchema,
         hash: TKeyGenAlgorithmValidHashValues = defaultSignHash,
     ) {
         super(hash);
         if (SCHEMA_MAP.has(schema)) {
             this._data = SCHEMA_MAP.get(schema)!();
         } else {
-            this._data = new CommonParentTxData(schema);
+            throw new Error(Errors.INVALID_SCHEMA);
         }
     }
 
