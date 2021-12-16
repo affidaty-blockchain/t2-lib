@@ -34,7 +34,6 @@ export class CommonParentTxData {
     protected _signerPubKey: BaseECKey;
 
     constructor(schema: TTxSchemaType = DEFAULT_SCHEMA) {
-        console.log('parent');
         this._schema = schema;
         this._signerPubKey = new BaseECKey();
     }
