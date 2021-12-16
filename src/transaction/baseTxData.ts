@@ -18,9 +18,12 @@ import {
 const DEFAULT_SCHEMA = TxSchemas.ATOMIC_TX;
 
 interface IBaseTxDataPublicKeyUnnamedObject extends Array<any> {
-    [0]: string; // algorithm type. E.g. 'ecdsa'
-    [1]: string; // curve type. E.g. 'secp384r1'
-    [2]: Buffer; // actual value of the public key as 'raw'
+    /** Public key algorithm type. E.g. "ecdsa". */
+    [0]: string;
+    /** Public key curve type. E.g. 'secp384r1' */
+    [1]: string;
+    /** Actual value of the public key as "raw" bytes */
+    [2]: Buffer;
 }
 
 export interface IBaseTxDataUnnamedObject extends ICommonParentTxDataUnnamedObject {
@@ -38,43 +41,65 @@ export interface IBaseTxDataUnnamedObject extends ICommonParentTxDataUnnamedObje
     [6]: string;
     /** Signer's public key */
     [7]: IBaseTxDataPublicKeyUnnamedObject;
-    /** Msgpacked smart contract args */
+    /** Bytes representing smart contract arguments */
     [8]: Buffer;
 }
 
 interface IBaseTxDataPublicKeyObjectWithBuffers {
-    type: string; // algorithm type. E.g. 'ecdsa'
-    curve: string; // curve type. E.g. 'secp384r1'
-    value: Buffer; // actual value of the public key as 'raw'
+    /** Public key algorithm type. E.g. "ecdsa". */
+    type: string;
+    /** Public key curve type. E.g. 'secp384r1' */
+    curve: string;
+    /** Actual value of the public key as "raw" bytes */
+    value: Buffer;
 }
 
 export interface IBaseTxDataObjectWithBuffers extends ICommonParentTxDataObjectWithBuffers {
-    account: string; // accountId
-    maxFuel: number; // max fuel consumable by transaction
-    nonce: Buffer; // nonce
+    /** Target AccountId */
+    account: string;
+    /** Max fuel that consumable by this transaction */
+    maxFuel: number;
+    /** Nonce */
+    nonce: Buffer;
+    /** Network name */
     network: string; // networkName
-    contract: Buffer | null; // smartContractHash
-    method: string; // smartContractMethod
-    caller: IBaseTxDataPublicKeyObjectWithBuffers; // signerPublicKey
-    args: Buffer; // msgpacked smartContractMethodArgs
+    /** Smart contract hash */
+    contract: Buffer | null;
+    /** Smart contract method */
+    method: string;
+    /** Signer's public key */
+    caller: IBaseTxDataPublicKeyObjectWithBuffers;
+    /** Bytes representing smart contract arguments */
+    args: Buffer;
 }
 
 interface IBaseTxDataPublicKeyObject {
-    type: string; // algorithm type. E.g. 'ecdsa'
-    curve: string; // curve type. E.g. 'secp384r1'
-    value: Uint8Array; // actual value of the public key as 'raw'
+    /** Public key algorithm type. E.g. "ecdsa". */
+    type: string;
+    /** Public key curve type. E.g. 'secp384r1' */
+    curve: string;
+    /** Actual value of the public key as "raw" bytes */
+    value: Uint8Array;
 }
 
 /** Structure returned by toObject() method. */
 export interface IBaseTxDataObject extends ICommonParentTxDataObject {
-    account: string; // accountId
-    maxFuel: number; // max fuel consumable by transaction
-    nonce: Uint8Array; // nonce
-    network: string; // networkName
-    contract: Uint8Array | null; // smartContractHash
-    method: string; // smartContractMethod
-    caller: IBaseTxDataPublicKeyObject; // signerPublicKey
-    args: Uint8Array; // msgpacked smartContractMethodArgs
+    /** Target AccountId */
+    account: string;
+    /** Max fuel that consumable by this transaction */
+    maxFuel: number;
+    /** Nonce */
+    nonce: Uint8Array;
+    /** Network name */
+    network: string;
+    /** Smart contract hash */
+    contract: Uint8Array | null;
+    /** Smart contract method */
+    method: string;
+    /** Signer's public key */
+    caller: IBaseTxDataPublicKeyObject;
+    /** Bytes representing smart contract arguments */
+    args: Uint8Array;
 }
 
 export class BaseTxData extends CommonParentTxData {
