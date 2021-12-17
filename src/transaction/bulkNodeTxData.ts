@@ -1,11 +1,4 @@
 import * as Errors from '../errors';
-import { WebCrypto } from '../cryptography/webCrypto';
-import { objectToBytes, bytesToObject } from '../utils';
-import {
-    EmptyKeyParams,
-    EKeyParamsIds,
-    mKeyPairParams,
-} from '../cryptography/cryptoDefaults';
 import {
     TTxSchemaType,
     TxSchemas,
@@ -104,6 +97,9 @@ export class BulkNodeTxData extends BaseTxData {
 
     public fromUnnamedObject(passedObj: IBulkNodeTxDataUnnamedObject): Promise<boolean> {
         return new Promise((resolve, reject) => {
+            if (passedObj[0] !== DEFAULT_SCHEMA) {
+                return reject(new Error(Errors.INVALID_SCHEMA));
+            }
             if (passedObj[9]) {
                 this._dependsOn = passedObj[9];
             }

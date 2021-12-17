@@ -204,6 +204,9 @@ export class BaseTxData extends CommonParentTxData {
 
     public fromUnnamedObject(passedObj: IBaseTxDataUnnamedObject): Promise<boolean> {
         return new Promise((resolve, reject) => {
+            if (passedObj[0] !== DEFAULT_SCHEMA) {
+                return reject(new Error(Errors.INVALID_SCHEMA));
+            }
             this._schema = passedObj[0];
             this._account = passedObj[1];
             this._maxFuel = passedObj[2];
