@@ -3,7 +3,6 @@ import { TKeyGenAlgorithmValidHashValues } from '../cryptography/base';
 import {
     DEF_SIGN_HASH_ALGORITHM as defaultSignHash,
 } from '../cryptography/cryptoDefaults';
-import { TTxSchemaType } from './commonParentTxData';
 import {
     BulkNodeTxData,
     IBulkNodeTxDataUnnamedObject,
