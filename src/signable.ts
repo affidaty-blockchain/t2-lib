@@ -8,25 +8,30 @@ import { BaseECKey } from './cryptography/baseECKey';
  * Structure returned by Signable.toObject() method.
  */
 export interface ISignableObject {
-    data: any,
+    type: string;
+    data: any;
     signature?: Uint8Array;
 }
 
 // exported for usage in Client class
 export interface ISignableObjectWithBuffer {
-    data: any,
+    type: string;
+    data: any;
     signature?: Buffer;
 }
 
 export interface ISignableUnnamedObject extends Array<any> {
-    [0]: any,
-    [1]?: Buffer;
+    [0]: string;
+    [1]: any,
+    [2]?: Buffer;
 }
 
 /**
  * Class for automatic transaction creation, management and transcoding
  */
 export class Signable {
+    protected _typeTag: string = '';
+
     protected _data: any = {};
 
     protected _signature: Buffer = Buffer.from([]);
@@ -35,6 +40,14 @@ export class Signable {
 
     constructor(hash: TKeyGenAlgorithmValidHashValues = defaultSignHash) {
         this._signHashAlg = hash;
+    }
+
+    public get typeTag(): string {
+        return this._typeTag;
+    }
+
+    public set typeTag(typeTag: string) {
+        this._typeTag = typeTag;
     }
 
     /** Data to sign */
@@ -59,11 +72,56 @@ export class Signable {
 
     protected toUnnamedObject(): Promise<ISignableUnnamedObject> {
         return new Promise((resolve) => {
-            const resultObj: ISignableUnnamedObject = [ this._data ];
+            const resultObj: ISignableUnnamedObject = [
+                this._typeTag,
+                this._data,
+            ];
             if (this._signature.byteLength > 0) {
-                resultObj[1] = this._signature;
+                resultObj[2] = this._signature;
             }
             return resolve(resultObj);
+        });
+    }
+
+    protected toObjectWithBuffers(): Promise<ISignableObjectWithBuffer> {
+        return new Promise((resolve, reject) => {
+            this.toUnnamedObject()
+                .then((unnamedObj: ISignableUnnamedObject) => {
+                    const resultObj: ISignableObjectWithBuffer = {
+                        type: unnamedObj[0],
+                        data: unnamedObj[1],
+                    };
+                    if (unnamedObj[2]) {
+                        resultObj.signature = unnamedObj[2];
+                    }
+                    return resolve(resultObj);
+                })
+                .catch((error: any) => {
+                    return reject(error);
+                });
+        });
+    }
+
+    /**
+     * Serializes signable to a simple object with named properties
+     * @returns - object, throws otherwise
+     */
+    public toObject(): Promise<ISignableObject> {
+        return new Promise((resolve, reject) => {
+            this.toObjectWithBuffers()
+                .then((withBuffers: ISignableObjectWithBuffer) => {
+                    const resultObj: ISignableObject = {
+                        type: withBuffers.type,
+                        data: withBuffers.data,
+                    };
+                    if (withBuffers.signature) {
+                        resultObj.signature = new Uint8Array(withBuffers.signature);
+                    }
+                    return resolve(resultObj);
+                })
+                .catch((error: any) => {
+                    return reject(error);
+                });
         });
     }
 
@@ -99,17 +157,29 @@ export class Signable {
         });
     }
 
-    protected toObjectWithBuffers(): Promise<ISignableObjectWithBuffer> {
+    protected fromUnnamedObject(passedObj: ISignableUnnamedObject): Promise<boolean> {
+        return new Promise((resolve) => {
+            this._typeTag = passedObj[0];
+            this._data = passedObj[1];
+            if (passedObj[2]) {
+                this._signature = passedObj[2];
+            }
+            return resolve(true);
+        });
+    }
+
+    protected fromObjectWithBuffers(passedObj: ISignableObjectWithBuffer): Promise<boolean> {
         return new Promise((resolve, reject) => {
-            this.toUnnamedObject()
-                .then((unnamedObj: ISignableUnnamedObject) => {
-                    let resultObj: ISignableObjectWithBuffer = {
-                        data: unnamedObj[0],
-                    };
-                    if (unnamedObj[1]) {
-                        resultObj.signature = unnamedObj[1];
-                    }
-                    return resolve(resultObj);
+            const unnamedArg: ISignableUnnamedObject = [
+                passedObj.type,
+                passedObj.data,
+            ];
+            if (passedObj.signature) {
+                unnamedArg[2] = passedObj.signature;
+            }
+            this.fromUnnamedObject(unnamedArg)
+                .then((result: boolean) => {
+                    return resolve(result);
                 })
                 .catch((error: any) => {
                     return reject(error);
@@ -118,34 +188,26 @@ export class Signable {
     }
 
     /**
-     * Serializes signable to a simple object with named properties
-     * @returns - object, throws otherwise
+     * Tries to deserialize a signable from object with named properties.
+     * @param object - object to try to deserialize signable from
+     * @returns - true on success, throws otherwise
      */
-    public toObject(): Promise<ISignableObject> {
+    public fromObject(object: ISignableObject): Promise<boolean> {
         return new Promise((resolve, reject) => {
-            this.toObjectWithBuffers()
-                .then((withBuffers: ISignableObjectWithBuffer) => {
-                    let resultObj: ISignableObject = {
-                        data: withBuffers.data,
-                    };
-                    if (withBuffers.signature) {
-                        resultObj.signature = new Uint8Array(withBuffers.signature)
-                    }
-                    return resolve(resultObj);
+            const withBuffersArg: ISignableObjectWithBuffer = {
+                type: object.type,
+                data: object.data,
+            };
+            if (object.signature) {
+                withBuffersArg.signature = Buffer.from(object.signature);
+            }
+            this.fromObjectWithBuffers(withBuffersArg)
+                .then((result: boolean) => {
+                    return resolve(result);
                 })
                 .catch((error: any) => {
                     return reject(error);
                 });
-        });
-    }
-
-    protected fromUnnamedObject(passedObj: ISignableUnnamedObject): Promise<boolean> {
-        return new Promise((resolve) => {
-            this._data = passedObj[0];
-            if (passedObj[1]) {
-                this._signature = passedObj[1];
-            }
-            return resolve(true);
         });
     }
 
@@ -184,47 +246,6 @@ export class Signable {
         });
     }
 
-    protected fromObjectWithBuffers(passedObj: ISignableObjectWithBuffer): Promise<boolean> {
-        return new Promise((resolve, reject) => {
-            let unnamedArg: ISignableUnnamedObject = [
-                passedObj.data,
-            ];
-            if (passedObj.signature) {
-                unnamedArg[1] = passedObj.signature;
-            };
-            this.fromUnnamedObject(unnamedArg)
-                .then((result: boolean) => {
-                    return resolve(result);
-                })
-                .catch((error: any) => {
-                    return reject(error);
-                });
-        });
-    }
-
-    /**
-     * Tries to deserialize a signable from object with named properties.
-     * @param object - object to try to deserialize signable from
-     * @returns - true on success, throws otherwise
-     */
-    public fromObject(object: ISignableObject): Promise<boolean> {
-        return new Promise((resolve, reject) => {
-            let withBuffersArg: ISignableObjectWithBuffer = {
-                data: object.data,
-            }
-            if (object.signature) {
-                withBuffersArg.signature = Buffer.from(object.signature);
-            }
-            this.fromObjectWithBuffers(withBuffersArg)
-                .then((result: boolean) => {
-                    return resolve(result);
-                })
-                .catch((error: any) => {
-                    return reject(error);
-                });
-        });
-    }
-
     /**
      * Sign data with private key
      * @param privateKey - private key to sign data with
@@ -234,7 +255,7 @@ export class Signable {
         return new Promise((resolve, reject) => {
             this.toUnnamedObject()
                 .then((unnamedObject: ISignableUnnamedObject) => {
-                    const bytesToSign: Uint8Array = objectToBytes(unnamedObject[0]);
+                    const bytesToSign: Uint8Array = objectToBytes(unnamedObject[1]);
                     signData(privateKey, bytesToSign, this._signHashAlg)
                         .then((signature: Uint8Array) => {
                             this._signature = Buffer.from(signature);
@@ -259,7 +280,7 @@ export class Signable {
         return new Promise((resolve, reject) => {
             this.toUnnamedObject()
                 .then((unnamedObject: ISignableUnnamedObject) => {
-                    const dataToVerify: Uint8Array = objectToBytes(unnamedObject[0]);
+                    const dataToVerify: Uint8Array = objectToBytes(unnamedObject[1]);
                     verifyDataSignature(
                         publicKey,
                         dataToVerify,

@@ -17,7 +17,11 @@ import { BaseECKey } from './cryptography/baseECKey';
 import {
     Signable,
     ISignableUnnamedObject,
+    ISignableObjectWithBuffer,
+    ISignableObject,
 } from './signable';
+
+const TYPE_TAG_VALUE = 'certificate';
 
 const DEF_SALT_BYTE_LEN: number = 32;
 
@@ -107,29 +111,6 @@ interface ICertMainDataInternal {
     certifier: BaseECKey;
 }
 
-interface ICertifierBuffers {
-    type: string; // id of the key type. E.g. 'ecdsa'
-    curve: string; // curve variant. E.g. 'secp384r1'
-    value: Buffer; // actual value of the public key as 'raw'
-}
-
-interface ICertMainDataBuffers {
-    target: string;
-    fields: string[];
-    salt: Buffer;
-    root: Buffer;
-    certifier: ICertifierBuffers;
-}
-
-/**
- * Certificate object with binary members as Buffers
- */
-export interface ICertBuffers {
-    data: ICertMainDataBuffers;
-    signature: Buffer;
-    multiProof?: Buffer[];
-}
-
 interface IUnnamedCertifier extends Array<any> {
     [0]: string; // id of the key type. Es. 'ecdsa'
     [1]: string; // curve
@@ -148,9 +129,32 @@ interface IUnnamedCertMainData extends Array<any> {
  * Unnamed certificate object meant for transfer.
  */
 export interface IUnnamedCert extends ISignableUnnamedObject {
-    [0]: IUnnamedCertMainData; // data
-    [1]: Buffer; // signature
-    [2]?: Buffer[]; // multiProof
+    [1]: IUnnamedCertMainData; // data
+    [2]: Buffer; // signature
+    [3]?: Buffer[]; // multiProof
+}
+
+interface ICertifierBuffers {
+    type: string; // id of the key type. E.g. 'ecdsa'
+    curve: string; // curve variant. E.g. 'secp384r1'
+    value: Buffer; // actual value of the public key as 'raw'
+}
+
+interface ICertMainDataBuffers {
+    target: string;
+    fields: string[];
+    salt: Buffer;
+    root: Buffer;
+    certifier: ICertifierBuffers;
+}
+
+/**
+ * Certificate object with binary members as Buffers
+ */
+export interface ICertBuffers extends ISignableObjectWithBuffer {
+    data: ICertMainDataBuffers;
+    signature: Buffer;
+    multiProof?: Buffer[];
 }
 
 interface ICertifier {
@@ -170,7 +174,7 @@ interface ICertMainData {
 /**
  *Plain certificate object
  */
-export interface ICert {
+export interface ICert extends ISignableObject {
     data: ICertMainData;
     signature: Uint8Array;
     multiProof?: Uint8Array[];
@@ -200,6 +204,7 @@ export class Certificate extends Signable {
         hash: TKeyGenAlgorithmValidHashValues = defaultSignHash,
     ) {
         super(hash);
+        this._typeTag = TYPE_TAG_VALUE;
         this._data = {
             target: '',
             fields: [],
@@ -350,6 +355,7 @@ export class Certificate extends Signable {
     public toUnnamedObject(): Promise<IUnnamedCert> {
         return new Promise((resolve, reject) => {
             const resultObj: IUnnamedCert = [
+                this._typeTag,
                 [
                     this._data.target,
                     this._data.fields,
@@ -364,7 +370,7 @@ export class Certificate extends Signable {
                 this._signature,
             ];
             if (this._multiProof.length !== 0) {
-                resultObj[2] = this._multiProof;
+                resultObj[3] = this._multiProof;
             }
             if (this._data.certifier.paramsId === EKeyParamsIds.EMPTY) {
                 return resolve(resultObj);
@@ -373,12 +379,12 @@ export class Certificate extends Signable {
                 .then((rawKeyBytes: Uint8Array) => {
                     const undrscrIndex = this._data.certifier.paramsId.indexOf('_');
                     if (undrscrIndex > -1) {
-                        resultObj[0][4][0] = this._data.certifier.paramsId.slice(0, undrscrIndex);
-                        resultObj[0][4][1] = this._data.certifier.paramsId.slice(undrscrIndex + 1);
+                        resultObj[1][4][0] = this._data.certifier.paramsId.slice(0, undrscrIndex);
+                        resultObj[1][4][1] = this._data.certifier.paramsId.slice(undrscrIndex + 1);
                     } else {
-                        resultObj[0][4][0] = this._data.certifier.paramsId;
+                        resultObj[1][4][0] = this._data.certifier.paramsId;
                     }
-                    resultObj[0][4][2] = Buffer.from(rawKeyBytes);
+                    resultObj[1][4][2] = Buffer.from(rawKeyBytes);
                     return resolve(resultObj);
                 })
                 .catch((error: any) => {
@@ -396,21 +402,22 @@ export class Certificate extends Signable {
             this.toUnnamedObject()
                 .then((unnamedObject: IUnnamedCert) => {
                     const resultObj: ICertBuffers = {
+                        type: unnamedObject[0],
                         data: {
-                            target: unnamedObject[0][0],
-                            fields: unnamedObject[0][1],
-                            salt: unnamedObject[0][2],
-                            root: unnamedObject[0][3],
+                            target: unnamedObject[1][0],
+                            fields: unnamedObject[1][1],
+                            salt: unnamedObject[1][2],
+                            root: unnamedObject[1][3],
                             certifier: {
-                                type: unnamedObject[0][4][0],
-                                curve: unnamedObject[0][4][1],
-                                value: unnamedObject[0][4][2],
+                                type: unnamedObject[1][4][0],
+                                curve: unnamedObject[1][4][1],
+                                value: unnamedObject[1][4][2],
                             },
                         },
-                        signature: unnamedObject[1],
+                        signature: unnamedObject[2],
                     };
-                    if (unnamedObject.length === 3) {
-                        resultObj.multiProof = unnamedObject[2];
+                    if (unnamedObject.length === 4) {
+                        resultObj.multiProof = unnamedObject[3];
                     }
                     return resolve(resultObj);
                 })
@@ -429,6 +436,7 @@ export class Certificate extends Signable {
             this.toObjectWithBuffers()
                 .then((objBuffers: ICertBuffers) => {
                     const resultObj: ICert = {
+                        type: objBuffers.type,
                         data: {
                             target: objBuffers.data.target,
                             fields: objBuffers.data.fields,
@@ -463,14 +471,15 @@ export class Certificate extends Signable {
      */
     public fromUnnamedObject(passedObj: IUnnamedCert): Promise<boolean> {
         return new Promise((resolve, reject) => {
-            this._data.target = passedObj[0][0];
-            this._data.fields = passedObj[0][1];
-            this._data.salt = passedObj[0][2];
-            this._data.root = passedObj[0][3];
+            this._typeTag = passedObj[0];
+            this._data.target = passedObj[1][0];
+            this._data.fields = passedObj[1][1];
+            this._data.salt = passedObj[1][2];
+            this._data.root = passedObj[1][3];
 
-            let keyParamsId: string = passedObj[0][4][0];
-            if (passedObj[0][4][1].length > 0) {
-                keyParamsId += `_${passedObj[0][4][1]}`;
+            let keyParamsId: string = passedObj[1][4][0];
+            if (passedObj[1][4][1].length > 0) {
+                keyParamsId += `_${passedObj[1][4][1]}`;
             }
             if (!mKeyPairParams.has(keyParamsId)) {
                 return reject(new Error(Errors.IMPORT_TYPE_ERROR));
@@ -478,16 +487,16 @@ export class Certificate extends Signable {
             this._data.certifier = new BaseECKey(
                 mKeyPairParams.get(keyParamsId)!.publicKey,
             );
-            this._signature = passedObj[1];
-            if (typeof passedObj[2] !== 'undefined') {
-                for (let i = 0; i < passedObj[2].length; i += 1) {
-                    this._multiProof.push(passedObj[2][i]);
+            this._signature = passedObj[2];
+            if (typeof passedObj[3] !== 'undefined') {
+                for (let i = 0; i < passedObj[3].length; i += 1) {
+                    this._multiProof.push(passedObj[3][i]);
                 }
             }
             if (this._data.certifier.paramsId === EKeyParamsIds.EMPTY) {
                 return resolve(true);
             }
-            this._data.certifier.importBin(new Uint8Array(passedObj[0][4][2]))
+            this._data.certifier.importBin(new Uint8Array(passedObj[1][4][2]))
                 .then(() => {
                     return resolve(true);
                 })
@@ -505,6 +514,7 @@ export class Certificate extends Signable {
     public fromObjectWithBuffers(passedObj: ICertBuffers): Promise<boolean> {
         return new Promise((resolve, reject) => {
             const unnamedObject: IUnnamedCert = [
+                passedObj.type,
                 [
                     passedObj.data.target,
                     passedObj.data.fields,
@@ -539,6 +549,7 @@ export class Certificate extends Signable {
     public fromObject(passedObj: ICert): Promise<boolean> {
         return new Promise((resolve, reject) => {
             const objBuffers: ICertBuffers = {
+                type: passedObj.type,
                 data: {
                     target: passedObj.data.target,
                     fields: passedObj.data.fields,
