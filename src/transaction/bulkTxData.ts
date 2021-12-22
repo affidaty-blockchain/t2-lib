@@ -1,39 +1,64 @@
 import {
     TTxSchemaType,
     TxSchemas,
-} from './commonParentTxData';
-import {
     CommonParentTxData,
     ICommonParentTxDataUnnamedObject,
     ICommonParentTxDataObjectWithBuffers,
     ICommonParentTxDataObject,
 } from './commonParentTxData';
-import { BulkRootTransaction } from './bulkRootTransaction';
-import { BulkNodeTransaction } from './bulkNodeTransaction';
+import {
+    BulkRootTransaction,
+    IBulkRootTxUnnamedObject,
+    IBulkRootTxObjectWithBuffers,
+    IBulkRootTxObject,
+} from './bulkRootTransaction';
+import {
+    BulkNodeTransaction,
+    IBulkNodeTxUnnamedObject,
+    IBulkNodeTxObjectWithBuffers,
+    IBulkNodeTxObject,
+} from './bulkNodeTransaction';
 
 const DEFAULT_SCHEMA = TxSchemas.BULK_TX;
 
-interface txList extends Array<BulkRootTransaction | BulkNodeTransaction> {
+interface txListUnnamedObject extends Array<any> {
+    [0]: IBulkRootTxUnnamedObject;
+    [key: number]: IBulkRootTxUnnamedObject | IBulkNodeTxUnnamedObject;
+}
+
+interface IBulkTxDataUnnamedObject extends ICommonParentTxDataUnnamedObject {
+    /** Hash of the bulk root transaction on which this one depends. */
+    [1]: txListUnnamedObject;
+}
+
+interface txListObjectWithBuffers extends Array<any> {
+    [0]: IBulkRootTxObjectWithBuffers;
+    [key: number]: IBulkRootTxObjectWithBuffers | IBulkNodeTxObjectWithBuffers;
+}
+
+interface IBulkTxDataObjectWithBuffers extends ICommonParentTxDataObjectWithBuffers {
+    /** Hash of the bulk root transaction on which this one depends. */
+    txs: txListObjectWithBuffers;
+}
+
+interface txListObject extends Array<any> {
+    [0]: IBulkRootTxObject;
+    [key: number]: IBulkRootTxObject | IBulkNodeTxObject;
+}
+
+interface IBulkTxDataObject extends ICommonParentTxDataObject {
+    /** Hash of the bulk root transaction on which this one depends. */
+    txs: txListObject;
+}
+
+interface txListInternal extends Array<BulkRootTransaction | BulkNodeTransaction> {
     [0]: BulkRootTransaction;
     [key: number]: BulkRootTransaction | BulkNodeTransaction
 }
+export class BulkTxData extends CommonParentTxData {
 
-interface IBulkNodeTxDataUnnamedObject extends ICommonParentTxDataUnnamedObject {
-    /** Hash of the bulk root transaction on which this one depends. */
-    [1]: txList;
-}
+    protected _txs: txListInternal;
 
-interface IBulkNodeTxDataObjectWithBuffers extends ICommonParentTxDataObjectWithBuffers {
-    /** Hash of the bulk root transaction on which this one depends. */
-    txs: txList;
-}
-
-interface IBulkNodeTxDataObject extends ICommonParentTxDataObject {
-    /** Hash of the bulk root transaction on which this one depends. */
-    txs: txList;
-}
-
-export class BulkNodeTxData extends BaseTxData {
     public static get defaultSchema(): string {
         return DEFAULT_SCHEMA;
     }
@@ -42,10 +67,10 @@ export class BulkNodeTxData extends BaseTxData {
         super(schema);
     }
 
-    public toUnnamedObject(): Promise<IBulkNodeTxDataUnnamedObject> {
+    public toUnnamedObject(): Promise<IBulkTxDataObjectWithBuffers> {
         return new Promise((resolve, reject) => {
             super.toUnnamedObject()
-                .then((superResult: IBaseTxDataUnnamedObject) => {
+                .then((superResult: IBulkTxDataUnnamedObject) => {
                     const resultObj: IBulkNodeTxDataUnnamedObject = [
                         superResult[0],
                         superResult[1],

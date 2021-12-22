@@ -4,7 +4,7 @@ import {
     IKeyPairParams,
     TKeyUsages,
     TKeyGenAlgorithmValidHashValues,
-} from './base';
+} from './baseTypes';
 
 export const DEF_AES_IV_BYTE_LEN: number = 12;
 

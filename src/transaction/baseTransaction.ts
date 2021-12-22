@@ -19,7 +19,7 @@ import {
     BulkNodeTxData,
 } from './bulkNodeTxData';
 import {
-    BulkTxData
+    BulkTxData,
 } from './bulkTxData';
 import {
     Signable,
@@ -31,6 +31,7 @@ import {
 const SCHEMA_MAP: Map<TTxSchemaType, (schema?: TTxSchemaType)=>CommonParentTxData> = new Map();
 // SCHEMA_MAP.set(CommonParentTxData.defaultSchema, () => { return new CommonParentTxData(); });
 SCHEMA_MAP.set(BaseTxData.defaultSchema, (schema) => { return new BaseTxData(schema); });
+SCHEMA_MAP.set(BulkTxData.defaultSchema, (schema) => { return new BulkTxData(schema); });
 SCHEMA_MAP.set(BulkNodeTxData.defaultSchema, (schema) => { return new BulkNodeTxData(schema); });
 
 export interface IBaseTxUnnamedObject extends ISignableUnnamedObject {

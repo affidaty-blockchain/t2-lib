@@ -85,8 +85,8 @@ export class CommonParentTxData {
         this._args = Buffer.from([]);
         this._dependsOn = Buffer.from([]);
         this._typeTag = SCHEMA_TO_TYPE_TAG_MAP.has(schema)
-        ? SCHEMA_TO_TYPE_TAG_MAP.get(schema)!
-        : SignableTypeTags.EMPTY_TX;
+            ? SCHEMA_TO_TYPE_TAG_MAP.get(schema)!
+            : SignableTypeTags.EMPTY_TX;
     }
 
     public set typeTag(typeTag: string) {

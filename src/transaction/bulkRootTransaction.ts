@@ -1,5 +1,5 @@
 import * as Errors from '../errors';
-import { TKeyGenAlgorithmValidHashValues } from '../cryptography/base';
+import { TKeyGenAlgorithmValidHashValues } from '../cryptography/baseTypes';
 import {
     DEF_SIGN_HASH_ALGORITHM as defaultSignHash,
 } from '../cryptography/cryptoDefaults';
@@ -17,15 +17,15 @@ import {
     IBaseTxObject,
 } from './baseTransaction';
 
-interface IBulkRootTxUnnamedObject extends IBaseTxUnnamedObject {
+export interface IBulkRootTxUnnamedObject extends IBaseTxUnnamedObject {
     [1]: IBaseTxDataUnnamedObject;
 }
 
-interface IBulkRootTxObjectWithBuffers extends IBaseTxObjectWithBuffers {
+export interface IBulkRootTxObjectWithBuffers extends IBaseTxObjectWithBuffers {
     data: IBaseTxDataObjectWithBuffers;
 }
 
-interface IBulkRootTxObject extends IBaseTxObject {
+export interface IBulkRootTxObject extends IBaseTxObject {
     data: IBaseTxDataObject;
 }
 
@@ -140,8 +140,10 @@ export class BulkRootTransaction extends BaseTransaction {
         });
     }
 
+    /* eslint-disable class-methods-use-this */
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     public sign(privateKey: BaseECKey): Promise<boolean> {
-        return new Promise((resolve,reject) => {
+        return new Promise((resolve, reject) => {
             return reject(new Error(Errors.BULK_ROOT_TX_NO_SIGN));
         });
     }
@@ -151,4 +153,5 @@ export class BulkRootTransaction extends BaseTransaction {
             return reject(new Error(Errors.BULK_ROOT_TX_NO_VERIFY));
         });
     }
+    /* eslint-enable class-methods-use-this */
 }

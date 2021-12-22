@@ -16,17 +16,17 @@ import {
     IBaseTxObject,
 } from './baseTransaction';
 
-interface IBulkNodeTxUnnamedObject extends IBaseTxUnnamedObject {
+export interface IBulkNodeTxUnnamedObject extends IBaseTxUnnamedObject {
     [1]: IBulkNodeTxDataUnnamedObject;
     [2]: Buffer;
 }
 
-interface IBulkNodeTxObjectWithBuffers extends IBaseTxObjectWithBuffers {
+export interface IBulkNodeTxObjectWithBuffers extends IBaseTxObjectWithBuffers {
     data: IBulkNodeTxDataObjectWithBuffers;
     signature: Buffer;
 }
 
-interface IBulkNodeTxObject extends IBaseTxObject {
+export interface IBulkNodeTxObject extends IBaseTxObject {
     data: IBulkNodeTxDataObject;
     signature: Uint8Array;
 }

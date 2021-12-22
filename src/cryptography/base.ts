@@ -1,88 +1,11 @@
 import { Key as UtilKey } from 'js-crypto-key-utils';
+import * as baseTypes from './baseTypes';
 import * as Errors from '../errors';
 import { Subtle } from './webCrypto';
 import { similarArrays } from '../utils';
 import { EmptyKeyParams } from './cryptoDefaults';
 
-export type TValidKeyType = 'public' | 'private' | 'secret' |'undefined';
-export type TValidKeyFormatValues = 'jwk' | 'raw';
-export type TValidKeyUsageValues = 'encrypt' | 'decrypt' | 'sign' | 'verify' | 'deriveKey' | 'deriveBits' | 'wrapKey' | 'unwrapKey';
-export type TKeyUsages = TValidKeyUsageValues[];
-export type TTranscryptAlgorithmValidName = 'RSA-OAEP' | 'AES-GCM';
-export type TKeyGenAlgorithmValidNameValues = '' | 'ECDSA' | 'ECDH' | 'RSA-OAEP' | 'AES-GCM' | 'HMAC' | 'PBKDF2';
-export type TKeyGenAlgorithmValidNamedCurveValues = 'P-384' | 'P-256';
-export type TKeyGenAlgorithmValidModulusLengthValues = 2048 | 3072 | 4096;
-export type TKeyGenAlgorithmValidPublicExponentValues = Uint8Array;
-export type TKeyGenAlgorithmValidHashValues = 'SHA-256' | 'SHA-384' | 'SHA-512';
-export type TValidSymmetricKeyLength = 256;
 type TecKeyBinFormat = 'oct' | 'der' | 'pem';
-
-interface IRsaOtherPrimesInfo {
-    d?: string;
-    r?: string;
-    t?: string;
-}
-
-/** JWK Interface */
-export interface IJwk {
-    /* eslint-disable-next-line camelcase */
-    key_ops?: TKeyUsages,
-    ext?: boolean;
-    kty: string;
-    crv?: string;
-    alg?: string;
-    d?: string;
-    x?: string;
-    y?: string;
-    k?: string;
-    dp?: string;
-    dq?: string;
-    e?: string;
-    n?: string;
-    oth?: IRsaOtherPrimesInfo[];
-    p?: string;
-    q?: string;
-    qi?: string;
-    use?: string;
-}
-
-/**
-* Interface to define key generation algorithm params.
-* Used in IKeyParams interface and for key derivation.
-*/
-export interface IKeyGenAlgorithm {
-    name: TKeyGenAlgorithmValidNameValues, // all
-    namedCurve?: TKeyGenAlgorithmValidNamedCurveValues, // EC
-    modulusLength?: TKeyGenAlgorithmValidModulusLengthValues, // RSA
-    publicExponent?: TKeyGenAlgorithmValidPublicExponentValues, // RSA
-    hash?: TKeyGenAlgorithmValidHashValues, // RSA, HMAC
-    length?: TValidSymmetricKeyLength, // AES
-}
-
-/**
-* Interface that defines cryptographic key params.
-*/
-export interface IKeyParams {
-    /** String identifying this particulas set of parameters */
-    paramsId: string;
-    genAlgorithm?: IKeyGenAlgorithm;
-    /** array of key usages */
-    usages?: TKeyUsages;
-    type: TValidKeyType;
-}
-
-/** Interface defining parameters for a keypair generation */
-export interface IKeyPairParams {
-    publicKey: IKeyParams;
-    privateKey: IKeyParams;
-    /** Union of publicKey and privateKey usages */
-    usages: TKeyUsages;
-}
-
-export interface ITranscryptParams {
-    name: TTranscryptAlgorithmValidName;
-    iv?: Uint8Array;
-}
 
 /**
  * Converts binary key data into a JWK object
@@ -97,7 +20,7 @@ export function keyBinToJWK(
     binFormat: TecKeyBinFormat = 'der',
     importOptions: object = {},
     exportOptions: object = {},
-): Promise<IJwk> {
+): Promise<baseTypes.IJwk> {
     return new Promise((resolve, reject) => {
         if (bin.byteLength === 0) {
             return reject(new Error(Errors.EMPTY_VALUE));
@@ -105,7 +28,7 @@ export function keyBinToJWK(
         const keyObj = new UtilKey(binFormat, bin, importOptions);
         keyObj.export('jwk', exportOptions)
             .then((exportedJwk:any) => {
-                const result: IJwk = exportedJwk;
+                const result: baseTypes.IJwk = exportedJwk;
                 return resolve(result);
             })
             .catch((error:any) => { return reject(error); });
@@ -121,7 +44,7 @@ export function keyBinToJWK(
  * @returns - binary key data
  */
 export function keyJWKToBin(
-    jwk: IJwk,
+    jwk: baseTypes.IJwk,
     binFormat: TecKeyBinFormat = 'der',
     importOptions: object = {},
     exportOptions: object = {},
@@ -144,8 +67,12 @@ export function keyJWKToBin(
  * @param jwkExt - needed ext value
  * @returns - corrected JWK object
  */
-function correctJwkFields(jwk: IJwk, jwkOps: TKeyUsages, jwkExt: boolean): IJwk {
-    const tempJwk: IJwk = { ...jwk };
+function correctJwkFields(
+    jwk: baseTypes.IJwk,
+    jwkOps: baseTypes.TKeyUsages,
+    jwkExt: boolean,
+): baseTypes.IJwk {
+    const tempJwk: baseTypes.IJwk = { ...jwk };
     tempJwk.key_ops = jwkOps;
     tempJwk.ext = jwkExt;
     return tempJwk;
@@ -158,7 +85,7 @@ function correctJwkFields(jwk: IJwk, jwkOps: TKeyUsages, jwkExt: boolean): IJwk 
  * @returns - key convertted to desired format
  */
 export function exportCryptoKey(
-    format: TValidKeyFormatValues,
+    format: baseTypes.TValidKeyFormatValues,
     key?: CryptoKey | undefined,
 ):Promise<any> {
     if (typeof key === 'undefined') {
@@ -169,11 +96,11 @@ export function exportCryptoKey(
 
 /** Converts keys in various formats into a CryptoKey object */
 export function importCryptoKey(
-    format: TValidKeyFormatValues,
+    format: baseTypes.TValidKeyFormatValues,
     keyData: any,
-    algorithm: IKeyGenAlgorithm | TKeyGenAlgorithmValidNameValues | undefined,
+    algorithm: baseTypes.IKeyGenAlgorithm | baseTypes.TKeyGenAlgorithmValidNameValues | undefined,
     extractable: boolean,
-    usages: TKeyUsages | undefined = [],
+    usages: baseTypes.TKeyUsages | undefined = [],
 ):Promise<CryptoKey> {
     if (typeof algorithm === 'undefined') {
         return Promise.reject(new Error(Errors.UNDEF_KEY_IMPORT_ALGORITHM));
@@ -183,11 +110,11 @@ export function importCryptoKey(
 
 /** Basic cryptographic key class, extended by other, more specific classes */
 export class BaseKey {
-    private _keyParams: IKeyParams;
+    private _keyParams: baseTypes.IKeyParams;
 
     private _cryptoKey?: CryptoKey;
 
-    private _jwk?: IJwk;
+    private _jwk?: baseTypes.IJwk;
 
     protected _clearBase(): void {
         this._cryptoKey = undefined;
@@ -198,7 +125,7 @@ export class BaseKey {
         this._clearBase();
     }
 
-    constructor(passedKeyParams: IKeyParams = EmptyKeyParams) {
+    constructor(passedKeyParams: baseTypes.IKeyParams = EmptyKeyParams) {
         if (typeof passedKeyParams.genAlgorithm === 'undefined') {
             throw new Error(Errors.UNDEF_KEY_GEN_ALGORITHM);
         }
@@ -211,14 +138,14 @@ export class BaseKey {
     /**
      * Key type.
      */
-    public get type():TValidKeyType {
+    public get type(): baseTypes.TValidKeyType {
         return this._keyParams.type;
     }
 
     /**
      * Key type.
      */
-    public set type(type: TValidKeyType) {
+    public set type(type: baseTypes.TValidKeyType) {
         this._keyParams.type = type;
     }
 
@@ -232,7 +159,7 @@ export class BaseKey {
     /**
      * Object, containing set of parameters for this key
      */
-    public get keyParams(): IKeyParams {
+    public get keyParams(): baseTypes.IKeyParams {
         return this._keyParams;
     }
 
@@ -241,7 +168,7 @@ export class BaseKey {
      * useful with conditional statements in derived classes ctors
      * (see RSAKey)
      */
-    public set keyParams(params: IKeyParams) {
+    public set keyParams(params: baseTypes.IKeyParams) {
         if (this.keyParams.paramsId === EmptyKeyParams.paramsId) {
             this._keyParams = { ...params };
         } else {
@@ -254,7 +181,7 @@ export class BaseKey {
      * @param jwk - JWK object from which to take key value
      * @param doClear - set to false (true by default) to not to clean already set key values
      */
-    public setJWK(jwk: IJwk, doClear: boolean = true): void {
+    public setJWK(jwk: baseTypes.IJwk, doClear: boolean = true): void {
         if (doClear) {
             this._clear();
         }
@@ -265,14 +192,14 @@ export class BaseKey {
      * Get a JWK object, which can be used with setJWK() method
      * @returns - JWK object, containing key value
      */
-    public getJWK(): Promise<IJwk> {
+    public getJWK(): Promise<baseTypes.IJwk> {
         return new Promise((resolve, reject) => {
             if (typeof this._jwk === 'undefined') {
                 if (typeof this._cryptoKey === 'undefined') {
                     return reject(new Error(Errors.NO_BASE_KEY_VALUE));
                 }
                 exportCryptoKey('jwk', this._cryptoKey)
-                    .then((exportedJwk: IJwk) => {
+                    .then((exportedJwk: baseTypes.IJwk) => {
                         this.setJWK(exportedJwk, false);
                         return resolve({ ...this._jwk! });
                     })
@@ -409,7 +336,7 @@ export function verifyDataSignature(
  * @returns - Encrypted data.
  */
 export function encrypt(
-    params: ITranscryptParams,
+    params: baseTypes.ITranscryptParams,
     key: BaseKey,
     plainData: Uint8Array,
 ): Promise<Uint8Array> {
@@ -438,7 +365,7 @@ export function encrypt(
  * @returns - Plain decrypted data.
  */
 export function decrypt(
-    params: ITranscryptParams,
+    params: baseTypes.ITranscryptParams,
     key: BaseKey,
     encryptedData: Uint8Array,
 ): Promise<Uint8Array> {
@@ -462,7 +389,7 @@ export function decrypt(
  * Basic cryptographic key pair interface.
  */
 export interface IBaseKeyPair {
-    keyPairParams: IKeyPairParams;
+    keyPairParams: baseTypes.IKeyPairParams;
     publicKey: BaseKey;
     privateKey: BaseKey;
 }

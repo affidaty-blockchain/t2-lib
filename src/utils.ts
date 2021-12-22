@@ -1,10 +1,6 @@
 import { encode as mpEncode, decode as mpDecode } from 'msgpack-lite';
 import fastSha256 from 'fast-sha256';
 import { bufferToArrayBuffer } from './binConversions';
-import {
-    DEF_AES_IV_BYTE_LEN as defIVLength,
-    DEF_AES_SALT_BYTE_LEN as defSaltLength,
-} from './cryptography/cryptoDefaults';
 
 /**
  * Produces sha256 hash of given data.
@@ -86,22 +82,4 @@ export function numRange(
         { length: (stop - start) / step + 1 },
         (_, i) => { return start + (i * step); },
     );
-}
-
-interface ISaltAndIV {
-    salt: Uint8Array;
-    iv: Uint8Array;
-}
-
-export function getSaltAndIV(
-    data: Uint8Array,
-    saltLength: number = defSaltLength,
-    ivLength: number = defIVLength,
-): ISaltAndIV {
-    const salt = data.slice(0, saltLength);
-    const iv = data.slice(saltLength, saltLength + ivLength);
-    return {
-        salt,
-        iv,
-    };
 }
