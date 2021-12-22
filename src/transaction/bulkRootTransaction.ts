@@ -3,6 +3,7 @@ import { TKeyGenAlgorithmValidHashValues } from '../cryptography/base';
 import {
     DEF_SIGN_HASH_ALGORITHM as defaultSignHash,
 } from '../cryptography/cryptoDefaults';
+import { BaseECKey } from '../cryptography/baseECKey';
 import {
     BaseTxData,
     IBaseTxDataUnnamedObject,
@@ -16,22 +17,19 @@ import {
     IBaseTxObject,
 } from './baseTransaction';
 
-interface IUnitaryTxUnnamedObject extends IBaseTxUnnamedObject {
+interface IBulkRootTxUnnamedObject extends IBaseTxUnnamedObject {
     [1]: IBaseTxDataUnnamedObject;
-    [2]: Buffer;
 }
 
-interface IUnitaryTxObjectWithBuffers extends IBaseTxObjectWithBuffers {
+interface IBulkRootTxObjectWithBuffers extends IBaseTxObjectWithBuffers {
     data: IBaseTxDataObjectWithBuffers;
-    signature: Buffer;
 }
 
-interface IUnitaryTxObject extends IBaseTxObject {
+interface IBulkRootTxObject extends IBaseTxObject {
     data: IBaseTxDataObject;
-    signature: Uint8Array;
 }
 
-export class UnitaryTransaction extends BaseTransaction {
+export class BulkRootTransaction extends BaseTransaction {
     protected _data: BaseTxData;
 
     constructor(
@@ -42,14 +40,13 @@ export class UnitaryTransaction extends BaseTransaction {
         this._typeTag = this._data.typeTag;
     }
 
-    public toUnnamedObject(): Promise<IUnitaryTxUnnamedObject> {
+    public toUnnamedObject(): Promise<IBulkRootTxUnnamedObject> {
         return new Promise((resolve, reject) => {
             this._data.toUnnamedObject()
                 .then((unnamedData: IBaseTxDataUnnamedObject) => {
-                    const resultObj: IUnitaryTxUnnamedObject = [
+                    const resultObj: IBulkRootTxUnnamedObject = [
                         this._typeTag,
                         unnamedData,
-                        this._signature,
                     ];
                     return resolve(resultObj);
                 })
@@ -59,14 +56,13 @@ export class UnitaryTransaction extends BaseTransaction {
         });
     }
 
-    public toObjectWithBuffers(): Promise<IUnitaryTxObjectWithBuffers> {
+    public toObjectWithBuffers(): Promise<IBulkRootTxObjectWithBuffers> {
         return new Promise((resolve, reject) => {
             this._data.toObjectWithBuffers()
                 .then((dataObj: IBaseTxDataObjectWithBuffers) => {
-                    const resultObj: IUnitaryTxObjectWithBuffers = {
+                    const resultObj: IBulkRootTxObjectWithBuffers = {
                         type: this._typeTag,
                         data: dataObj,
-                        signature: this._signature,
                     };
                     return resolve(resultObj);
                 })
@@ -76,14 +72,13 @@ export class UnitaryTransaction extends BaseTransaction {
         });
     }
 
-    public toObject(): Promise<IUnitaryTxObject> {
+    public toObject(): Promise<IBulkRootTxObject> {
         return new Promise((resolve, reject) => {
             this._data.toObject()
                 .then((dataObj: IBaseTxDataObject) => {
-                    const resultObj: IUnitaryTxObject = {
+                    const resultObj: IBulkRootTxObject = {
                         type: this._typeTag,
                         data: dataObj,
-                        signature: new Uint8Array(this._signature),
                     };
                     return resolve(resultObj);
                 })
@@ -93,17 +88,14 @@ export class UnitaryTransaction extends BaseTransaction {
         });
     }
 
-    public fromUnnamedObject(passedObj: IUnitaryTxUnnamedObject): Promise<boolean> {
+    public fromUnnamedObject(passedObj: IBulkRootTxUnnamedObject): Promise<boolean> {
         return new Promise((resolve, reject) => {
             if (passedObj[1][0] !== BaseTxData.defaultSchema) {
                 return reject(new Error(Errors.INVALID_SCHEMA));
             }
             this._data.fromUnnamedObject(passedObj[1])
                 .then((result: boolean) => {
-                    if (result) {
-                        this._typeTag = passedObj[0];
-                        this._signature = passedObj[2];
-                    }
+                    this._typeTag = passedObj[0];
                     return resolve(result);
                 })
                 .catch((error: any) => {
@@ -117,14 +109,11 @@ export class UnitaryTransaction extends BaseTransaction {
      * values represented by Buffers
      * @param passedObj - object with named members and binary values represented by Buffers
      */
-    public fromObjectWithBuffers(passedObj: IUnitaryTxObjectWithBuffers): Promise<boolean> {
+    public fromObjectWithBuffers(passedObj: IBulkRootTxObjectWithBuffers): Promise<boolean> {
         return new Promise((resolve, reject) => {
             this._data.fromObjectWithBuffers(passedObj.data)
                 .then((result: boolean) => {
-                    if (result) {
-                        this._typeTag = passedObj.type;
-                        this._signature = passedObj.signature;
-                    }
+                    this._typeTag = passedObj.type;
                     return resolve(result);
                 })
                 .catch((error: any) => {
@@ -138,19 +127,28 @@ export class UnitaryTransaction extends BaseTransaction {
      * values represented by Uint8Arrays
      * @param passedObj - object with named members and binary values represented by Uint8Arrays
      */
-    public fromObject(passedObj: IUnitaryTxObject): Promise<boolean> {
+    public fromObject(passedObj: IBulkRootTxObject): Promise<boolean> {
         return new Promise((resolve, reject) => {
             this._data.fromObject(passedObj.data)
                 .then((result: boolean) => {
-                    if (result) {
-                        this._typeTag = passedObj.type;
-                        this._signature = Buffer.from(passedObj.signature);
-                    }
+                    this._typeTag = passedObj.type;
                     return resolve(result);
                 })
                 .catch((error: any) => {
                     return reject(error);
                 });
+        });
+    }
+
+    public sign(privateKey: BaseECKey): Promise<boolean> {
+        return new Promise((resolve,reject) => {
+            return reject(new Error(Errors.BULK_ROOT_TX_NO_SIGN));
+        });
+    }
+
+    public verify(): Promise<boolean> {
+        return new Promise((resolve, reject) => {
+            return reject(new Error(Errors.BULK_ROOT_TX_NO_VERIFY));
         });
     }
 }

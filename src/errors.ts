@@ -34,3 +34,5 @@ export const REQUEST_UNSUPPORTED_METHOD = 'Unsupported request method.';
 export const KEY_IMPORT_CLASS_NOT_INIT = 'Key class object must be initialized first.';
 export const KEY_IMPORT_UNKNOWN_FORMAT = 'Could not determine the key format.';
 export const INVALID_SCHEMA = 'Invalid transaction schema.';
+export const BULK_ROOT_TX_NO_SIGN = 'Cannot sign bulk root transaction directly. Sign the whole bulk instead.';
+export const BULK_ROOT_TX_NO_VERIFY = 'Cannot verify bulk root transaction directly. Verify the whole bulk instead.';

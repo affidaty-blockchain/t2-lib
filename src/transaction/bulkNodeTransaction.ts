@@ -8,17 +8,17 @@ import {
     IBulkNodeTxDataUnnamedObject,
     IBulkNodeTxDataObjectWithBuffers,
     IBulkNodeTxDataObject,
- } from './bulkNodeTxData';
+} from './bulkNodeTxData';
 import {
-    Transaction,
+    BaseTransaction,
     IBaseTxUnnamedObject,
     IBaseTxObjectWithBuffers,
     IBaseTxObject,
-} from './transaction';
+} from './baseTransaction';
 
 interface IBulkNodeTxUnnamedObject extends IBaseTxUnnamedObject {
-    [0]: IBulkNodeTxDataUnnamedObject;
-    [1]: Buffer;
+    [1]: IBulkNodeTxDataUnnamedObject;
+    [2]: Buffer;
 }
 
 interface IBulkNodeTxObjectWithBuffers extends IBaseTxObjectWithBuffers {
@@ -31,7 +31,7 @@ interface IBulkNodeTxObject extends IBaseTxObject {
     signature: Uint8Array;
 }
 
-export class UnitaryTransaction extends Transaction {
+export class BulkNodeTransaction extends BaseTransaction {
     protected _data: BulkNodeTxData;
 
     constructor(
@@ -39,6 +39,7 @@ export class UnitaryTransaction extends Transaction {
     ) {
         super(BulkNodeTxData.defaultSchema, hash);
         this._data = new BulkNodeTxData();
+        this._typeTag = this._data.typeTag;
     }
 
     public toUnnamedObject(): Promise<IBulkNodeTxUnnamedObject> {
@@ -46,8 +47,9 @@ export class UnitaryTransaction extends Transaction {
             this._data.toUnnamedObject()
                 .then((unnamedData: IBulkNodeTxDataUnnamedObject) => {
                     const resultObj: IBulkNodeTxUnnamedObject = [
+                        this._typeTag,
                         unnamedData,
-                        this._signature
+                        this._signature,
                     ];
                     return resolve(resultObj);
                 })
@@ -62,6 +64,7 @@ export class UnitaryTransaction extends Transaction {
             this._data.toObjectWithBuffers()
                 .then((dataObj: IBulkNodeTxDataObjectWithBuffers) => {
                     const resultObj: IBulkNodeTxObjectWithBuffers = {
+                        type: this._typeTag,
                         data: dataObj,
                         signature: this._signature,
                     };
@@ -78,6 +81,7 @@ export class UnitaryTransaction extends Transaction {
             this._data.toObject()
                 .then((dataObj: IBulkNodeTxDataObject) => {
                     const resultObj: IBulkNodeTxObject = {
+                        type: this._typeTag,
                         data: dataObj,
                         signature: new Uint8Array(this._signature),
                     };
@@ -91,13 +95,14 @@ export class UnitaryTransaction extends Transaction {
 
     public fromUnnamedObject(passedObj: IBulkNodeTxUnnamedObject): Promise<boolean> {
         return new Promise((resolve, reject) => {
-            if (passedObj[0][0] !== BulkNodeTxData.defaultSchema) {
+            if (passedObj[1][0] !== BulkNodeTxData.defaultSchema) {
                 return reject(new Error(Errors.INVALID_SCHEMA));
             }
-            this._data.fromUnnamedObject(passedObj[0])
+            this._data.fromUnnamedObject(passedObj[1])
                 .then((result: boolean) => {
                     if (result) {
-                        this._signature = passedObj[1];
+                        this._typeTag = passedObj[0];
+                        this._signature = passedObj[2];
                     }
                     return resolve(result);
                 })
@@ -117,6 +122,7 @@ export class UnitaryTransaction extends Transaction {
             this._data.fromObjectWithBuffers(passedObj.data)
                 .then((result: boolean) => {
                     if (result) {
+                        this._typeTag = passedObj.type;
                         this._signature = passedObj.signature;
                     }
                     return resolve(result);
@@ -137,6 +143,7 @@ export class UnitaryTransaction extends Transaction {
             this._data.fromObject(passedObj.data)
                 .then((result: boolean) => {
                     if (result) {
+                        this._typeTag = passedObj.type;
                         this._signature = Buffer.from(passedObj.signature);
                     }
                     return resolve(result);

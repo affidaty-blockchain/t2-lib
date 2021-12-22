@@ -1,13 +1,13 @@
 import { bytesToObject, objectToBytes } from './utils';
-import { ITxUnnamedObject } from './transaction';
+import { IBaseTxUnnamedObject } from './transaction/baseTransaction';
 
 export namespace MessageTypes {
     export const Undefined = -1;
     export const Exception = 0;
     // export const Subscribe = 1;
     // export const Unsubscribe = 2;
-    export const SubmitTransactionRequest = 3;
-    export const SubmitTransactionResponse = 4;
+    export const PutTransactionRequest = 3;
+    export const PutTransactionResponse = 4;
     export const GetTransactionRequest = 5;
     export const GetTransactionResponse = 6;
     export const GetReceiptRequest = 7;
@@ -46,12 +46,12 @@ const MsgStructs: IMessagesSettings = {
     //     name: 'Unsubscribe',
     //     bodyOrder: ['id', 'event'],
     // },
-    [MessageTypes.SubmitTransactionRequest]: { // ok
-        name: 'SubmitTransaction request',
+    [MessageTypes.PutTransactionRequest]: { // ok
+        name: 'PutTransaction request',
         bodyOrder: ['confirmed', 'tx'],
     },
-    [MessageTypes.SubmitTransactionResponse]: { // ok
-        name: 'SubmitTransaction response',
+    [MessageTypes.PutTransactionResponse]: { // ok
+        name: 'PutTransaction response',
         bodyOrder: ['ticket'],
     },
 
@@ -217,9 +217,9 @@ export namespace stdTrinciMessages {
 
     export function submitTransaction(
         confirmed: boolean,
-        TxObj: ITxUnnamedObject,
+        TxObj: IBaseTxUnnamedObject,
     ): TrinciMessage {
-        return new TrinciMessage(MessageTypes.SubmitTransactionRequest, {
+        return new TrinciMessage(MessageTypes.PutTransactionRequest, {
             confirmed,
             tx: TxObj,
         });

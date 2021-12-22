@@ -11,13 +11,33 @@ export namespace TxSchemas {
     export const BULK_TX: TTxSchemaType = 'bulkTxSchema';
     export const BULK_ROOT_TX: TTxSchemaType = 'bulkRootTxSchema';
     export const BULK_NODE_TX: TTxSchemaType = 'bulkNodeTxSchema';
+    export const DELEGATION_TX: string = 'bulk_node_tx';
+    export const CERTIFICATE_TX: string = 'bulk_node_tx';
 }
+
+export namespace SignableTypeTags {
+    export const EMPTY_TX: string = '';
+    export const UNITARY_TX: string = 'unit_tx';
+    export const BULK_TX: string = 'bulk_tx';
+    export const BULK_ROOT_TX: string = 'bulk_root_tx';
+    export const BULK_NODE_TX: string = 'bulk_node_tx';
+    export const DELEGATION_TX: string = 'bulk_node_tx';
+    export const CERTIFICATE_TX: string = 'bulk_node_tx';
+}
+
+const SCHEMA_TO_TYPE_TAG_MAP = new Map<TTxSchemaType, string>();
+SCHEMA_TO_TYPE_TAG_MAP.set(TxSchemas.EMPTY_TX, SignableTypeTags.EMPTY_TX);
+SCHEMA_TO_TYPE_TAG_MAP.set(TxSchemas.UNITARY_TX, SignableTypeTags.UNITARY_TX);
+SCHEMA_TO_TYPE_TAG_MAP.set(TxSchemas.BULK_TX, SignableTypeTags.BULK_TX);
+SCHEMA_TO_TYPE_TAG_MAP.set(TxSchemas.BULK_ROOT_TX, SignableTypeTags.BULK_ROOT_TX);
+SCHEMA_TO_TYPE_TAG_MAP.set(TxSchemas.BULK_NODE_TX, SignableTypeTags.BULK_NODE_TX);
 
 const DEFAULT_SCHEMA: TTxSchemaType = TxSchemas.EMPTY_TX;
 
 export interface ICommonParentTxDataUnnamedObject extends Array<any> {
     /** Transaction schema */
     [0]: TTxSchemaType;
+    [key: number]: any;
 }
 
 export interface ICommonParentTxDataObjectWithBuffers extends Object {
@@ -31,6 +51,8 @@ export interface ICommonParentTxDataObject extends Object {
 }
 
 export class CommonParentTxData {
+    protected _typeTag: string;
+
     protected _schema: TTxSchemaType;
 
     protected _signerPubKey: BaseECKey;
@@ -62,6 +84,18 @@ export class CommonParentTxData {
         this._method = '';
         this._args = Buffer.from([]);
         this._dependsOn = Buffer.from([]);
+        this._typeTag = SCHEMA_TO_TYPE_TAG_MAP.has(schema)
+        ? SCHEMA_TO_TYPE_TAG_MAP.get(schema)!
+        : SignableTypeTags.EMPTY_TX;
+    }
+
+    public set typeTag(typeTag: string) {
+        this._typeTag = typeTag;
+    }
+
+    /** Reference to the schema used in this data type. */
+    public get typeTag(): string {
+        return this._typeTag;
     }
 
     /** Reference to the default schema used in this data type. */
@@ -177,7 +211,7 @@ export class CommonParentTxData {
     }
 
     /** Smart contract hash, which will be invoked on target account. */
-    public setSmartContractHash(hash: Buffer | string) {
+    public setSmartContractHash(hash: Uint8Array | string) {
         if (typeof hash === 'string') {
             this.smartContractHashHex = hash;
         } else {
@@ -311,7 +345,7 @@ export class CommonParentTxData {
      */
     public fromUnnamedObject(unnamedObj: ICommonParentTxDataUnnamedObject): Promise<boolean> {
         return new Promise((resolve) => {
-            this.schema = unnamedObj[0];
+            this._schema = unnamedObj[0];
             return resolve(true);
         });
     }

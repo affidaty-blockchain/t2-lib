@@ -1,5 +1,5 @@
 import { toBuffer } from './utils';
-import { Transaction } from './transaction';
+import { BaseTransaction } from './transaction/baseTransaction';
 
 function commonPrepare(
     target: string,
@@ -7,14 +7,14 @@ function commonPrepare(
     contract: Uint8Array | string,
     method: string,
     args: any,
-): Transaction {
-    const tx = new Transaction();
-    tx.accountId = target;
-    tx.genNonce();
-    tx.networkName = network;
-    tx.setSmartContractHash(contract);
-    tx.smartContractMethod = method;
-    tx.smartContractMethodArgs = args;
+): BaseTransaction {
+    const tx = new BaseTransaction();
+    tx.data.accountId = target;
+    tx.data.genNonce();
+    tx.data.networkName = network;
+    tx.data.setSmartContractHash(contract);
+    tx.data.smartContractMethod = method;
+    tx.data.smartContractMethodArgs = args;
     return tx;
 }
 

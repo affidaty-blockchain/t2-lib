@@ -101,7 +101,6 @@ export interface IBaseTxDataObject extends ICommonParentTxDataObject {
 }
 
 export class BaseTxData extends CommonParentTxData {
-
     public static get defaultSchema(): string {
         return DEFAULT_SCHEMA;
     }
@@ -204,7 +203,7 @@ export class BaseTxData extends CommonParentTxData {
 
     public fromUnnamedObject(passedObj: IBaseTxDataUnnamedObject): Promise<boolean> {
         return new Promise((resolve, reject) => {
-            if (passedObj[0] !== DEFAULT_SCHEMA) {
+            if (passedObj[0] !== this._schema) {
                 return reject(new Error(Errors.INVALID_SCHEMA));
             }
             this._schema = passedObj[0];

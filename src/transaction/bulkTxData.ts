@@ -3,27 +3,34 @@ import {
     TxSchemas,
 } from './commonParentTxData';
 import {
-    BaseTxData,
-    IBaseTxDataUnnamedObject,
-    IBaseTxDataObjectWithBuffers,
-    IBaseTxDataObject,
-} from './baseTxData';
+    CommonParentTxData,
+    ICommonParentTxDataUnnamedObject,
+    ICommonParentTxDataObjectWithBuffers,
+    ICommonParentTxDataObject,
+} from './commonParentTxData';
+import { BulkRootTransaction } from './bulkRootTransaction';
+import { BulkNodeTransaction } from './bulkNodeTransaction';
 
-const DEFAULT_SCHEMA = TxSchemas.BULK_NODE_TX;
+const DEFAULT_SCHEMA = TxSchemas.BULK_TX;
 
-export interface IBulkNodeTxDataUnnamedObject extends IBaseTxDataUnnamedObject {
-    /** Hash of the bulk root transaction on which this one depends. */
-    [9]: Buffer;
+interface txList extends Array<BulkRootTransaction | BulkNodeTransaction> {
+    [0]: BulkRootTransaction;
+    [key: number]: BulkRootTransaction | BulkNodeTransaction
 }
 
-export interface IBulkNodeTxDataObjectWithBuffers extends IBaseTxDataObjectWithBuffers {
+interface IBulkNodeTxDataUnnamedObject extends ICommonParentTxDataUnnamedObject {
     /** Hash of the bulk root transaction on which this one depends. */
-    dependsOn: Buffer;
+    [1]: txList;
 }
 
-export interface IBulkNodeTxDataObject extends IBaseTxDataObject {
+interface IBulkNodeTxDataObjectWithBuffers extends ICommonParentTxDataObjectWithBuffers {
     /** Hash of the bulk root transaction on which this one depends. */
-    dependsOn: Uint8Array;
+    txs: txList;
+}
+
+interface IBulkNodeTxDataObject extends ICommonParentTxDataObject {
+    /** Hash of the bulk root transaction on which this one depends. */
+    txs: txList;
 }
 
 export class BulkNodeTxData extends BaseTxData {

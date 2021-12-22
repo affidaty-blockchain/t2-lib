@@ -19,20 +19,23 @@ import {
     BulkNodeTxData,
 } from './bulkNodeTxData';
 import {
+    BulkTxData
+} from './bulkTxData';
+import {
     Signable,
     ISignableObject,
     ISignableObjectWithBuffer,
     ISignableUnnamedObject,
 } from '../signable';
 
-const SCHEMA_MAP: Map<TTxSchemaType, ()=>CommonParentTxData> = new Map();
+const SCHEMA_MAP: Map<TTxSchemaType, (schema?: TTxSchemaType)=>CommonParentTxData> = new Map();
 // SCHEMA_MAP.set(CommonParentTxData.defaultSchema, () => { return new CommonParentTxData(); });
-SCHEMA_MAP.set(BaseTxData.defaultSchema, () => { return new BaseTxData(); });
-SCHEMA_MAP.set(BulkNodeTxData.defaultSchema, () => { return new BulkNodeTxData(); });
+SCHEMA_MAP.set(BaseTxData.defaultSchema, (schema) => { return new BaseTxData(schema); });
+SCHEMA_MAP.set(BulkNodeTxData.defaultSchema, (schema) => { return new BulkNodeTxData(schema); });
 
 export interface IBaseTxUnnamedObject extends ISignableUnnamedObject {
-    [0]: ICommonParentTxDataUnnamedObject,
-    [1]?: Buffer;
+    [1]: ICommonParentTxDataUnnamedObject,
+    [2]?: Buffer;
 }
 
 // exported for usage in Client class
@@ -52,7 +55,7 @@ export interface IBaseTxObject extends ISignableObject {
 /**
  * Class for automatic transaction creation, management and transcoding
  */
-export class Transaction extends Signable {
+export class BaseTransaction extends Signable {
     protected _data: CommonParentTxData;
 
     constructor(
@@ -65,6 +68,7 @@ export class Transaction extends Signable {
         } else {
             throw new Error(Errors.INVALID_SCHEMA);
         }
+        this._typeTag = this._data.typeTag;
     }
 
     public get data(): CommonParentTxData {
@@ -87,10 +91,11 @@ export class Transaction extends Signable {
             this._data.toUnnamedObject()
                 .then((unnamedData: ICommonParentTxDataUnnamedObject) => {
                     const resultObj: IBaseTxUnnamedObject = [
+                        this._typeTag,
                         unnamedData,
                     ];
                     if (this._signature.byteLength > 0) {
-                        resultObj[1] = this._signature;
+                        resultObj[2] = this._signature;
                     }
                     return resolve(resultObj);
                 })
@@ -110,6 +115,7 @@ export class Transaction extends Signable {
             this._data.toObjectWithBuffers()
                 .then((dataObj: ICommonParentTxDataObjectWithBuffers) => {
                     const resultObj: IBaseTxObjectWithBuffers = {
+                        type: this._typeTag,
                         data: dataObj,
                     };
                     if (this._signature.byteLength > 0) {
@@ -133,6 +139,7 @@ export class Transaction extends Signable {
             this._data.toObject()
                 .then((dataObj: ICommonParentTxDataObject) => {
                     const resultObj: IBaseTxObject = {
+                        type: this._typeTag,
                         data: dataObj,
                     };
                     if (this._signature.byteLength > 0) {
@@ -152,14 +159,15 @@ export class Transaction extends Signable {
      */
     public fromUnnamedObject(passedObj: IBaseTxUnnamedObject): Promise<boolean> {
         return new Promise((resolve, reject) => {
-            if (!SCHEMA_MAP.has(passedObj[0][0])) {
+            if (!SCHEMA_MAP.has(passedObj[1][0])) {
                 return reject(new Error(Errors.INVALID_SCHEMA));
             }
-            this._data = SCHEMA_MAP.get(passedObj[0][0])!();
-            this._data.fromUnnamedObject(passedObj[0])
+            this._data = SCHEMA_MAP.get(passedObj[1][0])!();
+            this._data.fromUnnamedObject(passedObj[1])
                 .then((result: boolean) => {
-                    if (result && passedObj[1]) {
-                        this._signature = passedObj[1];
+                    this._typeTag = passedObj[0];
+                    if (result && passedObj[2]) {
+                        this._signature = passedObj[2];
                     }
                     return resolve(result);
                 })
@@ -182,6 +190,7 @@ export class Transaction extends Signable {
             this._data = SCHEMA_MAP.get(passedObj.data.schema)!();
             this._data.fromObjectWithBuffers(passedObj.data)
                 .then((result: boolean) => {
+                    this._typeTag = passedObj.type;
                     if (result && passedObj.signature) {
                         this._signature = passedObj.signature;
                     }
@@ -206,6 +215,7 @@ export class Transaction extends Signable {
             this._data = SCHEMA_MAP.get(passedObj.data.schema)!();
             this._data.fromObject(passedObj.data)
                 .then((result: boolean) => {
+                    this._typeTag = passedObj.type;
                     if (result && passedObj.signature) {
                         this._signature = Buffer.from(passedObj.signature);
                     }

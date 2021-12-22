@@ -3,7 +3,7 @@
 // please set the correct node url, network name and asset smart contract hash
 
 import { Account } from '../src/account';
-import { Transaction } from '../src/transaction';
+import { BaseTransaction } from '../src/transaction/baseTransaction';
 import { stdTxPrepareUnsigned } from '../src/stdTxPrepareUnsigned';
 import { Client } from '../src/client';
 
@@ -79,7 +79,7 @@ describe('Testing transaction class', () => {
 
         const mintTx = await client.txData(mintTicket);
         await expect(mintTx.verify()).resolves.toEqual(true);
-        expect(mintTx.smartContractMethod).toEqual('mint');
+        expect(mintTx.data.smartContractMethod).toEqual('mint');
 
         const mintReceipt = await client.waitForTicket(mintTicket, 10, 1000);
         expect(mintReceipt.success).toBeTruthy();
@@ -108,7 +108,7 @@ describe('Testing transaction class', () => {
         const assetsListKeys = Object.keys(assetsList);
         expect(assetsListKeys.length).toBeGreaterThan(0);
 
-        const txArray: Transaction[] = [];
+        const txArray: BaseTransaction[] = [];
         for (let i = 0; i < 5; i += 1) {
             txArray.push(await client.prepareTx(
                 assetAcc.accountId,

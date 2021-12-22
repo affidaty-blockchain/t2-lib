@@ -6,7 +6,7 @@ import { bytesToObject } from './utils';
 import { SERVICE_ACCOUNT_ID as defServiceAccountID } from './systemDefaults';
 import { BaseECKey } from './cryptography/baseECKey';
 import { Account } from './account';
-import { Transaction, ITxUnnamedObject } from './transaction';
+import { BaseTransaction, IBaseTxUnnamedObject } from './transaction/baseTransaction';
 
 export function sleep(ms: number) {
     return new Promise((resolve) => { setTimeout(resolve, ms); });
@@ -223,7 +223,7 @@ export class Client {
 
     /** Name of the TRINCI network */
     public set network(newNetName: string) {
-        this.t2CoreBaseUrl = newNetName;
+        this.t2CoreNetworkName = newNetName;
     }
 
     /** Name of the TRINCI network */
@@ -257,14 +257,14 @@ export class Client {
         contract: Uint8Array | string,
         method: string,
         args: any,
-    ): Transaction {
-        const tx = new Transaction();
-        tx.accountId = targetID;
-        tx.genNonce();
-        tx.networkName = this.t2CoreNetworkName;
-        tx.setSmartContractHash(contract);
-        tx.smartContractMethod = method;
-        tx.smartContractMethodArgs = args;
+    ): BaseTransaction {
+        const tx = new BaseTransaction();
+        tx.data.accountId = targetID;
+        tx.data.genNonce();
+        tx.data.networkName = this.t2CoreNetworkName;
+        tx.data.setSmartContractHash(contract);
+        tx.data.smartContractMethod = method;
+        tx.data.smartContractMethodArgs = args;
         return tx;
     }
 
@@ -284,14 +284,14 @@ export class Client {
         method: string,
         args: any,
         signerPrivateKey: BaseECKey,
-    ): Promise<Transaction> {
+    ): Promise<BaseTransaction> {
         return new Promise((resolve, reject) => {
             const tx = this.prepareUnsignedTx(targetID, contract, method, args);
             tx.sign(signerPrivateKey)
                 .then(() => {
                     return resolve(tx);
                 })
-                .catch((error) => {
+                .catch((error: any) => {
                     return reject(error);
                 });
         });
@@ -302,20 +302,20 @@ export class Client {
      * @param txToSubmit - Transaction to submit
      * @returns - Transaction ticket.
      */
-    submitTx(txToSubmit: Transaction): Promise<string> {
+    submitTx(txToSubmit: BaseTransaction): Promise<string> {
         return new Promise((resolve, reject) => {
             if (
                 (this.t2CoreNetworkName !== '')
-                && (txToSubmit.networkName !== this.t2CoreNetworkName)
+                && (txToSubmit.data.networkName !== this.t2CoreNetworkName)
             ) {
                 return reject(new Error(Errors.WRONG_TX_NETWORK));
             }
             txToSubmit.toUnnamedObject()
-                .then((txObj: ITxUnnamedObject) => {
+                .then((txObj: IBaseTxUnnamedObject) => {
                     const msg = stdTrinciMessages.submitTransaction(true, txObj);
                     this.submitTrinciMessage(msg)
                         .then((resultMessage: TrinciMessage) => {
-                            resultMessage.assertType(MessageTypes.SubmitTransactionResponse);
+                            resultMessage.assertType(MessageTypes.PutTransactionResponse);
                             return resolve(Buffer.from(resultMessage.body.ticket).toString('hex'));
                         })
                         .catch((error: any) => {
@@ -333,7 +333,7 @@ export class Client {
      * @param txToSubmit - Transaction to submit
      * @returns - array of transaction tickets (or errors) in the same order they were given.
      */
-    submitTxArray(txList: Transaction[]): Promise<Array<string | Error>> {
+    submitTxArray(txList: BaseTransaction[]): Promise<Array<string | Error>> {
         return new Promise((resolve, reject) => {
             const resultsArray: Array<string | Error> = new Array(txList.length);
             const promisesArray = new Array<Promise<string>>(txList.length);
@@ -404,7 +404,7 @@ export class Client {
      * @returns - Transaction ticket.
      */
     signAndSubmitTx(
-        tx: Transaction,
+        tx: BaseTransaction,
         signerPrivateKey: BaseECKey,
     ): Promise<string> {
         return new Promise((resolve, reject) => {
@@ -430,13 +430,13 @@ export class Client {
      * or similar methods.
      * @returns - Transaction.
      */
-    txData(ticket: string): Promise<Transaction> {
+    txData(ticket: string): Promise<BaseTransaction> {
         return new Promise((resolve, reject) => {
             const msg = stdTrinciMessages.getTransaction(ticket);
             this.submitTrinciMessage(msg)
                 .then((resultMessage: TrinciMessage) => {
                     resultMessage.assertType(MessageTypes.GetTransactionResponse);
-                    const resultTx = new Transaction();
+                    const resultTx = new BaseTransaction();
                     resultTx.fromUnnamedObject(resultMessage.body.tx)
                         .then(() => {
                             return resolve(resultTx);
