@@ -1,5 +1,6 @@
 import { Subtle } from './webCrypto';
-import { IKeyPairParams, IBaseKeyPair } from './base';
+import { IKeyPairParams } from './baseTypes';
+import { IBaseKeyPair } from './base';
 import { RSAOAEP384KeyPairParams as defaultParams } from './cryptoDefaults';
 import { RSAKey } from './RSAKey';
 

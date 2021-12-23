@@ -1,6 +1,7 @@
 import { arrayBufferToBase58, base58ToArrayBuffer } from './binConversions';
 import { objectToBytes, bytesToObject } from './utils';
-import { signData, verifyDataSignature, TKeyGenAlgorithmValidHashValues } from './cryptography/base';
+import { TKeyGenAlgorithmValidHashValues } from './cryptography/baseTypes';
+import { signData, verifyDataSignature } from './cryptography/base';
 import { DEF_SIGN_HASH_ALGORITHM as defaultSignHash } from './cryptography/cryptoDefaults';
 import { BaseECKey } from './cryptography/baseECKey';
 

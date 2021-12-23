@@ -1,6 +1,6 @@
 import * as Errors from '../errors';
 import { objectToBytes, sha256 } from '../utils';
-import { TKeyGenAlgorithmValidHashValues } from '../cryptography/base';
+import { TKeyGenAlgorithmValidHashValues } from '../cryptography/baseTypes';
 import {
     DEF_SIGN_HASH_ALGORITHM as defaultSignHash,
 } from '../cryptography/cryptoDefaults';
@@ -18,9 +18,9 @@ import {
 import {
     BulkNodeTxData,
 } from './bulkNodeTxData';
-import {
-    BulkTxData,
-} from './bulkTxData';
+// import {
+//     BulkTxData,
+// } from './bulkTxData';
 import {
     Signable,
     ISignableObject,
@@ -31,7 +31,7 @@ import {
 const SCHEMA_MAP: Map<TTxSchemaType, (schema?: TTxSchemaType)=>CommonParentTxData> = new Map();
 // SCHEMA_MAP.set(CommonParentTxData.defaultSchema, () => { return new CommonParentTxData(); });
 SCHEMA_MAP.set(BaseTxData.defaultSchema, (schema) => { return new BaseTxData(schema); });
-SCHEMA_MAP.set(BulkTxData.defaultSchema, (schema) => { return new BulkTxData(schema); });
+// SCHEMA_MAP.set(BulkTxData.defaultSchema, (schema) => { return new BulkTxData(schema); });
 SCHEMA_MAP.set(BulkNodeTxData.defaultSchema, (schema) => { return new BulkNodeTxData(schema); });
 
 export interface IBaseTxUnnamedObject extends ISignableUnnamedObject {

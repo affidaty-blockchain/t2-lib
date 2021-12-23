@@ -1,7 +1,7 @@
 import { toBigIntBE, toBufferBE } from 'bigint-buffer';
 import { modInv, modPow } from 'bigint-mod-arith';
 import { base64urlToArrayBuffer, base64urlToBuffer } from '../binConversions';
-import { IJwk } from './base';
+import { IJwk } from './baseTypes';
 import { RSAOAEP384KeyPairParams as defaultRSAParams } from './cryptoDefaults';
 import { RSAKey } from './RSAKey';
 import { RSAKeyPair } from './RSAKeyPair';

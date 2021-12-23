@@ -1,6 +1,6 @@
 import { Subtle } from './cryptography/webCrypto';
 import { arrayBufferToBase58 } from './binConversions';
-import { IKeyPairParams } from './cryptography/base';
+import { IKeyPairParams } from './cryptography/baseTypes';
 import {
     ECDSAP384R1KeyPairParams as defaultKeyPairParams,
     EKeyParamsIds,

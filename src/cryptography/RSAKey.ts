@@ -2,10 +2,12 @@ import * as Errors from '../errors';
 import {
     IJwk,
     IKeyParams,
+    TValidKeyType,
+} from './baseTypes';
+import {
     BaseKey,
     keyBinToJWK,
     keyJWKToBin,
-    TValidKeyType,
 } from './base';
 import { mKeyPairParams, RSAOAEP384KeyPairParams as defaultParams } from './cryptoDefaults';
 

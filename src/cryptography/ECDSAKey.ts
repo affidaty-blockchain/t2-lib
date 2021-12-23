@@ -1,4 +1,4 @@
-import { IKeyParams } from './base';
+import { IKeyParams } from './baseTypes';
 import { ECDSAP384R1KeyPairParams as defaultParams } from './cryptoDefaults';
 import { BaseECKey } from './baseECKey';
 

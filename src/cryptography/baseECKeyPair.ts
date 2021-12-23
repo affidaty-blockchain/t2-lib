@@ -1,5 +1,8 @@
 import { Subtle } from './webCrypto';
-import { IKeyPairParams, IBaseKeyPair } from './base';
+import {
+    IKeyPairParams,
+} from './baseTypes';
+import { IBaseKeyPair } from './base';
 import { BaseECKey } from './baseECKey';
 
 export interface IBaseECKeyPair extends IBaseKeyPair {

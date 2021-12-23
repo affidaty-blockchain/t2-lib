@@ -2,6 +2,8 @@ import * as Errors from '../errors';
 import {
     IJwk,
     IKeyParams,
+} from './baseTypes';
+import {
     BaseKey,
     keyBinToJWK,
     keyJWKToBin,

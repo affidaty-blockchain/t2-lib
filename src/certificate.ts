@@ -6,7 +6,7 @@ import {
     sha256,
     numRange,
 } from './utils';
-import { TKeyGenAlgorithmValidHashValues } from './cryptography/base';
+import { TKeyGenAlgorithmValidHashValues } from './cryptography/baseTypes';
 import {
     DEF_SIGN_HASH_ALGORITHM as defaultSignHash,
     EmptyKeyParams,

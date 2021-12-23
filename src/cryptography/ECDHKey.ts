@@ -1,6 +1,7 @@
 import * as Errors from '../errors';
 import { Subtle } from './webCrypto';
-import { IKeyParams, BaseKey } from './base';
+import { IKeyParams } from './baseTypes';
+import { BaseKey } from './base';
 import { ECDHP384R1KeyPairParams as defaultParams } from './cryptoDefaults';
 import { BaseECKey } from './baseECKey';
 
