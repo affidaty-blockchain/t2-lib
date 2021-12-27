@@ -164,11 +164,35 @@ export class BulkTransaction extends BaseTransaction {
         return new Promise((resolve, reject) => {
             this._data.root.getTicket()
                 .then((rootTicket: string) => {
+                    const nodesVerifyPromises: Array<Promise<boolean>> = [];
                     for (let i = 0; i < this._data.nodes.length; i += 1) {
                         if (this._data.nodes[i].data.dependsOnHex !== rootTicket) {
-                            return reject(new Error(`Node transaction with index ${i} not dependant on root`));
+                            return reject(new Error(`Node transaction with index ${i} not dependant on root.`));
                         }
+                        if (this._data.nodes[i].data.networkName
+                            !== this._data.root.data.networkName
+                        ) {
+                            return reject(new Error(`Node transaction with index ${i} was created for a different network than root.`));
+                        }
+                        nodesVerifyPromises.push(this._data.nodes[i].verify());
                     }
+                    Promise.allSettled(nodesVerifyPromises)
+                        .then((results) => {
+                            for (let i = 0; i < results.length; i += 1) {
+                                if (results[i].status === 'rejected'
+                                    || !(results[i] as PromiseFulfilledResult<boolean>).value
+                                ) {
+                                    return reject(new Error(`Node transaction with index ${i} could not be verified.`));
+                                }
+                            }
+                            this.verifySignature(this._data.root.data.signerPublicKey)
+                                .then((result) => {
+                                    return resolve(result);
+                                })
+                                .catch((error: any) => {
+                                    return reject(error);
+                                });
+                        });
                 })
                 .catch((error: any) => {
                     return reject(error);
