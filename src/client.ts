@@ -7,12 +7,20 @@ import { SERVICE_ACCOUNT_ID as defServiceAccountID } from './systemDefaults';
 import { BaseECKey } from './cryptography/baseECKey';
 import { Account } from './account';
 import { BaseTransaction, IBaseTxUnnamedObject } from './transaction/baseTransaction';
+import { UnitaryTransaction } from './transaction/unitaryTransaction';
 
 export function sleep(ms: number) {
     return new Promise((resolve) => { setTimeout(resolve, ms); });
 }
 
-type TReqMethod = 'get' | 'GET' | 'post' | 'POST'
+type TReqMethod = 'get' | 'GET' | 'post' | 'POST';
+
+interface IBlockchainSettings {
+    networkName: string;
+    acceptBroadcast: boolean;
+    blockThreshold: number;
+    blockTimeout: number;
+}
 
 const submitMessaggePath = '/api/v1/message';
 
@@ -198,7 +206,7 @@ export class Client {
      * @param customServiceAcc - Account ID hosting service smart contract. Set this only if
      * your blockchain's default service account was changed
      */
-    constructor(baseUrl: string = '', networkName: string = '', customServiceAcc: string = defServiceAccountID) {
+    constructor(baseUrl: string = '', networkName: string = 'bootstrap', customServiceAcc: string = defServiceAccountID) {
         let lastIdx = 0;
         for (let i = baseUrl.length - 1; i >= 0; i -= 1) {
             if (baseUrl[i] !== '/') {
@@ -243,6 +251,38 @@ export class Client {
         this._serviceAccount = customServiceAccount;
     }
 
+    getBlockchainSettings(): Promise<IBlockchainSettings> {
+        return new Promise((resolve, reject) => {
+            this.accountData(this.serviceAccount, ['blockchain:settings'])
+                .then((serviceAccountData: IAccountData) => {
+                    const tempObj = bytesToObject(serviceAccountData.requestedData[0]);
+                    const result: IBlockchainSettings = {
+                        networkName: tempObj.network_name,
+                        acceptBroadcast: tempObj.accept_broadcast,
+                        blockThreshold: tempObj.block_threshold,
+                        blockTimeout: tempObj.block_timeout,
+                    };
+                    return resolve(result);
+                })
+                .catch((error: any) => {
+                    return reject(error);
+                });
+        });
+    }
+
+    autoDetectSettings(): Promise<IBlockchainSettings> {
+        return new Promise((resolve, reject) => {
+            this.getBlockchainSettings()
+                .then((bcSettings: IBlockchainSettings) => {
+                    this.network = bcSettings.networkName;
+                    return resolve(bcSettings);
+                })
+                .catch((error: any) => {
+                    return reject(error);
+                });
+        });
+    }
+
     /**
      * Creates and sets a ready to be signed transaction.
      * Nonce is set automatically.
@@ -257,8 +297,8 @@ export class Client {
         contract: Uint8Array | string,
         method: string,
         args: any,
-    ): BaseTransaction {
-        const tx = new BaseTransaction();
+    ): UnitaryTransaction {
+        const tx = new UnitaryTransaction();
         tx.data.accountId = targetID;
         tx.data.genNonce();
         tx.data.networkName = this.t2CoreNetworkName;
@@ -284,7 +324,7 @@ export class Client {
         method: string,
         args: any,
         signerPrivateKey: BaseECKey,
-    ): Promise<BaseTransaction> {
+    ): Promise<UnitaryTransaction> {
         return new Promise((resolve, reject) => {
             const tx = this.prepareUnsignedTx(targetID, contract, method, args);
             tx.sign(signerPrivateKey)
@@ -652,69 +692,69 @@ export class Client {
         throw new Error('Transactions not executed in time');
     }
 
-    /**
-     * This method returns a list of all published contracts.
-     */
-    registeredContractsList(): Promise<IContractsList> {
-        return new Promise((resolve, reject) => {
-            const msg = stdTrinciMessages.getAccount(`${this._serviceAccount}`, ['contracts']);
-            this.submitTrinciMessage(msg)
-                .then((resultMessage: TrinciMessage) => {
-                    resultMessage.assertType(MessageTypes.GetAccountResponse);
-                    const contractsList = bytesToObject(
-                        new Uint8Array(resultMessage.body.data[0]),
-                    );
-                    const hashes = Object.keys(contractsList);
-                    const resultList: IContractsList = {};
-                    hashes.forEach((hash: string) => {
-                        resultList[hash] = {
-                            name: contractsList[hash][0],
-                            version: contractsList[hash][1],
-                            publisher: contractsList[hash][2],
-                            description: contractsList[hash][3],
-                            url: contractsList[hash][4],
-                        };
-                    });
-                    return resolve(resultList);
-                })
-                .catch((error: any) => {
-                    return reject(new Error(error));
-                });
-        });
-    }
+    // /**
+    //  * This method returns a list of all published contracts.
+    //  */
+    // registeredContractsList(): Promise<IContractsList> {
+    //     return new Promise((resolve, reject) => {
+    //         const msg = stdTrinciMessages.getAccount(`${this._serviceAccount}`, ['contracts']);
+    //         this.submitTrinciMessage(msg)
+    //             .then((resultMessage: TrinciMessage) => {
+    //                 resultMessage.assertType(MessageTypes.GetAccountResponse);
+    //                 const contractsList = bytesToObject(
+    //                     new Uint8Array(resultMessage.body.data[0]),
+    //                 );
+    //                 const hashes = Object.keys(contractsList);
+    //                 const resultList: IContractsList = {};
+    //                 hashes.forEach((hash: string) => {
+    //                     resultList[hash] = {
+    //                         name: contractsList[hash][0],
+    //                         version: contractsList[hash][1],
+    //                         publisher: contractsList[hash][2],
+    //                         description: contractsList[hash][3],
+    //                         url: contractsList[hash][4],
+    //                     };
+    //                 });
+    //                 return resolve(resultList);
+    //             })
+    //             .catch((error: any) => {
+    //                 return reject(new Error(error));
+    //             });
+    //     });
+    // }
 
-    /**
-     * This method returns a list of all assets registered within service account.
-     */
-    registeredAssetsList(): Promise<IAssetsList> {
-        return new Promise((resolve, reject) => {
-            const msg = stdTrinciMessages.getAccount(`${this._serviceAccount}`, ['assets']);
-            this.submitTrinciMessage(msg)
-                .then((resultMessage: TrinciMessage) => {
-                    resultMessage.assertType(MessageTypes.GetAccountResponse);
-                    const resultList: IAssetsList = {};
-                    let assetsList: any = {};
-                    if (resultMessage.body.data[0]) {
-                        assetsList = bytesToObject(
-                            new Uint8Array(resultMessage.body.data[0]),
-                        );
-                    }
-                    const accounts = Object.keys(assetsList);
-                    accounts.forEach((accountId: string) => {
-                        resultList[accountId] = {
-                            name: assetsList[accountId][0],
-                            creator: assetsList[accountId][1],
-                            url: assetsList[accountId][2],
-                            contractHash: Buffer.from(assetsList[accountId][3]).toString('hex'),
-                        };
-                    });
-                    return resolve(resultList);
-                })
-                .catch((error: any) => {
-                    return reject(new Error(error));
-                });
-        });
-    }
+    // /**
+    //  * This method returns a list of all assets registered within service account.
+    //  */
+    // registeredAssetsList(): Promise<IAssetsList> {
+    //     return new Promise((resolve, reject) => {
+    //         const msg = stdTrinciMessages.getAccount(`${this._serviceAccount}`, ['assets']);
+    //         this.submitTrinciMessage(msg)
+    //             .then((resultMessage: TrinciMessage) => {
+    //                 resultMessage.assertType(MessageTypes.GetAccountResponse);
+    //                 const resultList: IAssetsList = {};
+    //                 let assetsList: any = {};
+    //                 if (resultMessage.body.data[0]) {
+    //                     assetsList = bytesToObject(
+    //                         new Uint8Array(resultMessage.body.data[0]),
+    //                     );
+    //                 }
+    //                 const accounts = Object.keys(assetsList);
+    //                 accounts.forEach((accountId: string) => {
+    //                     resultList[accountId] = {
+    //                         name: assetsList[accountId][0],
+    //                         creator: assetsList[accountId][1],
+    //                         url: assetsList[accountId][2],
+    //                         contractHash: Buffer.from(assetsList[accountId][3]).toString('hex'),
+    //                     };
+    //                 });
+    //                 return resolve(resultList);
+    //             })
+    //             .catch((error: any) => {
+    //                 return reject(new Error(error));
+    //             });
+    //     });
+    // }
 
     /**
      * Sends a message to the blockchain in "Trinci Message" format
