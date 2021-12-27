@@ -14,11 +14,17 @@ import {
     IBaseTxUnnamedObject,
     IBaseTxObjectWithBuffers,
     IBaseTxObject,
+    IBaseTxUnnamedObjectNoTag,
 } from './baseTransaction';
 
 export interface IBulkNodeTxUnnamedObject extends IBaseTxUnnamedObject {
     [1]: IBulkNodeTxDataUnnamedObject;
     [2]: Buffer;
+}
+
+export interface IBulkNodeTxUnnamedObjectNoTag extends IBaseTxUnnamedObjectNoTag {
+    [0]: IBulkNodeTxDataUnnamedObject,
+    [1]: Buffer,
 }
 
 export interface IBulkNodeTxObjectWithBuffers extends IBaseTxObjectWithBuffers {
@@ -50,6 +56,22 @@ export class BulkNodeTransaction extends BaseTransaction {
                         this._data.typeTag,
                         unnamedData,
                         this._signature,
+                    ];
+                    return resolve(resultObj);
+                })
+                .catch((error: any) => {
+                    return reject(error);
+                });
+        });
+    }
+
+    public toUnnamedObjectNoTag(): Promise<IBulkNodeTxUnnamedObjectNoTag> {
+        return new Promise((resolve, reject) => {
+            this.toUnnamedObject()
+                .then((unnamedObj: IBulkNodeTxUnnamedObject) => {
+                    const resultObj: IBulkNodeTxUnnamedObjectNoTag = [
+                        unnamedObj[1],
+                        unnamedObj[2],
                     ];
                     return resolve(resultObj);
                 })
@@ -109,6 +131,24 @@ export class BulkNodeTransaction extends BaseTransaction {
                 .catch((error: any) => {
                     return reject(error);
                 });
+        });
+    }
+
+    protected fromUnnamedObjectNoTag(passedObj: IBulkNodeTxUnnamedObjectNoTag): Promise<boolean> {
+        return new Promise((resolve, reject) => {
+            const unnamedArg: IBulkNodeTxUnnamedObject = [
+                '',
+                passedObj[0],
+                passedObj[1],
+            ];
+            this.fromUnnamedObject(unnamedArg)
+                .then((result) => {
+                    return resolve(result);
+                })
+                .catch((error: any) => {
+                    return reject(error);
+                });
+            return resolve(true);
         });
     }
 

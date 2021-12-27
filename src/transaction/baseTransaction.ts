@@ -20,6 +20,7 @@ import {
     ISignableObject,
     ISignableObjectWithBuffer,
     ISignableUnnamedObject,
+    ISignableUnnamedObjectNoTag,
 } from '../signable';
 
 export type TSchemaToDataMap = Map<TTxSchemaType, (schema?: TTxSchemaType)=>CommonParentTxData>;
@@ -27,6 +28,11 @@ export type TSchemaToDataMap = Map<TTxSchemaType, (schema?: TTxSchemaType)=>Comm
 export interface IBaseTxUnnamedObject extends ISignableUnnamedObject {
     [1]: ICommonParentTxDataUnnamedObject,
     [2]?: Buffer;
+}
+
+export interface IBaseTxUnnamedObjectNoTag extends ISignableUnnamedObjectNoTag {
+    [0]: ICommonParentTxDataUnnamedObject,
+    [1]?: Buffer;
 }
 
 // exported for usage in Client class
@@ -107,6 +113,24 @@ export class BaseTransaction extends Signable {
         });
     }
 
+    public toUnnamedObjectNoTag(): Promise<IBaseTxUnnamedObjectNoTag> {
+        return new Promise((resolve, reject) => {
+            this.toUnnamedObject()
+                .then((unnamedObj: IBaseTxUnnamedObject) => {
+                    const resultObj: IBaseTxUnnamedObjectNoTag = [
+                        unnamedObj[1],
+                    ];
+                    if (unnamedObj[2]) {
+                        resultObj[1] = unnamedObj[2];
+                    }
+                    return resolve(resultObj);
+                })
+                .catch((error: any) => {
+                    return reject(error);
+                });
+        });
+    }
+
     /**
      * Exports transaction to an object with named members and binary
      * values represented by Buffers
@@ -177,6 +201,26 @@ export class BaseTransaction extends Signable {
                 .catch((error: any) => {
                     return reject(error);
                 });
+        });
+    }
+
+    protected fromUnnamedObjectNoTag(passedObj: IBaseTxUnnamedObjectNoTag): Promise<boolean> {
+        return new Promise((resolve, reject) => {
+            const unnamedArg: IBaseTxUnnamedObject = [
+                '',
+                passedObj[0],
+            ];
+            if (passedObj[1]) {
+                unnamedArg[2] = passedObj[1];
+            }
+            this.fromUnnamedObject(unnamedArg)
+                .then((result) => {
+                    return resolve(result);
+                })
+                .catch((error: any) => {
+                    return reject(error);
+                });
+            return resolve(true);
         });
     }
 

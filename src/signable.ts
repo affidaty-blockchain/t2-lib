@@ -27,6 +27,11 @@ export interface ISignableUnnamedObject extends Array<any> {
     [2]?: Buffer;
 }
 
+export interface ISignableUnnamedObjectNoTag extends Array<any> {
+    [0]: any,
+    [1]?: Buffer;
+}
+
 /**
  * Class for automatic transaction creation, management and transcoding
  */
@@ -81,6 +86,24 @@ export class Signable {
                 resultObj[2] = this._signature;
             }
             return resolve(resultObj);
+        });
+    }
+
+    protected toUnnamedObjectNoTag(): Promise<ISignableUnnamedObjectNoTag> {
+        return new Promise((resolve, reject) => {
+            this.toUnnamedObject()
+                .then((unnamedObj: ISignableUnnamedObject) => {
+                    const resultObj: ISignableUnnamedObjectNoTag = [
+                        unnamedObj[1],
+                    ];
+                    if (unnamedObj[2]) {
+                        resultObj[1] = unnamedObj[2];
+                    }
+                    return resolve(resultObj);
+                })
+                .catch((error: any) => {
+                    return reject(error);
+                });
         });
     }
 
@@ -165,6 +188,26 @@ export class Signable {
             if (passedObj[2]) {
                 this._signature = passedObj[2];
             }
+            return resolve(true);
+        });
+    }
+
+    protected fromUnnamedObjectNoTag(passedObj: ISignableUnnamedObjectNoTag): Promise<boolean> {
+        return new Promise((resolve, reject) => {
+            const unnamedArg: ISignableUnnamedObject = [
+                '',
+                passedObj[0],
+            ];
+            if (passedObj[1]) {
+                unnamedArg[2] = passedObj[1];
+            }
+            this.fromUnnamedObject(unnamedArg)
+                .then((result) => {
+                    return resolve(result);
+                })
+                .catch((error: any) => {
+                    return reject(error);
+                });
             return resolve(true);
         });
     }
