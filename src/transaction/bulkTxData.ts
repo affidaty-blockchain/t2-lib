@@ -1,3 +1,5 @@
+import * as Errors from '../errors';
+import { BaseECKey } from '../cryptography/baseECKey';
 import {
     TTxSchemaType,
     TxSchemas,
@@ -21,43 +23,37 @@ import {
 
 const DEFAULT_SCHEMA = TxSchemas.BULK_TX;
 
-interface txListUnnamedObject extends Array<any> {
+interface ITxListUnnamedObject extends Array<any> {
     [0]: IBulkRootTxUnnamedObject;
     [key: number]: IBulkRootTxUnnamedObject | IBulkNodeTxUnnamedObject;
 }
 
-interface IBulkTxDataUnnamedObject extends ICommonParentTxDataUnnamedObject {
-    /** Hash of the bulk root transaction on which this one depends. */
-    [1]: txListUnnamedObject;
+export interface IBulkTxDataUnnamedObject extends ICommonParentTxDataUnnamedObject {
+    [1]: ITxListUnnamedObject;
 }
 
-interface txListObjectWithBuffers extends Array<any> {
+interface ITxListObjectWithBuffers extends Array<any> {
     [0]: IBulkRootTxObjectWithBuffers;
     [key: number]: IBulkRootTxObjectWithBuffers | IBulkNodeTxObjectWithBuffers;
 }
 
-interface IBulkTxDataObjectWithBuffers extends ICommonParentTxDataObjectWithBuffers {
-    /** Hash of the bulk root transaction on which this one depends. */
-    txs: txListObjectWithBuffers;
+export interface IBulkTxDataObjectWithBuffers extends ICommonParentTxDataObjectWithBuffers {
+    txs: ITxListObjectWithBuffers;
 }
 
-interface txListObject extends Array<any> {
+interface ITxListObject extends Array<any> {
     [0]: IBulkRootTxObject;
     [key: number]: IBulkRootTxObject | IBulkNodeTxObject;
 }
 
-interface IBulkTxDataObject extends ICommonParentTxDataObject {
-    /** Hash of the bulk root transaction on which this one depends. */
-    txs: txListObject;
+export interface IBulkTxDataObject extends ICommonParentTxDataObject {
+    txs: ITxListObject;
 }
 
-interface txListInternal extends Array<BulkRootTransaction | BulkNodeTransaction> {
-    [0]: BulkRootTransaction;
-    [key: number]: BulkRootTransaction | BulkNodeTransaction
-}
 export class BulkTxData extends CommonParentTxData {
+    protected _root: BulkRootTransaction;
 
-    protected _txs: txListInternal;
+    protected _nodes: Array<BulkNodeTransaction>;
 
     public static get defaultSchema(): string {
         return DEFAULT_SCHEMA;
@@ -65,105 +61,317 @@ export class BulkTxData extends CommonParentTxData {
 
     constructor(schema: TTxSchemaType = DEFAULT_SCHEMA) {
         super(schema);
+        this._root = new BulkRootTransaction();
+        this._nodes = [];
     }
 
-    public toUnnamedObject(): Promise<IBulkTxDataObjectWithBuffers> {
+    public set root(root: BulkRootTransaction) {
+        this._root = root;
+    }
+
+    public get root(): BulkRootTransaction {
+        return this._root;
+    }
+
+    public set nodes(nodes: Array<BulkNodeTransaction>) {
+        this._nodes = nodes;
+    }
+
+    public get nodes(): Array<BulkNodeTransaction> {
+        return this._nodes;
+    }
+
+    /** Signer's public key. */
+    public set signerPublicKey(publicKey: BaseECKey) {
+        this._root.data.signerPublicKey = publicKey;
+    }
+
+    /** Signer's public key. */
+    public get signerPublicKey(): BaseECKey {
+        return this._root.data.signerPublicKey;
+    }
+
+    public toUnnamedObject(): Promise<IBulkTxDataUnnamedObject> {
         return new Promise((resolve, reject) => {
-            super.toUnnamedObject()
-                .then((superResult: IBulkTxDataUnnamedObject) => {
-                    const resultObj: IBulkNodeTxDataUnnamedObject = [
-                        superResult[0],
-                        superResult[1],
-                        superResult[2],
-                        superResult[3],
-                        superResult[4],
-                        superResult[5],
-                        superResult[6],
-                        superResult[7],
-                        superResult[8],
-                        this._dependsOn,
-                    ];
-                    return resolve(resultObj);
+            this._root.toUnnamedObject()
+                .then((serializedRoot: IBulkRootTxUnnamedObject) => {
+                    const nodesPromises: Array<Promise<IBulkNodeTxUnnamedObject>> = [];
+                    for (let i = 0; i < this._nodes.length; i += 1) {
+                        nodesPromises.push(this._nodes[i].toUnnamedObject());
+                    }
+                    Promise.allSettled(nodesPromises)
+                        .then((nodesResults) => {
+                            const txList: ITxListUnnamedObject = [
+                                serializedRoot,
+                            ];
+                            const resultObj: IBulkTxDataUnnamedObject = [
+                                this._schema,
+                                txList,
+                            ];
+                            for (let i = 0; i < nodesResults.length; i += 1) {
+                                if (nodesResults[i].status === 'fulfilled') {
+                                    resultObj[1].push(
+                                        (
+                                            nodesResults[i] as
+                                            PromiseFulfilledResult<IBulkNodeTxUnnamedObject>
+                                        ).value,
+                                    );
+                                } else {
+                                    return reject(
+                                        new Error(
+                                            `Could not export node transaction with index ${i}`,
+                                        ),
+                                    );
+                                }
+                            }
+                            return resolve(resultObj);
+                        })
+                        .catch((error: any) => {
+                            return reject(error);
+                        });
                 })
                 .catch((error: any) => {
-                    return reject(error);
+                    return reject(new Error(`could not export root: ${error}`));
                 });
         });
     }
 
-    public toObjectWithBuffers(): Promise<IBulkNodeTxDataObjectWithBuffers> {
+    public toObjectWithBuffers(): Promise<IBulkTxDataObjectWithBuffers> {
         return new Promise((resolve, reject) => {
-            super.toObjectWithBuffers()
-                .then((superResult: IBaseTxDataObjectWithBuffers) => {
-                    const resultObj: IBulkNodeTxDataObjectWithBuffers = {
-                        ...superResult,
-                        dependsOn: this._dependsOn,
-                    };
-                    return resolve(resultObj);
+            this._root.toObjectWithBuffers()
+                .then((serializedRoot: IBulkRootTxObjectWithBuffers) => {
+                    const nodesPromises: Array<Promise<IBulkNodeTxObjectWithBuffers>> = [];
+                    for (let i = 0; i < this._nodes.length; i += 1) {
+                        nodesPromises.push(this._nodes[i].toObjectWithBuffers());
+                    }
+                    Promise.allSettled(nodesPromises)
+                        .then((nodesResults) => {
+                            const txList: ITxListObjectWithBuffers = [
+                                serializedRoot,
+                            ];
+                            const resultObj: IBulkTxDataObjectWithBuffers = {
+                                schema: this._schema,
+                                txs: txList,
+                            };
+                            for (let i = 0; i < nodesResults.length; i += 1) {
+                                if (nodesResults[i].status === 'fulfilled') {
+                                    resultObj.txs.push(
+                                        (
+                                            nodesResults[i] as
+                                            PromiseFulfilledResult<IBulkNodeTxObjectWithBuffers>
+                                        ).value,
+                                    );
+                                } else {
+                                    return reject(
+                                        new Error(
+                                            `Could not export node transaction with index ${i}`,
+                                        ),
+                                    );
+                                }
+                            }
+                            return resolve(resultObj);
+                        })
+                        .catch((error: any) => {
+                            return reject(error);
+                        });
                 })
                 .catch((error: any) => {
-                    return reject(error);
+                    return reject(new Error(`could not export root: ${error}`));
                 });
         });
     }
 
-    public toObject(): Promise<IBulkNodeTxDataObject> {
+    public toObject(): Promise<IBulkTxDataObject> {
         return new Promise((resolve, reject) => {
-            super.toObject()
-                .then((superResult: IBaseTxDataObject) => {
-                    const resultObj: IBulkNodeTxDataObject = {
-                        ...superResult,
-                        dependsOn: new Uint8Array(this._dependsOn),
-                    };
-                    return resolve(resultObj);
+            this._root.toObject()
+                .then((serializedRoot: IBulkRootTxObject) => {
+                    const nodesPromises: Array<Promise<IBulkNodeTxObject>> = [];
+                    for (let i = 0; i < this._nodes.length; i += 1) {
+                        nodesPromises.push(this._nodes[i].toObject());
+                    }
+                    Promise.allSettled(nodesPromises)
+                        .then((nodesResults) => {
+                            const txList: ITxListObject = [
+                                serializedRoot,
+                            ];
+                            const resultObj: IBulkTxDataObject = {
+                                schema: this._schema,
+                                txs: txList,
+                            };
+                            for (let i = 0; i < nodesResults.length; i += 1) {
+                                if (nodesResults[i].status === 'fulfilled') {
+                                    resultObj.txs.push(
+                                        (
+                                            nodesResults[i] as
+                                            PromiseFulfilledResult<IBulkNodeTxObject>
+                                        ).value,
+                                    );
+                                } else {
+                                    return reject(
+                                        new Error(
+                                            `Could not export node transaction with index ${i}`,
+                                        ),
+                                    );
+                                }
+                            }
+                            return resolve(resultObj);
+                        })
+                        .catch((error: any) => {
+                            return reject(error);
+                        });
                 })
                 .catch((error: any) => {
-                    return reject(error);
+                    return reject(new Error(`could not export root: ${error}`));
                 });
         });
     }
 
-    public fromUnnamedObject(passedObj: IBulkNodeTxDataUnnamedObject): Promise<boolean> {
+    public fromUnnamedObject(passedObj: IBulkTxDataUnnamedObject): Promise<boolean> {
         return new Promise((resolve, reject) => {
-            if (passedObj[9]) {
-                this._dependsOn = passedObj[9];
+            if (passedObj[0] !== DEFAULT_SCHEMA) {
+                return reject(new Error(Errors.INVALID_SCHEMA));
             }
-            super.fromUnnamedObject(passedObj)
+            this._schema = passedObj[0];
+            this._root.fromUnnamedObject(passedObj[1][0])
                 .then((result) => {
-                    return resolve(result);
+                    if (result) {
+                        const nodesPromises: Array<Promise<boolean>> = [];
+                        for (let i = 1; i < passedObj[1].length; i += 1) {
+                            const bulkNodeTx = new BulkNodeTransaction();
+                            this._nodes.push(bulkNodeTx);
+                            nodesPromises.push(
+                                this._nodes[i - 1].fromUnnamedObject(
+                                    passedObj[1][i] as IBulkNodeTxUnnamedObject,
+                                ),
+                            );
+                        }
+                        Promise.allSettled(nodesPromises)
+                            .then((nodesResults) => {
+                                for (let i = 0; i < nodesResults.length; i += 1) {
+                                    if (
+                                        nodesResults[i].status === 'rejected'
+                                        || !(
+                                            nodesResults[i] as PromiseFulfilledResult<boolean>
+                                        ).value
+                                    ) {
+                                        return reject(
+                                            new Error(
+                                                `Could not import transaction with index ${i + 1}`,
+                                            ),
+                                        );
+                                    }
+                                }
+                                return resolve(true);
+                            })
+                            .catch((error: any) => {
+                                return reject(error);
+                            });
+                    } else {
+                        return reject(new Error('could not import root'));
+                    }
                 })
                 .catch((error: any) => {
-                    return reject(error);
+                    return reject(new Error(`could not import root: ${error}`));
                 });
         });
     }
 
-    public fromObjectWithBuffers(passedObj: IBulkNodeTxDataObjectWithBuffers): Promise<boolean> {
+    public fromObjectWithBuffers(passedObj: IBulkTxDataObjectWithBuffers): Promise<boolean> {
         return new Promise((resolve, reject) => {
-            if (passedObj.dependsOn) {
-                this._dependsOn = passedObj.dependsOn;
+            if (passedObj.schema !== DEFAULT_SCHEMA) {
+                return reject(new Error(Errors.INVALID_SCHEMA));
             }
-            super.fromObjectWithBuffers(passedObj)
+            this._schema = passedObj.schema;
+            this._root.fromObjectWithBuffers(passedObj.txs[0])
                 .then((result) => {
-                    return resolve(result);
+                    if (result) {
+                        const nodesPromises: Array<Promise<boolean>> = [];
+                        for (let i = 1; i < passedObj.txs.length; i += 1) {
+                            const bulkNodeTx = new BulkNodeTransaction();
+                            this._nodes.push(bulkNodeTx);
+                            nodesPromises.push(
+                                this._nodes[i - 1].fromObjectWithBuffers(
+                                    passedObj.txs[i] as IBulkNodeTxObjectWithBuffers,
+                                ),
+                            );
+                        }
+                        Promise.allSettled(nodesPromises)
+                            .then((nodesResults) => {
+                                for (let i = 0; i < nodesResults.length; i += 1) {
+                                    if (
+                                        nodesResults[i].status === 'rejected'
+                                        || !(
+                                            nodesResults[i] as PromiseFulfilledResult<boolean>
+                                        ).value
+                                    ) {
+                                        return reject(
+                                            new Error(
+                                                `Could not import transaction with index ${i + 1}`,
+                                            ),
+                                        );
+                                    }
+                                }
+                                return resolve(true);
+                            })
+                            .catch((error: any) => {
+                                return reject(error);
+                            });
+                    } else {
+                        return reject(new Error('could not import root'));
+                    }
                 })
                 .catch((error: any) => {
-                    return reject(error);
+                    return reject(new Error(`could not import root: ${error}`));
                 });
         });
     }
 
-    public fromObject(passedObj: IBulkNodeTxDataObject): Promise<boolean> {
+    public fromObject(passedObj: IBulkTxDataObject): Promise<boolean> {
         return new Promise((resolve, reject) => {
-            if (passedObj.dependsOn) {
-                this._dependsOn = Buffer.from(passedObj.dependsOn);
+            if (passedObj.schema !== DEFAULT_SCHEMA) {
+                return reject(new Error(Errors.INVALID_SCHEMA));
             }
-            super.fromObject(passedObj)
+            this._schema = passedObj.schema;
+            this._root.fromObject(passedObj.txs[0])
                 .then((result) => {
-                    return resolve(result);
+                    if (result) {
+                        const nodesPromises: Array<Promise<boolean>> = [];
+                        for (let i = 1; i < passedObj.txs.length; i += 1) {
+                            const bulkNodeTx = new BulkNodeTransaction();
+                            this._nodes.push(bulkNodeTx);
+                            nodesPromises.push(
+                                this._nodes[i - 1].fromObject(
+                                    passedObj.txs[i] as IBulkNodeTxObject,
+                                ),
+                            );
+                        }
+                        Promise.allSettled(nodesPromises)
+                            .then((nodesResults) => {
+                                for (let i = 0; i < nodesResults.length; i += 1) {
+                                    if (
+                                        nodesResults[i].status === 'rejected'
+                                        || !(
+                                            nodesResults[i] as PromiseFulfilledResult<boolean>
+                                        ).value
+                                    ) {
+                                        return reject(
+                                            new Error(
+                                                `Could not import transaction with index ${i + 1}`,
+                                            ),
+                                        );
+                                    }
+                                }
+                                return resolve(true);
+                            })
+                            .catch((error: any) => {
+                                return reject(error);
+                            });
+                    } else {
+                        return reject(new Error('could not import root'));
+                    }
                 })
                 .catch((error: any) => {
-                    return reject(error);
+                    return reject(new Error(`could not import root: ${error}`));
                 });
         });
     }

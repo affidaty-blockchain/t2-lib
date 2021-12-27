@@ -7,12 +7,12 @@ export type TTxSchemaType = string;
 
 export namespace TxSchemas {
     export const EMPTY_TX: TTxSchemaType = '';
-    export const UNITARY_TX: TTxSchemaType = 'unitaryTxSchema';
-    export const BULK_TX: TTxSchemaType = 'bulkTxSchema';
-    export const BULK_ROOT_TX: TTxSchemaType = 'bulkRootTxSchema';
-    export const BULK_NODE_TX: TTxSchemaType = 'bulkNodeTxSchema';
-    export const DELEGATION_TX: string = 'bulk_node_tx';
-    export const CERTIFICATE_TX: string = 'bulk_node_tx';
+    export const UNITARY_TX: TTxSchemaType = 'v1';
+    export const BULK_TX: TTxSchemaType = 'bv1';
+    export const BULK_ROOT_TX: TTxSchemaType = 'brv1';
+    export const BULK_NODE_TX: TTxSchemaType = 'bnv1';
+    export const DELEGATION_TX: string = 'deleg';
+    export const CERTIFICATE_TX: string = 'cert';
 }
 
 export namespace SignableTypeTags {
@@ -21,8 +21,8 @@ export namespace SignableTypeTags {
     export const BULK_TX: string = 'bulk_tx';
     export const BULK_ROOT_TX: string = 'bulk_root_tx';
     export const BULK_NODE_TX: string = 'bulk_node_tx';
-    export const DELEGATION_TX: string = 'bulk_node_tx';
-    export const CERTIFICATE_TX: string = 'bulk_node_tx';
+    export const DELEGATION_TX: string = 'deleg';
+    export const CERTIFICATE_TX: string = 'cert';
 }
 
 const SCHEMA_TO_TYPE_TAG_MAP = new Map<TTxSchemaType, string>();

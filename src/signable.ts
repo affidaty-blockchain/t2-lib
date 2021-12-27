@@ -282,6 +282,7 @@ export class Signable {
             this.toUnnamedObject()
                 .then((unnamedObject: ISignableUnnamedObject) => {
                     const dataToVerify: Uint8Array = objectToBytes(unnamedObject[1]);
+                    // console.log(Buffer.from(dataToVerify).toString('hex'));
                     verifyDataSignature(
                         publicKey,
                         dataToVerify,

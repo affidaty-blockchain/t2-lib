@@ -47,7 +47,7 @@ export class BulkNodeTransaction extends BaseTransaction {
             this._data.toUnnamedObject()
                 .then((unnamedData: IBulkNodeTxDataUnnamedObject) => {
                     const resultObj: IBulkNodeTxUnnamedObject = [
-                        this._typeTag,
+                        this._data.typeTag,
                         unnamedData,
                         this._signature,
                     ];
@@ -64,7 +64,7 @@ export class BulkNodeTransaction extends BaseTransaction {
             this._data.toObjectWithBuffers()
                 .then((dataObj: IBulkNodeTxDataObjectWithBuffers) => {
                     const resultObj: IBulkNodeTxObjectWithBuffers = {
-                        type: this._typeTag,
+                        type: this._data.typeTag,
                         data: dataObj,
                         signature: this._signature,
                     };
@@ -81,7 +81,7 @@ export class BulkNodeTransaction extends BaseTransaction {
             this._data.toObject()
                 .then((dataObj: IBulkNodeTxDataObject) => {
                     const resultObj: IBulkNodeTxObject = {
-                        type: this._typeTag,
+                        type: this._data.typeTag,
                         data: dataObj,
                         signature: new Uint8Array(this._signature),
                     };
@@ -101,7 +101,7 @@ export class BulkNodeTransaction extends BaseTransaction {
             this._data.fromUnnamedObject(passedObj[1])
                 .then((result: boolean) => {
                     if (result) {
-                        this._typeTag = passedObj[0];
+                        this._typeTag = this._data.typeTag;
                         this._signature = passedObj[2];
                     }
                     return resolve(result);
@@ -122,7 +122,7 @@ export class BulkNodeTransaction extends BaseTransaction {
             this._data.fromObjectWithBuffers(passedObj.data)
                 .then((result: boolean) => {
                     if (result) {
-                        this._typeTag = passedObj.type;
+                        this._typeTag = this._data.typeTag;
                         this._signature = passedObj.signature;
                     }
                     return resolve(result);
@@ -143,7 +143,7 @@ export class BulkNodeTransaction extends BaseTransaction {
             this._data.fromObject(passedObj.data)
                 .then((result: boolean) => {
                     if (result) {
-                        this._typeTag = passedObj.type;
+                        this._typeTag = this._data.typeTag;
                         this._signature = Buffer.from(passedObj.signature);
                     }
                     return resolve(result);

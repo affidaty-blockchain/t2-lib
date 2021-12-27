@@ -4,6 +4,7 @@ import {
     DEF_SIGN_HASH_ALGORITHM as defaultSignHash,
 } from '../cryptography/cryptoDefaults';
 import { BaseECKey } from '../cryptography/baseECKey';
+import { TxSchemas } from './commonParentTxData';
 import {
     BaseTxData,
     IBaseTxDataUnnamedObject,
@@ -16,6 +17,8 @@ import {
     IBaseTxObjectWithBuffers,
     IBaseTxObject,
 } from './baseTransaction';
+
+const DEFAULT_SCHEMA = TxSchemas.BULK_ROOT_TX;
 
 export interface IBulkRootTxUnnamedObject extends IBaseTxUnnamedObject {
     [1]: IBaseTxDataUnnamedObject;
@@ -36,7 +39,7 @@ export class BulkRootTransaction extends BaseTransaction {
         hash: TKeyGenAlgorithmValidHashValues = defaultSignHash,
     ) {
         super(BaseTxData.defaultSchema, hash);
-        this._data = new BaseTxData();
+        this._data = new BaseTxData(DEFAULT_SCHEMA);
         this._typeTag = this._data.typeTag;
     }
 
@@ -45,7 +48,7 @@ export class BulkRootTransaction extends BaseTransaction {
             this._data.toUnnamedObject()
                 .then((unnamedData: IBaseTxDataUnnamedObject) => {
                     const resultObj: IBulkRootTxUnnamedObject = [
-                        this._typeTag,
+                        this._data.typeTag,
                         unnamedData,
                     ];
                     return resolve(resultObj);
@@ -61,7 +64,7 @@ export class BulkRootTransaction extends BaseTransaction {
             this._data.toObjectWithBuffers()
                 .then((dataObj: IBaseTxDataObjectWithBuffers) => {
                     const resultObj: IBulkRootTxObjectWithBuffers = {
-                        type: this._typeTag,
+                        type: this._data.typeTag,
                         data: dataObj,
                     };
                     return resolve(resultObj);
@@ -77,7 +80,7 @@ export class BulkRootTransaction extends BaseTransaction {
             this._data.toObject()
                 .then((dataObj: IBaseTxDataObject) => {
                     const resultObj: IBulkRootTxObject = {
-                        type: this._typeTag,
+                        type: this._data.typeTag,
                         data: dataObj,
                     };
                     return resolve(resultObj);
@@ -90,12 +93,14 @@ export class BulkRootTransaction extends BaseTransaction {
 
     public fromUnnamedObject(passedObj: IBulkRootTxUnnamedObject): Promise<boolean> {
         return new Promise((resolve, reject) => {
-            if (passedObj[1][0] !== BaseTxData.defaultSchema) {
+            if (passedObj[1][0] !== DEFAULT_SCHEMA) {
                 return reject(new Error(Errors.INVALID_SCHEMA));
             }
             this._data.fromUnnamedObject(passedObj[1])
                 .then((result: boolean) => {
-                    this._typeTag = passedObj[0];
+                    if (result) {
+                        this._typeTag = this._data.typeTag;
+                    }
                     return resolve(result);
                 })
                 .catch((error: any) => {
@@ -113,7 +118,9 @@ export class BulkRootTransaction extends BaseTransaction {
         return new Promise((resolve, reject) => {
             this._data.fromObjectWithBuffers(passedObj.data)
                 .then((result: boolean) => {
-                    this._typeTag = passedObj.type;
+                    if (result) {
+                        this._typeTag = this._data.typeTag;
+                    }
                     return resolve(result);
                 })
                 .catch((error: any) => {
@@ -131,7 +138,9 @@ export class BulkRootTransaction extends BaseTransaction {
         return new Promise((resolve, reject) => {
             this._data.fromObject(passedObj.data)
                 .then((result: boolean) => {
-                    this._typeTag = passedObj.type;
+                    if (result) {
+                        this._typeTag = this._data.typeTag;
+                    }
                     return resolve(result);
                 })
                 .catch((error: any) => {
