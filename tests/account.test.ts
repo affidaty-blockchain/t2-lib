@@ -1,4 +1,5 @@
 import * as Errors from '../src/errors';
+import * as BaseTypes from '../src/cryptography/baseTypes';
 import * as Base from '../src/cryptography/base';
 import * as Defaults from '../src/cryptography/cryptoDefaults';
 import * as EllipticCurve from '../src/cryptography/baseECKey';
@@ -8,7 +9,7 @@ import { BaseECKeyPair } from '../src/cryptography/baseECKeyPair';
 
 describe('Testing ACCOUNT CLASS implementations', () => {
     const predefinedAccountId = 'QmamzDVuZqkUDwHikjHCkgJXhtgkbiVDTvTYb2aq6qfLbY';
-    const predefinedPubKeyJWK: Base.IJwk = {
+    const predefinedPubKeyJWK: BaseTypes.IJwk = {
         key_ops: ['verify'],
         ext: true,
         kty: 'EC',
@@ -17,21 +18,21 @@ describe('Testing ACCOUNT CLASS implementations', () => {
         y: 'ycGxRyc2FbvsysfdSJvrIDkQFxJ04bFdJ01swPRikWYDaZLyohhEx8TA_d0bDphw',
     };
     let ecdsaKeyPair: CryptoKeyPair;
-    let ecdsaPublicKeyJwk: Base.IJwk;
+    let ecdsaPublicKeyJwk: BaseTypes.IJwk;
     let ecdsaPublicKeyRaw: ArrayBuffer;
     let ecdsaPublicKeySPKI: ArrayBuffer;
-    let ecdsaPrivateKeyJwk: Base.IJwk;
+    let ecdsaPrivateKeyJwk: BaseTypes.IJwk;
     let ecdsaPrivateKeyPKCS8: ArrayBuffer;
 
     let ecdhKeyPair: CryptoKeyPair;
-    let ecdhPublicKeyJwk: Base.IJwk;
+    let ecdhPublicKeyJwk: BaseTypes.IJwk;
     let ecdhPublicKeyRaw: ArrayBuffer;
     let ecdhPublicKeySPKI: ArrayBuffer;
-    let ecdhPrivateKeyJwk: Base.IJwk;
+    let ecdhPrivateKeyJwk: BaseTypes.IJwk;
     let ecdhPrivateKeyPKCS8: ArrayBuffer;
 
     let rsaKeyPair: CryptoKeyPair;
-    let rsaPrivateKeyJwk: Base.IJwk;
+    let rsaPrivateKeyJwk: BaseTypes.IJwk;
     let rsaPrivateKeyPKCS8: ArrayBuffer;
 
     it('setting control values', async () => {
@@ -108,7 +109,7 @@ describe('Testing ACCOUNT CLASS implementations', () => {
         await expect(acc.setKeyPair(keyPair))
             .rejects.toEqual(new Error(Errors.NO_BASE_KEY_VALUE));
 
-        const customKeyPairParams: Base.IKeyPairParams = {
+        const customKeyPairParams: BaseTypes.IKeyPairParams = {
             publicKey: Defaults.ECDSAP384R1KeyPairParams.publicKey,
             privateKey: Defaults.ECDSAP384R1KeyPairParams.privateKey,
             usages: ['decrypt', 'encrypt'],

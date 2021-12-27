@@ -1,4 +1,5 @@
 import * as Errors from '../../src/errors';
+import * as BaseTypes from '../../src/cryptography/baseTypes';
 import * as Base from '../../src/cryptography/base';
 import * as Defaults from '../../src/cryptography/cryptoDefaults';
 import { Subtle } from '../../src/cryptography/webCrypto';
@@ -7,11 +8,11 @@ describe('Testing base cryptography implementations', () => {
     describe('Testing base key with ECDSA default parameters', () => {
         let ecdhKeyPair1: CryptoKeyPair;
         let ecdsaKeyPair: CryptoKeyPair;
-        let ecdsaPublicKeyJwk: Base.IJwk;
-        let ecdsaPrivateKeyJwk: Base.IJwk;
+        let ecdsaPublicKeyJwk: BaseTypes.IJwk;
+        let ecdsaPrivateKeyJwk: BaseTypes.IJwk;
 
         let rsaKeyPair: CryptoKeyPair;
-        let rsaPrivateKeyJwk: Base.IJwk;
+        let rsaPrivateKeyJwk: BaseTypes.IJwk;
         let rsaPrivateKeyPKCS8: ArrayBuffer;
 
         it('setting control values', async () => {
@@ -145,7 +146,7 @@ describe('Testing base cryptography implementations', () => {
             }
             expect(testError).toEqual(new Error(Errors.IMPORT_USAGES_ERROR));
 
-            const testParams: Base.IKeyParams = {
+            const testParams: BaseTypes.IKeyParams = {
                 paramsId: 'test_params',
                 genAlgorithm: {
                     name: 'ECDSA',
