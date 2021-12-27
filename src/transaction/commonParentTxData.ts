@@ -134,16 +134,16 @@ export class CommonParentTxData {
     }
 
     /** Random 8-bytes value as an anti-replay protection(Uint8Array). */
-    public set nonce(nonce: Buffer) {
+    public set nonce(nonce: Uint8Array) {
         if (nonce.byteLength !== 8) {
             throw new Error(Errors.WRONG_TX_NONCE_LENGTH);
         }
-        this._nonce = nonce;
+        this._nonce = Buffer.from(nonce);
     }
 
     /** Random 8-bytes value as an anti-replay protection(Uint8Array). */
-    public get nonce(): Buffer {
-        return this._nonce;
+    public get nonce(): Uint8Array {
+        return new Uint8Array(this._nonce);
     }
 
     /** Random 8-bytes value as an anti-replay protection(hex string). */
