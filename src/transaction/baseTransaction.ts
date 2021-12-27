@@ -277,6 +277,7 @@ export class BaseTransaction extends Signable {
         return new Promise((resolve, reject) => {
             this._data.toUnnamedObject()
                 .then((unnamedDataObj: ICommonParentTxDataUnnamedObject) => {
+                    // console.log(unnamedDataObj);
                     try {
                         const dataHash = sha256(objectToBytes(unnamedDataObj));
                         return resolve(`1220${Buffer.from(dataHash).toString('hex')}`);
