@@ -1,5 +1,13 @@
 import {
-    UnitaryTransaction, Account, ECDHKeyPair, Errors, Utils,
+    UnitaryTransaction,
+    BulkRootTransaction,
+    BulkNodeTransaction,
+    BulkTransaction,
+    Transaction,
+    Account,
+    ECDHKeyPair,
+    Errors,
+    Utils,
 } from '../index';
 
 describe('transaction', () => {
@@ -153,4 +161,197 @@ describe('transaction', () => {
         await expect(t2.verify()).resolves.toBeTruthy();
         await expect(t3.verify()).resolves.toBeTruthy();
     });
+
+    it('UnitaryTransaction', async () => {
+        const tx1 = new UnitaryTransaction();
+        await tx1.sign(acc.keyPair.privateKey);
+        const tx1B58 = await tx1.toBase58();
+        const tx1Obj = await tx1.toObject();
+        const tx1Ticket = await tx1.getTicket();
+
+        const tx2 = new UnitaryTransaction();
+        await tx2.fromBase58(tx1B58);
+        let tx2Ticket = await tx2.getTicket();
+        expect(tx2Ticket).toEqual(tx1Ticket);
+        await expect(tx2.verify()).resolves.toBeTruthy();
+        tx2.data.networkName = 'testVal';
+        tx2Ticket = await tx2.getTicket();
+        expect(tx2Ticket).not.toEqual(tx1Ticket);
+        await expect(tx2.verify()).resolves.toBeFalsy();
+        await tx2.fromObject(tx1Obj);
+        tx2Ticket = await tx2.getTicket();
+        expect(tx2Ticket).toEqual(tx1Ticket);
+        await expect(tx2.verify()).resolves.toBeTruthy();
+        tx2.data.networkName = 'testVal';
+        tx2Ticket = await tx2.getTicket();
+        expect(tx2Ticket).not.toEqual(tx1Ticket);
+        await expect(tx2.verify()).resolves.toBeFalsy();
+
+        const tx3 = new Transaction();
+        await tx3.fromBase58(tx1B58);
+        let tx3Ticket = await tx3.getTicket();
+        expect(tx3Ticket).toEqual(tx1Ticket);
+        await expect(tx3.verify()).resolves.toBeTruthy();
+        tx3.data.networkName = 'testVal';
+        tx3Ticket = await tx3.getTicket();
+        expect(tx3Ticket).not.toEqual(tx1Ticket);
+        await expect(tx3.verify()).resolves.toBeFalsy();
+        await tx3.fromObject(tx1Obj);
+        tx3Ticket = await tx3.getTicket();
+        expect(tx3Ticket).toEqual(tx1Ticket);
+        await expect(tx3.verify()).resolves.toBeTruthy();
+        tx3.data.networkName = 'testVal';
+        tx3Ticket = await tx3.getTicket();
+        expect(tx3Ticket).not.toEqual(tx1Ticket);
+        await expect(tx3.verify()).resolves.toBeFalsy();
+
+        // console.log(util.inspect(await tx3.toUnnamedObject(), false, null, true));
+    }, 30000);
+
+    it('bulkRootTransaction', async () => {
+        const tx1 = new BulkRootTransaction();
+        await expect(
+            tx1.sign(
+                acc.keyPair.privateKey,
+            ),
+        ).rejects.toEqual(new Error(Errors.BULK_ROOT_TX_NO_SIGN));
+        const tx1B58 = await tx1.toBase58();
+        const tx1Obj = await tx1.toObject();
+        const tx1Ticket = await tx1.getTicket();
+
+        const tx2 = new BulkRootTransaction();
+        await tx2.fromBase58(tx1B58);
+        let tx2Ticket = await tx2.getTicket();
+        expect(tx2Ticket).toEqual(tx1Ticket);
+        await expect(tx2.verify()).rejects.toEqual(new Error(Errors.BULK_ROOT_TX_NO_VERIFY));
+        tx2.data.networkName = 'testVal';
+        tx2Ticket = await tx2.getTicket();
+        expect(tx2Ticket).not.toEqual(tx1Ticket);
+        await tx2.fromObject(tx1Obj);
+        tx2Ticket = await tx2.getTicket();
+        expect(tx2Ticket).toEqual(tx1Ticket);
+        tx2.data.networkName = 'testVal';
+        tx2Ticket = await tx2.getTicket();
+        expect(tx2Ticket).not.toEqual(tx1Ticket);
+
+        const tx3 = new Transaction();
+        await tx3.fromBase58(tx1B58);
+        let tx3Ticket = await tx3.getTicket();
+        expect(tx3Ticket).toEqual(tx1Ticket);
+        await expect(tx3.verify()).rejects.toEqual(new Error(Errors.NO_BASE_KEY_VALUE));
+        tx3.data.networkName = 'testVal';
+        tx3Ticket = await tx3.getTicket();
+        expect(tx3Ticket).not.toEqual(tx1Ticket);
+        await tx3.fromObject(tx1Obj);
+        tx3Ticket = await tx3.getTicket();
+        expect(tx3Ticket).toEqual(tx1Ticket);
+        tx3.data.networkName = 'testVal';
+        tx3Ticket = await tx3.getTicket();
+        expect(tx3Ticket).not.toEqual(tx1Ticket);
+    }, 30000);
+
+    it('bulkNodeTransaction', async () => {
+        const tx1 = new BulkNodeTransaction();
+        tx1.data.dependsOnHex = 'aabbccddeeff';
+        await tx1.sign(acc.keyPair.privateKey);
+        const tx1B58 = await tx1.toBase58();
+        const tx1Obj = await tx1.toObject();
+        const tx1Ticket = await tx1.getTicket();
+
+        const tx2 = new BulkNodeTransaction();
+        await tx2.fromBase58(tx1B58);
+        let tx2Ticket = await tx2.getTicket();
+        expect(tx2Ticket).toEqual(tx1Ticket);
+        await expect(tx2.verify()).resolves.toBeTruthy();
+        tx2.data.networkName = 'testVal';
+        tx2Ticket = await tx2.getTicket();
+        expect(tx2Ticket).not.toEqual(tx1Ticket);
+        await expect(tx2.verify()).resolves.toBeFalsy();
+        await tx2.fromObject(tx1Obj);
+        tx2Ticket = await tx2.getTicket();
+        expect(tx2Ticket).toEqual(tx1Ticket);
+        await expect(tx2.verify()).resolves.toBeTruthy();
+        tx2.data.networkName = 'testVal';
+        tx2Ticket = await tx2.getTicket();
+        expect(tx2Ticket).not.toEqual(tx1Ticket);
+        await expect(tx2.verify()).resolves.toBeFalsy();
+
+        const tx3 = new Transaction();
+        await tx3.fromBase58(tx1B58);
+        let tx3Ticket = await tx3.getTicket();
+        expect(tx3Ticket).toEqual(tx1Ticket);
+        await expect(tx3.verify()).resolves.toBeTruthy();
+        tx3.data.networkName = 'testVal';
+        tx3Ticket = await tx3.getTicket();
+        expect(tx3Ticket).not.toEqual(tx1Ticket);
+        await expect(tx3.verify()).resolves.toBeFalsy();
+        await tx3.fromObject(tx1Obj);
+        tx3Ticket = await tx3.getTicket();
+        expect(tx3Ticket).toEqual(tx1Ticket);
+        await expect(tx3.verify()).resolves.toBeTruthy();
+        tx3.data.networkName = 'testVal';
+        tx3Ticket = await tx3.getTicket();
+        expect(tx3Ticket).not.toEqual(tx1Ticket);
+        await expect(tx3.verify()).resolves.toBeFalsy();
+    }, 30000);
+
+    it('bulkTransaction', async () => {
+        const root = new BulkRootTransaction();
+        root.data.accountId = 'root';
+        root.data.signerPublicKey = acc.keyPair.publicKey;
+        const node0 = new BulkNodeTransaction();
+        node0.data.accountId = 'node0';
+        node0.data.dependsOnHex = await root.getTicket();
+        await node0.sign(acc.keyPair.privateKey);
+        const node1 = new BulkNodeTransaction();
+        node1.data.accountId = 'node1';
+        node1.data.dependsOnHex = await root.getTicket();
+        await node1.sign(acc.keyPair.privateKey);
+
+        const tx1 = new BulkTransaction();
+        tx1.data.root = root;
+        tx1.data.nodes.push(node0);
+        tx1.data.nodes.push(node1);
+        await tx1.sign(acc.keyPair.privateKey);
+        await expect(tx1.verify()).resolves.toBeTruthy();
+        const tx1B58 = await tx1.toBase58();
+        const tx1Obj = await tx1.toObject();
+        const tx1Ticket = await tx1.getTicket();
+
+        const tx2 = new BulkTransaction();
+        await tx2.fromBase58(tx1B58);
+        let tx2Ticket = await tx2.getTicket();
+        expect(tx2Ticket).toEqual(tx1Ticket);
+        await expect(tx2.verify()).resolves.toBeTruthy();
+        tx2.data.root.data.networkName = 'testVal';
+        tx2Ticket = await tx2.getTicket();
+        expect(tx2Ticket).not.toEqual(tx1Ticket);
+        await expect(tx2.verify()).rejects.toBeDefined();
+        await tx2.fromObject(tx1Obj);
+        tx2Ticket = await tx2.getTicket();
+        expect(tx2Ticket).toEqual(tx1Ticket);
+        await expect(tx2.verify()).resolves.toBeTruthy();
+        tx2.data.root.data.networkName = 'testVal';
+        tx2Ticket = await tx2.getTicket();
+        expect(tx2Ticket).not.toEqual(tx1Ticket);
+        await expect(tx2.verify()).rejects.toBeDefined();
+
+        const tx3 = new Transaction();
+        await tx3.fromBase58(tx1B58);
+        let tx3Ticket = await tx3.getTicket();
+        expect(tx3Ticket).toEqual(tx1Ticket);
+        await expect(tx3.verify()).resolves.toBeTruthy();
+        (tx3 as BulkTransaction).data.root.data.networkName = 'testVal';
+        tx3Ticket = await tx3.getTicket();
+        expect(tx3Ticket).not.toEqual(tx1Ticket);
+        await expect(tx3.verify()).resolves.toBeFalsy();
+        await tx3.fromObject(tx1Obj);
+        tx3Ticket = await tx3.getTicket();
+        expect(tx3Ticket).toEqual(tx1Ticket);
+        await expect(tx3.verify()).resolves.toBeTruthy();
+        (tx3 as BulkTransaction).data.root.data.networkName = 'testVal';
+        tx3Ticket = await tx3.getTicket();
+        expect(tx3Ticket).not.toEqual(tx1Ticket);
+        await expect(tx3.verify()).resolves.toBeFalsy();
+    }, 30000);
 });
