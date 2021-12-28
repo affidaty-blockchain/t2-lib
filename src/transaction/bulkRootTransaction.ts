@@ -132,7 +132,7 @@ export class BulkRootTransaction extends BaseTransaction {
         });
     }
 
-    protected fromUnnamedObjectNoTag(passedObj: IBulkRootTxUnnamedObjectNoTag): Promise<boolean> {
+    public fromUnnamedObjectNoTag(passedObj: IBulkRootTxUnnamedObjectNoTag): Promise<boolean> {
         return new Promise((resolve, reject) => {
             const unnamedArg: IBulkRootTxUnnamedObject = [
                 '',
