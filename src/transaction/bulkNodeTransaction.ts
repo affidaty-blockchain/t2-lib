@@ -134,7 +134,7 @@ export class BulkNodeTransaction extends BaseTransaction {
         });
     }
 
-    protected fromUnnamedObjectNoTag(passedObj: IBulkNodeTxUnnamedObjectNoTag): Promise<boolean> {
+    public fromUnnamedObjectNoTag(passedObj: IBulkNodeTxUnnamedObjectNoTag): Promise<boolean> {
         return new Promise((resolve, reject) => {
             const unnamedArg: IBulkNodeTxUnnamedObject = [
                 '',
@@ -148,7 +148,6 @@ export class BulkNodeTransaction extends BaseTransaction {
                 .catch((error: any) => {
                     return reject(error);
                 });
-            return resolve(true);
         });
     }
 
