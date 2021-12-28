@@ -197,25 +197,6 @@ export class BulkTransaction extends BaseTransaction {
                 .catch((error: any) => {
                     return reject(error);
                 });
-            // super.verifySignature(this._data.signerPublicKey)
-            //     .then((result: boolean) => {
-            //         return resolve(result);
-            //     })
-            //     .catch((error: any) => {
-            //         return reject(error);
-            //     });
-        });
-    }
-
-    public getTicket(): Promise<string> {
-        return new Promise((resolve, reject) => {
-            this._data.root.getTicket()
-                .then((ticket: string) => {
-                    return resolve(ticket);
-                })
-                .catch((error: any) => {
-                    return reject(error);
-                });
         });
     }
 }

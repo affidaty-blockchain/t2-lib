@@ -1,5 +1,4 @@
 import * as Errors from '../errors';
-import { objectToBytes, sha256 } from '../utils';
 import { TKeyGenAlgorithmValidHashValues } from '../cryptography/baseTypes';
 import {
     DEF_SIGN_HASH_ALGORITHM as defaultSignHash,
@@ -319,15 +318,9 @@ export class BaseTransaction extends Signable {
      */
     public getTicket(): Promise<string> {
         return new Promise((resolve, reject) => {
-            this._data.toUnnamedObject()
-                .then((unnamedDataObj: ICommonParentTxDataUnnamedObject) => {
-                    // console.log(unnamedDataObj);
-                    try {
-                        const dataHash = sha256(objectToBytes(unnamedDataObj));
-                        return resolve(`1220${Buffer.from(dataHash).toString('hex')}`);
-                    } catch (error) {
-                        return reject(error);
-                    }
+            this._data.getTicket()
+                .then((ticket: string) => {
+                    return resolve(ticket);
                 })
                 .catch((error: any) => {
                     return reject(error);

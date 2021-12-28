@@ -413,4 +413,21 @@ export class CommonParentTxData {
                 });
         });
     }
+
+    public getTicket(): Promise<string> {
+        return new Promise((resolve, reject) => {
+            this.toUnnamedObject()
+                .then((unnamedDataObj: ICommonParentTxDataUnnamedObject) => {
+                    try {
+                        const dataHash = sha256(objectToBytes(unnamedDataObj));
+                        return resolve(`1220${Buffer.from(dataHash).toString('hex')}`);
+                    } catch (error) {
+                        return reject(error);
+                    }
+                })
+                .catch((error: any) => {
+                    return reject(error);
+                });
+        });
+    }
 }
