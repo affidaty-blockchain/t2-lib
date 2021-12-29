@@ -8,6 +8,7 @@ import { BaseECKey } from './cryptography/baseECKey';
 import { Account } from './account';
 import { BaseTransaction, IBaseTxUnnamedObject } from './transaction/baseTransaction';
 import { UnitaryTransaction } from './transaction/unitaryTransaction';
+import { Transaction } from './transaction/transaction';
 
 export function sleep(ms: number) {
     return new Promise((resolve) => { setTimeout(resolve, ms); });
@@ -476,7 +477,7 @@ export class Client {
             this.submitTrinciMessage(msg)
                 .then((resultMessage: TrinciMessage) => {
                     resultMessage.assertType(MessageTypes.GetTransactionResponse);
-                    const resultTx = new BaseTransaction();
+                    const resultTx = new Transaction();
                     resultTx.fromUnnamedObject(resultMessage.body.tx)
                         .then(() => {
                             return resolve(resultTx);

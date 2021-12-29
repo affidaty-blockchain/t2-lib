@@ -18,14 +18,14 @@ import {
     BulkNodeTransaction,
     IBulkNodeTxObjectWithBuffers,
     IBulkNodeTxObject,
-    IBulkNodeTxUnnamedObjectNoTag,
+    IBulkNodeTxUnnamedObject,
 } from './bulkNodeTransaction';
 
 const DEFAULT_SCHEMA = TxSchemas.BULK_TX;
 
 interface ITxListUnnamedObject extends Array<any> {
     [0]: IBulkRootTxUnnamedObjectNoTag;
-    [key: number]: IBulkRootTxUnnamedObjectNoTag | IBulkNodeTxUnnamedObjectNoTag;
+    [1]: IBulkNodeTxUnnamedObject[] | null;
 }
 
 export interface IBulkTxDataUnnamedObject extends ICommonParentTxDataUnnamedObject {
@@ -34,7 +34,7 @@ export interface IBulkTxDataUnnamedObject extends ICommonParentTxDataUnnamedObje
 
 interface ITxListObjectWithBuffers extends Array<any> {
     [0]: IBulkRootTxObjectWithBuffers;
-    [key: number]: IBulkRootTxObjectWithBuffers | IBulkNodeTxObjectWithBuffers;
+    [1]: IBulkNodeTxObjectWithBuffers[] | null;
 }
 
 export interface IBulkTxDataObjectWithBuffers extends ICommonParentTxDataObjectWithBuffers {
@@ -43,7 +43,7 @@ export interface IBulkTxDataObjectWithBuffers extends ICommonParentTxDataObjectW
 
 interface ITxListObject extends Array<any> {
     [0]: IBulkRootTxObject;
-    [key: number]: IBulkRootTxObject | IBulkNodeTxObject;
+    [1]: IBulkNodeTxObject[] | null;
 }
 
 export interface IBulkTxDataObject extends ICommonParentTxDataObject {
@@ -63,6 +63,14 @@ export class BulkTxData extends CommonParentTxData {
         super(schema);
         this._root = new BulkRootTransaction();
         this._nodes = [];
+    }
+
+    public set networkName(networkName: string) {
+        this._root.data.networkName = networkName;
+    }
+
+    public get networkName(): string {
+        return this._root.data.networkName;
     }
 
     public set root(root: BulkRootTransaction) {
@@ -95,25 +103,29 @@ export class BulkTxData extends CommonParentTxData {
         return new Promise((resolve, reject) => {
             this._root.toUnnamedObjectNoTag()
                 .then((serializedRoot: IBulkRootTxUnnamedObjectNoTag) => {
-                    const nodesPromises: Array<Promise<IBulkNodeTxUnnamedObjectNoTag>> = [];
+                    const nodesPromises: Array<Promise<IBulkNodeTxUnnamedObject>> = [];
                     for (let i = 0; i < this._nodes.length; i += 1) {
-                        nodesPromises.push(this._nodes[i].toUnnamedObjectNoTag());
+                        nodesPromises.push(this._nodes[i].toUnnamedObject());
                     }
                     Promise.allSettled(nodesPromises)
                         .then((nodesResults) => {
                             const txList: ITxListUnnamedObject = [
                                 serializedRoot,
+                                [],
                             ];
                             const resultObj: IBulkTxDataUnnamedObject = [
                                 this._schema,
                                 txList,
                             ];
+                            if (nodesResults.length < 1) {
+                                resultObj[1][1] = null;
+                            }
                             for (let i = 0; i < nodesResults.length; i += 1) {
                                 if (nodesResults[i].status === 'fulfilled') {
-                                    resultObj[1].push(
+                                    resultObj[1][1]!.push(
                                         (
                                             nodesResults[i] as
-                                            PromiseFulfilledResult<IBulkNodeTxUnnamedObjectNoTag>
+                                            PromiseFulfilledResult<IBulkNodeTxUnnamedObject>
                                         ).value,
                                     );
                                 } else {
@@ -148,14 +160,18 @@ export class BulkTxData extends CommonParentTxData {
                         .then((nodesResults) => {
                             const txList: ITxListObjectWithBuffers = [
                                 serializedRoot,
+                                [],
                             ];
                             const resultObj: IBulkTxDataObjectWithBuffers = {
                                 schema: this._schema,
                                 txs: txList,
                             };
+                            if (nodesResults.length < 1) {
+                                resultObj.txs[1] = null;
+                            }
                             for (let i = 0; i < nodesResults.length; i += 1) {
                                 if (nodesResults[i].status === 'fulfilled') {
-                                    resultObj.txs.push(
+                                    resultObj.txs[1]!.push(
                                         (
                                             nodesResults[i] as
                                             PromiseFulfilledResult<IBulkNodeTxObjectWithBuffers>
@@ -193,14 +209,18 @@ export class BulkTxData extends CommonParentTxData {
                         .then((nodesResults) => {
                             const txList: ITxListObject = [
                                 serializedRoot,
+                                [],
                             ];
                             const resultObj: IBulkTxDataObject = {
                                 schema: this._schema,
                                 txs: txList,
                             };
+                            if (nodesResults.length < 1) {
+                                resultObj.txs[1] = null;
+                            }
                             for (let i = 0; i < nodesResults.length; i += 1) {
                                 if (nodesResults[i].status === 'fulfilled') {
-                                    resultObj.txs.push(
+                                    resultObj.txs[1]!.push(
                                         (
                                             nodesResults[i] as
                                             PromiseFulfilledResult<IBulkNodeTxObject>
@@ -238,14 +258,16 @@ export class BulkTxData extends CommonParentTxData {
                 .then((result) => {
                     if (result) {
                         const nodesPromises: Array<Promise<boolean>> = [];
-                        for (let i = 1; i < passedObj[1].length; i += 1) {
-                            const bulkNodeTx = new BulkNodeTransaction();
-                            this._nodes.push(bulkNodeTx);
-                            nodesPromises.push(
-                                this._nodes[i - 1].fromUnnamedObjectNoTag(
-                                    passedObj[1][i] as IBulkNodeTxUnnamedObjectNoTag,
-                                ),
-                            );
+                        if (passedObj[1][1]) {
+                            for (let i = 0; i < passedObj[1][1].length; i += 1) {
+                                const bulkNodeTx = new BulkNodeTransaction();
+                                this._nodes.push(bulkNodeTx);
+                                nodesPromises.push(
+                                    this._nodes[i].fromUnnamedObject(
+                                        passedObj[1][1] as IBulkNodeTxUnnamedObject,
+                                    ),
+                                );
+                            }
                         }
                         Promise.allSettled(nodesPromises)
                             .then((nodesResults) => {
@@ -256,6 +278,7 @@ export class BulkTxData extends CommonParentTxData {
                                             nodesResults[i] as PromiseFulfilledResult<boolean>
                                         ).value
                                     ) {
+                                        // console.log(nodesResults);
                                         return reject(
                                             new Error(
                                                 `Could not import transaction with index ${i + 1}`,
@@ -288,14 +311,16 @@ export class BulkTxData extends CommonParentTxData {
                 .then((result) => {
                     if (result) {
                         const nodesPromises: Array<Promise<boolean>> = [];
-                        for (let i = 1; i < passedObj.txs.length; i += 1) {
-                            const bulkNodeTx = new BulkNodeTransaction();
-                            this._nodes.push(bulkNodeTx);
-                            nodesPromises.push(
-                                this._nodes[i - 1].fromObjectWithBuffers(
-                                    passedObj.txs[i] as IBulkNodeTxObjectWithBuffers,
-                                ),
-                            );
+                        if (passedObj.txs[1]) {
+                            for (let i = 1; i < passedObj.txs[1].length; i += 1) {
+                                const bulkNodeTx = new BulkNodeTransaction();
+                                this._nodes.push(bulkNodeTx);
+                                nodesPromises.push(
+                                    this._nodes[i].fromObjectWithBuffers(
+                                        passedObj.txs[1][i] as IBulkNodeTxObjectWithBuffers,
+                                    ),
+                                );
+                            }
                         }
                         Promise.allSettled(nodesPromises)
                             .then((nodesResults) => {
@@ -339,14 +364,16 @@ export class BulkTxData extends CommonParentTxData {
                     if (result) {
                         this._nodes = [];
                         const nodesPromises: Array<Promise<boolean>> = [];
-                        for (let i = 1; i < passedObj.txs.length; i += 1) {
-                            const bulkNodeTx = new BulkNodeTransaction();
-                            this._nodes.push(bulkNodeTx);
-                            nodesPromises.push(
-                                this._nodes[i - 1].fromObject(
-                                    passedObj.txs[i] as IBulkNodeTxObject,
-                                ),
-                            );
+                        if (passedObj.txs[1]) {
+                            for (let i = 1; i < passedObj.txs[1].length; i += 1) {
+                                const bulkNodeTx = new BulkNodeTransaction();
+                                this._nodes.push(bulkNodeTx);
+                                nodesPromises.push(
+                                    this._nodes[i].fromObject(
+                                        passedObj.txs[1][i] as IBulkNodeTxObject,
+                                    ),
+                                );
+                            }
                         }
                         Promise.allSettled(nodesPromises)
                             .then((nodesResults) => {
