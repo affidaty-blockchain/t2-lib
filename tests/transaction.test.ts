@@ -204,8 +204,6 @@ describe('transaction', () => {
         tx3Ticket = await tx3.getTicket();
         expect(tx3Ticket).not.toEqual(tx1Ticket);
         await expect(tx3.verify()).resolves.toBeFalsy();
-
-        // console.log(util.inspect(await tx3.toUnnamedObject(), false, null, true));
     }, 30000);
 
     it('bulkRootTransaction', async () => {

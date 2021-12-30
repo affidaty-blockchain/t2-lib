@@ -93,20 +93,11 @@ describe('Testing specific keys classes', () => {
     it('Testing RSA classes', async () => {
         const rsaKeyPair = new RSAKeyPair();
         await rsaKeyPair.generate();
-        // const rsaPubKeySPKI = await rsaKeyPair.publicKey.getSPKI();
-        // const rsaPrivKeyPKCS8 = await rsaKeyPair.privateKey.getPKCS8();
-        // const rsaPubKeyJWK = await rsaKeyPair.publicKey.getJWK();
-        // console.log(rsaKeyPair);
-        // console.log(Buffer.from(rsaPubKeySPKI).toString('hex'));
-        // console.log(Buffer.from(rsaPrivKeyPKCS8).toString('hex'));
-        // console.log(rsaPubKeyJWK);
-    });
-
-    it('', async () => {
-        const ecdsaKeyPair = new ECDSAKeyPair();
-        await ecdsaKeyPair.generate();
-        const rsaKeyPair = new RSAKeyPair();
-        await rsaKeyPair.generate();
-        // rsaKeyPair.publicKey = ecdsaKeyPair.publicKey;
+        const rsaPubKeySPKI = await rsaKeyPair.publicKey.getSPKI();
+        const rsaPrivKeyPKCS8 = await rsaKeyPair.privateKey.getPKCS8();
+        const rsaPubKeyJWK = await rsaKeyPair.publicKey.getJWK();
+        expect(rsaPubKeySPKI.byteLength).toBeGreaterThan(0);
+        expect(rsaPrivKeyPKCS8.byteLength).toBeGreaterThan(0);
+        expect(rsaPubKeyJWK.kty).toEqual('RSA');
     });
 });
