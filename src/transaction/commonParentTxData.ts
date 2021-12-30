@@ -11,8 +11,6 @@ export namespace TxSchemas {
     export const BULK_TX: TTxSchemaType = 'bv1';
     export const BULK_ROOT_TX: TTxSchemaType = 'brv1';
     export const BULK_NODE_TX: TTxSchemaType = 'bnv1';
-    export const DELEGATION_TX: string = 'deleg';
-    export const CERTIFICATE_TX: string = 'cert';
 }
 
 export namespace SignableTypeTags {
@@ -20,9 +18,7 @@ export namespace SignableTypeTags {
     export const UNITARY_TX: string = 'unit_tx';
     export const BULK_TX: string = 'bulk_tx';
     export const BULK_ROOT_TX: string = 'bulk_root_tx';
-    export const BULK_NODE_TX: string = 'bulk_node_tx';
-    export const DELEGATION_TX: string = 'deleg';
-    export const CERTIFICATE_TX: string = 'cert';
+    export const BULK_NODE_TX: string = 'unit_tx';
 }
 
 const SCHEMA_TO_TYPE_TAG_MAP = new Map<TTxSchemaType, string>();

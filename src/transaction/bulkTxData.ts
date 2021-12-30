@@ -264,7 +264,7 @@ export class BulkTxData extends CommonParentTxData {
                                 this._nodes.push(bulkNodeTx);
                                 nodesPromises.push(
                                     this._nodes[i].fromUnnamedObject(
-                                        passedObj[1][1] as IBulkNodeTxUnnamedObject,
+                                        passedObj[1][1][i] as IBulkNodeTxUnnamedObject,
                                     ),
                                 );
                             }
@@ -278,7 +278,6 @@ export class BulkTxData extends CommonParentTxData {
                                             nodesResults[i] as PromiseFulfilledResult<boolean>
                                         ).value
                                     ) {
-                                        // console.log(nodesResults);
                                         return reject(
                                             new Error(
                                                 `Could not import transaction with index ${i + 1}`,
@@ -365,7 +364,7 @@ export class BulkTxData extends CommonParentTxData {
                         this._nodes = [];
                         const nodesPromises: Array<Promise<boolean>> = [];
                         if (passedObj.txs[1]) {
-                            for (let i = 1; i < passedObj.txs[1].length; i += 1) {
+                            for (let i = 0; i < passedObj.txs[1].length; i += 1) {
                                 const bulkNodeTx = new BulkNodeTransaction();
                                 this._nodes.push(bulkNodeTx);
                                 nodesPromises.push(
