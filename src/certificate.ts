@@ -21,7 +21,7 @@ import {
     ISignableObject,
 } from './signable';
 
-const TYPE_TAG_VALUE = 'certificate';
+const TYPE_TAG_VALUE = 'cert';
 
 const DEF_SALT_BYTE_LEN: number = 32;
 
@@ -471,6 +471,9 @@ export class Certificate extends Signable {
      */
     public fromUnnamedObject(passedObj: IUnnamedCert): Promise<boolean> {
         return new Promise((resolve, reject) => {
+            if (typeof passedObj[0] !== 'string') {
+                passedObj.unshift(TYPE_TAG_VALUE);
+            }
             this._typeTag = passedObj[0];
             this._data.target = passedObj[1][0];
             this._data.fields = passedObj[1][1];
@@ -514,7 +517,7 @@ export class Certificate extends Signable {
     public fromObjectWithBuffers(passedObj: ICertBuffers): Promise<boolean> {
         return new Promise((resolve, reject) => {
             const unnamedObject: IUnnamedCert = [
-                passedObj.type,
+                TYPE_TAG_VALUE,
                 [
                     passedObj.data.target,
                     passedObj.data.fields,
@@ -549,7 +552,7 @@ export class Certificate extends Signable {
     public fromObject(passedObj: ICert): Promise<boolean> {
         return new Promise((resolve, reject) => {
             const objBuffers: ICertBuffers = {
-                type: passedObj.type,
+                type: TYPE_TAG_VALUE,
                 data: {
                     target: passedObj.data.target,
                     fields: passedObj.data.fields,

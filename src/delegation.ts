@@ -387,6 +387,9 @@ export class Delegation extends Signable {
      */
     public fromUnnamedObject(passedObj: IUnnamedDelegation): Promise<boolean> {
         return new Promise((resolve, reject) => {
+            if (typeof passedObj[0] !== 'string') {
+                passedObj.unshift(TYPE_TAG_VALUE);
+            }
             this._typeTag = passedObj[0];
             this._data.delegate = passedObj[1][0];
             this._data.network = passedObj[1][2];
@@ -426,7 +429,7 @@ export class Delegation extends Signable {
     public fromObjectWithBuffers(passedObj: IDelegationBuffers): Promise<boolean> {
         return new Promise((resolve, reject) => {
             const unnamedObject: IUnnamedDelegation = [
-                passedObj.type,
+                TYPE_TAG_VALUE,
                 [
                     passedObj.data.delegate,
                     [
@@ -459,7 +462,7 @@ export class Delegation extends Signable {
     public fromObject(passedObj: IDelegation): Promise<boolean> {
         return new Promise((resolve, reject) => {
             const objBuffers: IDelegationBuffers = {
-                type: passedObj.type,
+                type: TYPE_TAG_VALUE,
                 data: {
                     delegate: passedObj.data.delegate,
                     delegator: {
