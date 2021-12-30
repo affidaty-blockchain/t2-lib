@@ -18,14 +18,14 @@ import {
     BulkNodeTransaction,
     IBulkNodeTxObjectWithBuffers,
     IBulkNodeTxObject,
-    IBulkNodeTxUnnamedObject,
+    IBulkNodeTxUnnamedObjectNoTag,
 } from './bulkNodeTransaction';
 
 const DEFAULT_SCHEMA = TxSchemas.BULK_TX;
 
 interface ITxListUnnamedObject extends Array<any> {
     [0]: IBulkRootTxUnnamedObjectNoTag;
-    [1]: IBulkNodeTxUnnamedObject[] | null;
+    [1]: IBulkNodeTxUnnamedObjectNoTag[] | null;
 }
 
 export interface IBulkTxDataUnnamedObject extends ICommonParentTxDataUnnamedObject {
@@ -103,9 +103,9 @@ export class BulkTxData extends CommonParentTxData {
         return new Promise((resolve, reject) => {
             this._root.toUnnamedObjectNoTag()
                 .then((serializedRoot: IBulkRootTxUnnamedObjectNoTag) => {
-                    const nodesPromises: Array<Promise<IBulkNodeTxUnnamedObject>> = [];
+                    const nodesPromises: Array<Promise<IBulkNodeTxUnnamedObjectNoTag>> = [];
                     for (let i = 0; i < this._nodes.length; i += 1) {
-                        nodesPromises.push(this._nodes[i].toUnnamedObject());
+                        nodesPromises.push(this._nodes[i].toUnnamedObjectNoTag());
                     }
                     Promise.allSettled(nodesPromises)
                         .then((nodesResults) => {
@@ -125,7 +125,7 @@ export class BulkTxData extends CommonParentTxData {
                                     resultObj[1][1]!.push(
                                         (
                                             nodesResults[i] as
-                                            PromiseFulfilledResult<IBulkNodeTxUnnamedObject>
+                                            PromiseFulfilledResult<IBulkNodeTxUnnamedObjectNoTag>
                                         ).value,
                                     );
                                 } else {
@@ -263,8 +263,8 @@ export class BulkTxData extends CommonParentTxData {
                                 const bulkNodeTx = new BulkNodeTransaction();
                                 this._nodes.push(bulkNodeTx);
                                 nodesPromises.push(
-                                    this._nodes[i].fromUnnamedObject(
-                                        passedObj[1][1][i] as IBulkNodeTxUnnamedObject,
+                                    this._nodes[i].fromUnnamedObjectNoTag(
+                                        passedObj[1][1][i] as IBulkNodeTxUnnamedObjectNoTag,
                                     ),
                                 );
                             }

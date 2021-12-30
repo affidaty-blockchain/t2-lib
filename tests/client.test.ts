@@ -107,7 +107,7 @@ describe('Testing transaction classes', () => {
     }, 30000);
 
     it('test bulk transaction', async () => {
-        // await client.autoDetectSettings();
+        await client.autoDetectSettings();
 
         const argsBytes = new Uint8Array([0xff, 0x00, 0xff]);
 

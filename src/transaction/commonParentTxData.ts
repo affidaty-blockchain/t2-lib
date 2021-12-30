@@ -18,7 +18,7 @@ export namespace SignableTypeTags {
     export const UNITARY_TX: string = 'unit_tx';
     export const BULK_TX: string = 'bulk_tx';
     export const BULK_ROOT_TX: string = 'bulk_root_tx';
-    export const BULK_NODE_TX: string = 'unit_tx';
+    export const BULK_NODE_TX: string = 'bulk_node_tx';
 }
 
 const SCHEMA_TO_TYPE_TAG_MAP = new Map<TTxSchemaType, string>();
