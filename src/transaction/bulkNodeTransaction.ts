@@ -118,11 +118,8 @@ export class BulkNodeTransaction extends BaseTransaction {
     public fromUnnamedObject(passedObj: IBulkNodeTxUnnamedObject): Promise<boolean> {
         return new Promise((resolve, reject) => {
             if (passedObj[1][0] !== BulkNodeTxData.defaultSchema) {
-                console.log('REJECTING!!!!!!!!!!!!!!!!!!!');
                 return reject(new Error(Errors.INVALID_SCHEMA));
             }
-            console.log(JSON.stringify(passedObj[1][0]));
-            console.log(JSON.stringify(BulkNodeTxData.defaultSchema));
             this._data.fromUnnamedObject(passedObj[1])
                 .then((result: boolean) => {
                     if (result) {
@@ -132,7 +129,6 @@ export class BulkNodeTransaction extends BaseTransaction {
                     return resolve(result);
                 })
                 .catch((error: any) => {
-                    // console.log('catch');
                     return reject(error);
                 });
         });
