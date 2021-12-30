@@ -14,9 +14,19 @@ export interface ISignableObject {
     signature?: Uint8Array;
 }
 
+export interface ISignableObjectNoTag {
+    data: any;
+    signature?: Uint8Array;
+}
+
 // exported for usage in Client class
 export interface ISignableObjectWithBuffer {
     type: string;
+    data: any;
+    signature?: Buffer;
+}
+
+export interface ISignableObjectWithBufferNoTag {
     data: any;
     signature?: Buffer;
 }
