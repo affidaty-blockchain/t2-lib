@@ -5,6 +5,8 @@ import { stringToArrayBuffer } from './binConversions';
 import {
     sha256,
     numRange,
+    objectToBytes,
+    bytesToObject,
 } from './utils';
 import { TKeyGenAlgorithmValidHashValues } from './cryptography/baseTypes';
 import {
@@ -17,6 +19,7 @@ import { BaseECKey } from './cryptography/baseECKey';
 import {
     Signable,
     ISignableUnnamedObject,
+    ISignableUnnamedObjectNoTag,
     ISignableObjectWithBuffer,
     ISignableObject,
 } from './signable';
@@ -132,6 +135,12 @@ export interface IUnnamedCert extends ISignableUnnamedObject {
     [1]: IUnnamedCertMainData; // data
     [2]: Buffer; // signature
     [3]?: Buffer[]; // multiProof
+}
+
+export interface IUnnamedCertNoTag extends ISignableUnnamedObjectNoTag {
+    [0]: IUnnamedCertMainData; // data
+    [1]: Buffer; // signature
+    [2]?: Buffer[]; // multiProof
 }
 
 interface ICertifierBuffers {
@@ -393,6 +402,46 @@ export class Certificate extends Signable {
         });
     }
 
+    public toUnnamedObjectNoTag(): Promise<IUnnamedCertNoTag> {
+        return new Promise((resolve, reject) => {
+            const resultObj: IUnnamedCertNoTag = [
+                [
+                    this._data.target,
+                    this._data.fields,
+                    this._data.salt,
+                    this._data.root,
+                    [
+                        '',
+                        '',
+                        Buffer.from([]),
+                    ],
+                ],
+                this._signature,
+            ];
+            if (this._multiProof.length !== 0) {
+                resultObj[2] = this._multiProof;
+            }
+            if (this._data.certifier.paramsId === EKeyParamsIds.EMPTY) {
+                return resolve(resultObj);
+            }
+            this._data.certifier.getRaw()
+                .then((rawKeyBytes: Uint8Array) => {
+                    const undrscrIndex = this._data.certifier.paramsId.indexOf('_');
+                    if (undrscrIndex > -1) {
+                        resultObj[0][4][0] = this._data.certifier.paramsId.slice(0, undrscrIndex);
+                        resultObj[0][4][1] = this._data.certifier.paramsId.slice(undrscrIndex + 1);
+                    } else {
+                        resultObj[0][4][0] = this._data.certifier.paramsId;
+                    }
+                    resultObj[0][4][2] = Buffer.from(rawKeyBytes);
+                    return resolve(resultObj);
+                })
+                .catch((error: any) => {
+                    return reject(error);
+                });
+        });
+    }
+
     /**
      * Converts certificate to an object with binary members represented by Buffers
      * @returns - object, throws otherwise
@@ -464,6 +513,18 @@ export class Certificate extends Signable {
         });
     }
 
+    public toBytes(): Promise<Uint8Array> {
+        return new Promise((resolve, reject) => {
+            this.toUnnamedObjectNoTag()
+                .then((unnamedObj: IUnnamedCertNoTag) => {
+                    return resolve(objectToBytes(unnamedObj));
+                })
+                .catch((error: any) => {
+                    return reject(error);
+                });
+        });
+    }
+
     /**
      * Converts a compact object with unnamed members to certificate
      * @param passedObj - compact object
@@ -500,6 +561,42 @@ export class Certificate extends Signable {
                 return resolve(true);
             }
             this._data.certifier.importBin(new Uint8Array(passedObj[1][4][2]))
+                .then(() => {
+                    return resolve(true);
+                })
+                .catch((error: any) => {
+                    return reject(error);
+                });
+        });
+    }
+
+    public fromUnnamedObjectNoTag(passedObj: IUnnamedCertNoTag): Promise<boolean> {
+        return new Promise((resolve, reject) => {
+            this._data.target = passedObj[0][0];
+            this._data.fields = passedObj[0][1];
+            this._data.salt = passedObj[0][2];
+            this._data.root = passedObj[0][3];
+
+            let keyParamsId: string = passedObj[0][4][0];
+            if (passedObj[0][4][1].length > 0) {
+                keyParamsId += `_${passedObj[0][4][1]}`;
+            }
+            if (!mKeyPairParams.has(keyParamsId)) {
+                return reject(new Error(Errors.IMPORT_TYPE_ERROR));
+            }
+            this._data.certifier = new BaseECKey(
+                mKeyPairParams.get(keyParamsId)!.publicKey,
+            );
+            this._signature = passedObj[1];
+            if (typeof passedObj[2] !== 'undefined') {
+                for (let i = 0; i < passedObj[2].length; i += 1) {
+                    this._multiProof.push(passedObj[2][i]);
+                }
+            }
+            if (this._data.certifier.paramsId === EKeyParamsIds.EMPTY) {
+                return resolve(true);
+            }
+            this._data.certifier.importBin(new Uint8Array(passedObj[0][4][2]))
                 .then(() => {
                     return resolve(true);
                 })
@@ -574,6 +671,19 @@ export class Certificate extends Signable {
             }
             this.fromObjectWithBuffers(objBuffers)
                 .then((result: boolean) => {
+                    return resolve(result);
+                })
+                .catch((error: any) => {
+                    return reject(error);
+                });
+        });
+    }
+
+    public fromBytes(bytes: Uint8Array): Promise<boolean> {
+        return new Promise((resolve, reject) => {
+            const unnamedObj: IUnnamedCertNoTag = bytesToObject(bytes);
+            this.fromUnnamedObjectNoTag(unnamedObj)
+                .then((result) => {
                     return resolve(result);
                 })
                 .catch((error: any) => {

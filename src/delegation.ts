@@ -1,4 +1,8 @@
 import * as Errors from './errors';
+import {
+    objectToBytes,
+    bytesToObject,
+} from './utils';
 import { TKeyGenAlgorithmValidHashValues } from './cryptography/baseTypes';
 import {
     DEF_SIGN_HASH_ALGORITHM as defaultSignHash,
@@ -10,6 +14,7 @@ import { BaseECKey } from './cryptography/baseECKey';
 import {
     Signable,
     ISignableUnnamedObject,
+    ISignableUnnamedObjectNoTag,
     ISignableObjectWithBuffer,
     ISignableObject,
 } from './signable';
@@ -52,6 +57,11 @@ interface IUnnamedDelegationMainData extends Array<any> {
 export interface IUnnamedDelegation extends ISignableUnnamedObject {
     [1]: IUnnamedDelegationMainData; // data
     [2]: Buffer; // signature
+}
+
+export interface IUnnamedDelegationNoTag extends ISignableUnnamedObjectNoTag {
+    [0]: IUnnamedDelegationMainData; // data
+    [1]: Buffer; // signature
 }
 
 interface IDelegatorBuffers {
@@ -316,6 +326,50 @@ export class Delegation extends Signable {
         });
     }
 
+    public toUnnamedObjectNoTag(): Promise<IUnnamedDelegationNoTag> {
+        return new Promise((resolve, reject) => {
+            const resultObj: IUnnamedDelegationNoTag = [
+                [
+                    this._data.delegate,
+                    [
+                        '',
+                        '',
+                        Buffer.from([]),
+                    ],
+                    this._data.network,
+                    this._data.target,
+                    this._data.expiration,
+                    this._data.capabilities,
+                ],
+                this._signature,
+            ];
+            if (this._data.delegator.paramsId === EKeyParamsIds.EMPTY) {
+                return resolve(resultObj);
+            }
+            this._data.delegator.getRaw()
+                .then((rawKeyBytes: Uint8Array) => {
+                    const underscoreIndex = this._data.delegator.paramsId.indexOf('_');
+                    if (underscoreIndex > -1) {
+                        resultObj[0][1][0] = this._data.delegator.paramsId.slice(
+                            0,
+                            underscoreIndex,
+                        );
+                        resultObj[0][1][1] = this._data.delegator.paramsId.slice(
+                            underscoreIndex
+                            + 1,
+                        );
+                    } else {
+                        resultObj[0][1][0] = this._data.delegator.paramsId;
+                    }
+                    resultObj[0][1][2] = Buffer.from(rawKeyBytes);
+                    return resolve(resultObj);
+                })
+                .catch((error: any) => {
+                    return reject(error);
+                });
+        });
+    }
+
     /**
      * Converts delegation to an object with binary members represented by Buffers
      * @returns - object, throws otherwise
@@ -380,6 +434,18 @@ export class Delegation extends Signable {
         });
     }
 
+    public toBytes(): Promise<Uint8Array> {
+        return new Promise((resolve, reject) => {
+            this.toUnnamedObjectNoTag()
+                .then((unnamedObj: IUnnamedDelegationNoTag) => {
+                    return resolve(objectToBytes(unnamedObj));
+                })
+                .catch((error: any) => {
+                    return reject(error);
+                });
+        });
+    }
+
     /**
      * Converts a compact object with unnamed members to delegation
      * @param passedObj - compact object
@@ -412,6 +478,38 @@ export class Delegation extends Signable {
                 return resolve(true);
             }
             this._data.delegator.importBin(new Uint8Array(passedObj[1][1][2]))
+                .then(() => {
+                    return resolve(true);
+                })
+                .catch((error: any) => {
+                    return reject(error);
+                });
+        });
+    }
+
+    public fromUnnamedObjectNoTag(passedObj: IUnnamedDelegationNoTag): Promise<boolean> {
+        return new Promise((resolve, reject) => {
+            this._data.delegate = passedObj[0][0];
+            this._data.network = passedObj[0][2];
+            this._data.target = passedObj[0][3];
+            this._data.expiration = passedObj[0][4];
+            this._data.capabilities = passedObj[0][5];
+
+            let keyParamsId: string = passedObj[0][1][0];
+            if (passedObj[0][1][1].length > 0) {
+                keyParamsId += `_${passedObj[0][1][1]}`;
+            }
+            if (!mKeyPairParams.has(keyParamsId)) {
+                return reject(new Error(Errors.IMPORT_TYPE_ERROR));
+            }
+            this._data.delegator = new BaseECKey(
+                mKeyPairParams.get(keyParamsId)!.publicKey,
+            );
+            this._signature = passedObj[1];
+            if (this._data.delegator.paramsId === EKeyParamsIds.EMPTY) {
+                return resolve(true);
+            }
+            this._data.delegator.importBin(new Uint8Array(passedObj[0][1][2]))
                 .then(() => {
                     return resolve(true);
                 })
@@ -479,6 +577,19 @@ export class Delegation extends Signable {
             };
             this.fromObjectWithBuffers(objBuffers)
                 .then((result: boolean) => {
+                    return resolve(result);
+                })
+                .catch((error: any) => {
+                    return reject(error);
+                });
+        });
+    }
+
+    public fromBytes(bytes: Uint8Array): Promise<boolean> {
+        return new Promise((resolve, reject) => {
+            const unnamedObj: IUnnamedDelegationNoTag = bytesToObject(bytes);
+            this.fromUnnamedObjectNoTag(unnamedObj)
+                .then((result) => {
                     return resolve(result);
                 })
                 .catch((error: any) => {
