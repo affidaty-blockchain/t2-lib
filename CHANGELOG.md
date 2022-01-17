@@ -6,15 +6,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/).
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## [1.7.0] - UNPUBLISHED
+## [2.0.0] - UNPUBLISHED
 
 ### Changed
 
 - event data member name changed from ```event_data``` to ```eventData``` inside receipt's events to respect project's casing rules.
+- Transaction's accessors have now been moved to transaction's data member, which now is a separate class. So to access transaction's data members you need to use ```tx.data.accountId()``` instead of ```tx.accountId()```.
+- Old ```Transaction``` class is now called UnitaryTransaction. Use specific transaction classes (Bulk, BulkNode, BulkRoot, Unitary) to create transaction of the desired type. Generic ```Transaction``` class can be used to parse/verify avery other transaction type.
 
 ### Added
 
-- added Transaction.getTicket() method, which computes transaction ticket without submitting it to the blockchain.
+- added ```Transaction.getTicket()``` method, which computes transaction ticket without submitting it to the blockchain.
+- added ```client.waitForBulkTicket()``` and ```client.bulkTxReceipt()``` methods. However bulk transactions can be managed with old
+    ```client.waitForTicket()``` and ```client.txReceipt()``` methods.
+- added ```client.getBlockchainSettings()``` method which can get some settings (not yet network name).
+- added ```Bulk Root```, ```Bulk Node```, and ```Bulk``` transactions classes.
+- added ```schema``` field to signable (and, therefore, to transactions, certificates and delegations).
+
+### Removed
+
+- removed client.registeredAssetsList() method as it cannot be used anymore.
 
 ## [1.6.4] - 2021-12-02
 
