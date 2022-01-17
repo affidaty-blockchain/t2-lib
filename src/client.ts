@@ -17,10 +17,10 @@ export function sleep(ms: number) {
 type TReqMethod = 'get' | 'GET' | 'post' | 'POST';
 
 interface IBlockchainSettings {
-    networkName: string;
     acceptBroadcast: boolean;
     blockThreshold: number;
     blockTimeout: number;
+    burningFuelMethod: string;
 }
 
 const submitMessaggePath = '/api/v1/message';
@@ -57,13 +57,41 @@ export interface ITxReceiptData {
     txIdx: number;
 
     /** Amount of fuel burned during this transaction execution */
-    burnedFuel: number
+    burnedFuel: number;
 
     /** Whether transaction was successfully executed by smart contract. */
     success: boolean;
 
     /** Smart contract execution result. */
     result: Uint8Array;
+
+    // /** Event fired during smart contract execution. */
+    events: ITxEvent[];
+}
+
+export interface IBulkSingleResult {
+    success: boolean;
+    result: Uint8Array;
+}
+
+export interface IBulkTxReceiptData {
+
+    /** Index(height) of the block containing the transaction. */
+    blockIdx: number;
+
+    /** Transaction index inside the block */
+    txIdx: number;
+
+    /** Amount of fuel burned during this transaction execution */
+    burnedFuel: number;
+
+    /** Whether transaction was successfully executed by smart contract. */
+    success: boolean;
+
+    /** Smart contract execution result. */
+    results: {
+        [key: string]: IBulkSingleResult;
+    };
 
     // /** Event fired during smart contract execution. */
     events: ITxEvent[];
@@ -258,25 +286,12 @@ export class Client {
                 .then((serviceAccountData: IAccountData) => {
                     const tempObj = bytesToObject(serviceAccountData.requestedData[0]);
                     const result: IBlockchainSettings = {
-                        networkName: tempObj.network_name,
                         acceptBroadcast: tempObj.accept_broadcast,
                         blockThreshold: tempObj.block_threshold,
                         blockTimeout: tempObj.block_timeout,
+                        burningFuelMethod: tempObj.burning_fuel_method,
                     };
                     return resolve(result);
-                })
-                .catch((error: any) => {
-                    return reject(error);
-                });
-        });
-    }
-
-    autoDetectSettings(): Promise<IBlockchainSettings> {
-        return new Promise((resolve, reject) => {
-            this.getBlockchainSettings()
-                .then((bcSettings: IBlockchainSettings) => {
-                    this.network = bcSettings.networkName;
-                    return resolve(bcSettings);
                 })
                 .catch((error: any) => {
                     return reject(error);
@@ -650,6 +665,68 @@ export class Client {
     }
 
     /**
+     * This method waits for a transaction to be confirmed by sending periodical requests
+     * to get the status of the transaction.
+     * @param ticket - transaction ticket as returned by Client.submitTx()
+     * or Client.prepareAndSubmit() methods, or just a string.
+     * @param maxTries - Max number of requests, after which method throws
+     * @param sleepMs - Pause in milliseconds between requests
+     * @returns - Transaction receipt
+     */
+    async waitForBulkTicket(
+        ticket: string,
+        maxTries: number = 8,
+        sleepMs: number = 1000,
+    ): Promise<IBulkTxReceiptData> {
+        let counter = 0;
+        while (counter < maxTries) {
+            let receipt: any = null;
+            try {
+                receipt = await this.bulkTxReceipt(ticket);
+            } catch (error: any) {
+                const errMsg: string = error.message;
+                if (errMsg.indexOf('resource not found') === -1) {
+                    throw new Error(error);
+                }
+            }
+            if (receipt !== null) {
+                return receipt;
+            }
+            counter += 1;
+            await sleep(sleepMs);
+        }
+        throw new Error(`Tx ${ticket} not executed in time`);
+    }
+
+    bulkTxReceipt(ticket: string): Promise<IBulkTxReceiptData> {
+        return new Promise((resolve, reject) => {
+            this.txReceipt(ticket)
+                .then((unitReceipt: ITxReceiptData) => {
+                    const resultsTemp = bytesToObject(unitReceipt.result);
+                    const resultsKeys = Object.keys(resultsTemp);
+                    const bulkReceipt: IBulkTxReceiptData = {
+                        blockIdx: unitReceipt.blockIdx,
+                        txIdx: unitReceipt.txIdx,
+                        burnedFuel: unitReceipt.burnedFuel,
+                        success: unitReceipt.success,
+                        results: {},
+                        events: unitReceipt.events,
+                    };
+                    for (let i = 0; i < resultsKeys.length; i += 1) {
+                        bulkReceipt.results[resultsKeys[i]] = {
+                            success: resultsTemp[resultsKeys[i]][0] as boolean,
+                            result: new Uint8Array(resultsTemp[resultsKeys[i]][1]),
+                        };
+                    }
+                    return resolve(bulkReceipt);
+                })
+                .catch((error: any) => {
+                    return reject(new Error(error));
+                });
+        });
+    }
+
+    /**
      * This method waits for an array of transactions to be executed by core
      * by sending periodical requests to get the status of transactions.
      * @param ticket - transaction ticket as returned by Client.submitTx()
@@ -693,69 +770,43 @@ export class Client {
         throw new Error('Transactions not executed in time');
     }
 
-    // /**
-    //  * This method returns a list of all published contracts.
-    //  */
-    // registeredContractsList(): Promise<IContractsList> {
-    //     return new Promise((resolve, reject) => {
-    //         const msg = stdTrinciMessages.getAccount(`${this._serviceAccount}`, ['contracts']);
-    //         this.submitTrinciMessage(msg)
-    //             .then((resultMessage: TrinciMessage) => {
-    //                 resultMessage.assertType(MessageTypes.GetAccountResponse);
-    //                 const contractsList = bytesToObject(
-    //                     new Uint8Array(resultMessage.body.data[0]),
-    //                 );
-    //                 const hashes = Object.keys(contractsList);
-    //                 const resultList: IContractsList = {};
-    //                 hashes.forEach((hash: string) => {
-    //                     resultList[hash] = {
-    //                         name: contractsList[hash][0],
-    //                         version: contractsList[hash][1],
-    //                         publisher: contractsList[hash][2],
-    //                         description: contractsList[hash][3],
-    //                         url: contractsList[hash][4],
-    //                     };
-    //                 });
-    //                 return resolve(resultList);
-    //             })
-    //             .catch((error: any) => {
-    //                 return reject(new Error(error));
-    //             });
-    //     });
-    // }
-
-    // /**
-    //  * This method returns a list of all assets registered within service account.
-    //  */
-    // registeredAssetsList(): Promise<IAssetsList> {
-    //     return new Promise((resolve, reject) => {
-    //         const msg = stdTrinciMessages.getAccount(`${this._serviceAccount}`, ['assets']);
-    //         this.submitTrinciMessage(msg)
-    //             .then((resultMessage: TrinciMessage) => {
-    //                 resultMessage.assertType(MessageTypes.GetAccountResponse);
-    //                 const resultList: IAssetsList = {};
-    //                 let assetsList: any = {};
-    //                 if (resultMessage.body.data[0]) {
-    //                     assetsList = bytesToObject(
-    //                         new Uint8Array(resultMessage.body.data[0]),
-    //                     );
-    //                 }
-    //                 const accounts = Object.keys(assetsList);
-    //                 accounts.forEach((accountId: string) => {
-    //                     resultList[accountId] = {
-    //                         name: assetsList[accountId][0],
-    //                         creator: assetsList[accountId][1],
-    //                         url: assetsList[accountId][2],
-    //                         contractHash: Buffer.from(assetsList[accountId][3]).toString('hex'),
-    //                     };
-    //                 });
-    //                 return resolve(resultList);
-    //             })
-    //             .catch((error: any) => {
-    //                 return reject(new Error(error));
-    //             });
-    //     });
-    // }
+    /**
+     * This method returns a list of all published contracts.
+     */
+    registeredContractsList(): Promise<IContractsList> {
+        return new Promise((resolve, reject) => {
+            this.accountData(this._serviceAccount, ['*'])
+                .then((accDataKeysList: IAccountData) => {
+                    let keysList: string[] = bytesToObject(
+                        new Uint8Array(accDataKeysList.requestedData[0]),
+                    );
+                    keysList = keysList.filter((value: string) => {
+                        if (
+                            value.length > 19
+                            && value.substring(0, 19) === 'contracts:metadata:'
+                        ) {
+                            return true;
+                        }
+                        return false;
+                    });
+                    this.accountData(this._serviceAccount, keysList)
+                        .then((accDataAllKeys: IAccountData) => {
+                            const result: IContractsList = {};
+                            accDataAllKeys.requestedData.forEach((value: Uint8Array, i: number) => {
+                                const tempObj = bytesToObject(value);
+                                result[keysList[i].substring(19)] = tempObj;
+                            });
+                            return resolve(result);
+                        })
+                        .catch((error: any) => {
+                            return reject(new Error(error));
+                        });
+                })
+                .catch((error: any) => {
+                    return reject(new Error(error));
+                });
+        });
+    }
 
     /**
      * Sends a message to the blockchain in "Trinci Message" format
@@ -773,6 +824,7 @@ export class Client {
                             }
                             const responseMessage = new TrinciMessage();
                             responseMessage.fromBytes(new Uint8Array(resBuffer));
+                            // console.log(bytesToObject(new Uint8Array(resBuffer)));
                             return resolve(responseMessage);
                         })
                         .catch((error: any) => {
