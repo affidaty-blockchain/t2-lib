@@ -37,9 +37,9 @@ export class RSAKeyPair implements IRSAKeyPair {
                 this.keyPairParams.usages,
             )
                 .then((cryptoKeyPair: CryptoKeyPair) => {
-                    this.publicKey.setCryptoKey(cryptoKeyPair.publicKey)
+                    this.publicKey.setCryptoKey(cryptoKeyPair.publicKey!)
                         .then(() => {
-                            this.privateKey.setCryptoKey(cryptoKeyPair.privateKey)
+                            this.privateKey.setCryptoKey(cryptoKeyPair.privateKey!)
                                 .then(() => {
                                     return resolve(true);
                                 })

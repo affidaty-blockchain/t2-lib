@@ -59,7 +59,7 @@ describe('transaction', () => {
         try {
             t.data.nonce = new Uint8Array([0xff, 0xfa]);
         } catch (tError) {
-            error = tError;
+            error = tError as Error;
         }
         expect(error).toEqual(new Error(Errors.WRONG_TX_NONCE_LENGTH));
         t.data.nonceHex = bytesHex2;

@@ -57,7 +57,7 @@ describe('Testing base cryptography implementations', () => {
         });
         it('testing class conversions', async () => {
             let testBaseKey = new Base.BaseKey(Defaults.ECDSAP384R1PubKeyParams);
-            testBaseKey.setCryptoKey(ecdsaKeyPair.publicKey);
+            testBaseKey.setCryptoKey(ecdsaKeyPair.publicKey!);
             await expect(testBaseKey.getCryptoKey()).resolves.toEqual(
                 ecdsaKeyPair.publicKey,
             );
@@ -73,7 +73,7 @@ describe('Testing base cryptography implementations', () => {
             );
 
             testBaseKey = new Base.BaseKey(Defaults.ECDSAP384R1PrivKeyParams);
-            testBaseKey.setCryptoKey(ecdsaKeyPair.privateKey);
+            testBaseKey.setCryptoKey(ecdsaKeyPair.privateKey!);
             await expect(testBaseKey.getCryptoKey()).resolves.toEqual(
                 ecdsaKeyPair.privateKey,
             );
@@ -127,7 +127,7 @@ describe('Testing base cryptography implementations', () => {
 
             testError = undefined;
             try {
-                testBaseKey.setCryptoKey(ecdhKeyPair1.privateKey);
+                testBaseKey.setCryptoKey(ecdhKeyPair1.privateKey!);
             } catch (error) {
                 testError = error;
             }
@@ -158,7 +158,7 @@ describe('Testing base cryptography implementations', () => {
             testBaseKey = new Base.BaseKey(testParams);
             testError = undefined;
             try {
-                testBaseKey.setCryptoKey(ecdsaKeyPair.privateKey);
+                testBaseKey.setCryptoKey(ecdsaKeyPair.privateKey!);
             } catch (error) {
                 testError = error;
             }
@@ -188,7 +188,7 @@ describe('Testing base cryptography implementations', () => {
             await expect(Base.verifyDataSignature(testBaseKey, testData, testData, 'SHA-384'))
                 .rejects.toEqual(new Error(Errors.NO_BASE_KEY_VALUE));
 
-            testBaseKey.setCryptoKey(ecdhKeyPair1.privateKey);
+            testBaseKey.setCryptoKey(ecdhKeyPair1.privateKey!);
             await expect(Base.signData(testBaseKey, testData, 'SHA-384'))
                 .rejects.toBeDefined();
             await expect(Base.verifyDataSignature(testBaseKey, testData, testData, 'SHA-384'))

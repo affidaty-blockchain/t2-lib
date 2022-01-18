@@ -26,7 +26,7 @@ describe('Testing elliptic curve cryptography implementations', () => {
         let rsaPrivateKeyPKCS8: ArrayBuffer;
 
         it('setting control values', async () => {
-            ecdsaKeyPair = await Subtle.generateKey(
+            ecdsaKeyPair! = await Subtle.generateKey(
                 Defaults.ECDSAP384R1PrivKeyParams.genAlgorithm,
                 true,
                 Defaults.ECDSAP384R1KeyPairParams.usages,
@@ -99,7 +99,7 @@ describe('Testing elliptic curve cryptography implementations', () => {
         });
         it('testing conversions', async () => {
             let testBaseECKey = new EllipticCurve.BaseECKey(Defaults.ECDSAP384R1PubKeyParams);
-            await testBaseECKey.setCryptoKey(ecdsaKeyPair.publicKey);
+            await testBaseECKey.setCryptoKey(ecdsaKeyPair.publicKey!);
             expect(testBaseECKey.type).toEqual('public');
             expect(testBaseECKey.isPublic()).toBeTruthy();
             expect(testBaseECKey.isPrivate()).toBeFalsy();
@@ -156,7 +156,7 @@ describe('Testing elliptic curve cryptography implementations', () => {
             );
 
             testBaseECKey = new EllipticCurve.BaseECKey(Defaults.ECDSAP384R1PrivKeyParams);
-            await testBaseECKey.setCryptoKey(ecdsaKeyPair.privateKey);
+            await testBaseECKey.setCryptoKey(ecdsaKeyPair.privateKey!);
             expect(testBaseECKey.type).toEqual('private');
             await expect(testBaseECKey.getCryptoKey()).resolves.toEqual(
                 ecdsaKeyPair.privateKey,
@@ -198,7 +198,7 @@ describe('Testing elliptic curve cryptography implementations', () => {
                 .rejects.toEqual(new Error(Errors.NO_BASE_KEY_VALUE));
             await expect(testBaseECPubKey.getSPKI())
                 .rejects.toEqual(new Error(Errors.NO_BASE_KEY_VALUE));
-            await testBaseECPubKey.setCryptoKey(ecdsaKeyPair.publicKey);
+            await testBaseECPubKey.setCryptoKey(ecdsaKeyPair.publicKey!);
             await expect(testBaseECPubKey.getPKCS8())
                 .rejects.toEqual(new Error(Errors.ONLY_FOR_PRIVKEY));
             await expect(testBaseECPubKey.setRaw(emptyUint8Array))
@@ -220,7 +220,7 @@ describe('Testing elliptic curve cryptography implementations', () => {
                 .rejects.toEqual(new Error(Errors.NOT_PRIVATE_EC_BYTES));
             await expect(testBaseECPrivKey.getPKCS8())
                 .rejects.toEqual(new Error(Errors.NO_BASE_KEY_VALUE));
-            testBaseECPrivKey.setCryptoKey(ecdsaKeyPair.privateKey);
+            testBaseECPrivKey.setCryptoKey(ecdsaKeyPair.privateKey!);
             await expect(testBaseECPrivKey.getRaw())
                 .rejects.toEqual(new Error(Errors.ONLY_FOR_PUBKEY));
             await expect(testBaseECPrivKey.getSPKI())
