@@ -121,6 +121,9 @@ export class CommonParentTxData {
 
     /** Maximum amount of fuel that sender is ready to burn for this transaction. */
     public set maxFuel(maxFuel: number) {
+        if (maxFuel < 0) {
+            throw new Error(Errors.FUEL_NEGATIVE);
+        }
         this._maxFuel = maxFuel;
     }
 
