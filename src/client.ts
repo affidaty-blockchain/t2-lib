@@ -303,6 +303,7 @@ export class Client {
      * Creates and sets a ready to be signed transaction.
      * Nonce is set automatically.
      * @param targetID - transaction destination accountID
+     * @param maxFuel - max amount of fuel you are willing to spend on this transaction
      * @param contract - smart contract hash
      * @param method - method of the smart contract to call
      * @param args - arguments to pass  to the smart contract
@@ -310,6 +311,7 @@ export class Client {
      */
     prepareUnsignedTx(
         targetID: string,
+        maxFuel: number,
         contract: Uint8Array | string,
         method: string,
         args: any,
@@ -317,6 +319,7 @@ export class Client {
         const tx = new UnitaryTransaction();
         tx.data.accountId = targetID;
         tx.data.genNonce();
+        tx.data.maxFuel = maxFuel;
         tx.data.networkName = this.t2CoreNetworkName;
         tx.data.setSmartContractHash(contract);
         tx.data.smartContractMethod = method;
@@ -328,6 +331,7 @@ export class Client {
      * Creates and sets a ready to be sent transaction.
      * Nonce is set automatically.
      * @param targetID - transaction destination accountID
+     * @param maxFuel - max amount of fuel you are willing to spend on this transaction
      * @param contract - smart contract hash
      * @param method - method of the smart contract to call
      * @param args - arguments to pass  to the smart contract
@@ -336,13 +340,14 @@ export class Client {
      */
     prepareTx(
         targetID: string,
+        maxFuel: number,
         contract: Uint8Array | string,
         method: string,
         args: any,
         signerPrivateKey: BaseECKey,
     ): Promise<UnitaryTransaction> {
         return new Promise((resolve, reject) => {
-            const tx = this.prepareUnsignedTx(targetID, contract, method, args);
+            const tx = this.prepareUnsignedTx(targetID, maxFuel, contract, method, args);
             tx.sign(signerPrivateKey)
                 .then(() => {
                     return resolve(tx);
@@ -423,6 +428,7 @@ export class Client {
     /**
      * Concatenation of Client.prepareTx() and Client.submitTx() methods
      * @param targetID - transaction destination accountID
+     * @param maxFuel - max amount of fuel you are willing to spend on this transaction
      * @param contract - smart contract hash
      * @param method - method of the smart contract to call
      * @param args - arguments to pass  to the smart contract
@@ -431,13 +437,14 @@ export class Client {
      */
     prepareAndSubmitTx(
         targetID: string,
+        maxFuel: number,
         contract: Uint8Array | string,
         method: string,
         args: any,
         signerPrivateKey: BaseECKey,
     ): Promise<string> {
         return new Promise((resolve, reject) => {
-            this.prepareTx(targetID, contract, method, args, signerPrivateKey)
+            this.prepareTx(targetID, maxFuel, contract, method, args, signerPrivateKey)
                 .then((preparedTx) => {
                     this.submitTx(preparedTx)
                         .then((ticket) => {
