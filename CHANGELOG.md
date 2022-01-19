@@ -6,6 +6,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/).
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [2.0.1] - 2022-01-19
+
+### Changed
+
+- Added maxFuel parameter to ```prepareUnsignedTx()```, ```prepareTx()``` and ```prepareAndSubmitTx()``` client methods, which should've been done in ```2.0.0```.
+
 ## [2.0.0] - 2022-01-18
 
 ### Changed
