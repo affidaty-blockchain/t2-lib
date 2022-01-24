@@ -6,6 +6,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/).
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [2.0.2] - UNPUBLISHED
+
+### Changed
+
+- Transactions schema field now contains hashes of correcponding schema files shipped wit library inside "schemas" directory.
+
+### Added
+
+- Schema files for various transaction types.
+
 ## [2.0.1] - 2022-01-19
 
 ### Changed

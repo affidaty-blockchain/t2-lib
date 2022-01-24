@@ -12,6 +12,13 @@ export namespace TxSchemas {
     export const BULK_ROOT_TX: TTxSchemaType = 'brv1';
     export const BULK_NODE_TX: TTxSchemaType = 'bnv1';
 }
+// export namespace TxSchemas {
+//     export const EMPTY_TX: TTxSchemaType = '';
+//     export const UNITARY_TX: TTxSchemaType = 'ecd1f1480989f2ec04973aef33a9d399f78f06d47ad7349b3f494bae928a500c';
+//     export const BULK_TX: TTxSchemaType = '45bf1ce970ffe7c5314ae7d0a2bf0e956a62a67e811f1d282c5c1b1cdf54da42';
+//     export const BULK_ROOT_TX: TTxSchemaType = '45bf1ce970ffe7c5314ae7d0a2bf0e956a62a67e811f1d282c5c1b1cdf54da42';
+//     export const BULK_NODE_TX: TTxSchemaType = 'cd6c76ad5f0f46af9c86084d8f0b52e47d343140eae98a4ecc044d3958148f90';
+// }
 
 export namespace SignableTypeTags {
     export const EMPTY_TX: string = '';

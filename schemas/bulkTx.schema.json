@@ -1,0 +1,229 @@
+{
+    "$id": "bulkTx.schema.json",
+    "title": "Bulk Transaction",
+    "description": "A bulk transaction. It contains a bulk root transaction and at least one bulk node transaction. First root and then all node transactions get executed in order. A bulk transaction is considered successful only if root and every node transaction has been executed successfully. A bulk transaction data must be signed by the private key associated with the public key contained in the signer field of its root transaction.",
+    "type": "array",
+    "minItems": 3,
+    "maxItems": 3,
+    "items": [
+        {
+            "$id": "typeTag.bulkTx.schema.json",
+            "description": "Transaction type tag.",
+            "type": "string",
+            "pattern": "bulk_tx"
+        },
+        {
+            "$id": "data.bulkTx.schema.json",
+            "description": "Transaction data. This is the only part signed by signer's private key.",
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": [
+                {
+                    "$id": "schema.data.bulkTx.schema.json",
+                    "description": "Transaction schema. This is the hash of the file containing json schema whic can be used to validate and better explain the transaction. Just like this file.",
+                    "type": "string"
+                },
+                {
+                    "$id": "transactions.data.bulkTx.schema.json",
+                    "description": "This array contains all transactions composing this bulk transaction.",
+                    "type": "array",
+                    "minItems": 2,
+                    "maxItems": 2,
+                    "items": [
+                        {
+                            "$id": "bulkRootTx.transactions.data.bulkTx.schema.json",
+                            "title": "Bulk root transaction",
+                            "description": "A bulk root transaction. It does not have a signature, instead the whole bulk transaction must be signed by the private key associated with the public key contained in the root's signer field.",
+                            "type": "array",
+                            "minItems": 1,
+                            "maxItems": 1,
+                            "items": [
+                                {
+                                    "$id": "data.bulkRootTx.transactions.data.bulkTx.schema.json",
+                                    "description": "Transaction data. In case of bulk root transaction its data will be signed along with all node transactions by a single bulk transaction signature.",
+                                    "type": "array",
+                                    "minItems": 9,
+                                    "maxItems": 9,
+                                    "items": [
+                                        {
+                                            "$id": "schema.data.bulkRootTx.transactions.data.bulkTx.schema.json",
+                                            "description": "Transaction schema. This is the hash of the file containing json schema whic can be used to validate and better explain the transaction. Just like this file.",
+                                            "type": "string"
+                                        },
+                                        {
+                                            "$id": "account.data.bulkRootTx.transactions.data.bulkTx.schema.json",
+                                            "description": "Identifier of the account target of the transaction.",
+                                            "type": "string"
+                                        },
+                                        {
+                                            "$id": "maxFuel.data.bulkRootTx.transactions.data.bulkTx.schema.json",
+                                            "description": "The maximum amount of fuel which signer is willing to spend.",
+                                            "type": "number",
+                                            "minimum": 0
+                                        },
+                                        {
+                                            "$id": "nonce.data.bulkRootTx.transactions.data.bulkTx.schema.json",
+                                            "description": "Anti-replay value represented by an array of 8 bytes.",
+                                            "type": "object"
+                                        },
+                                        {
+                                            "$id": "network.data.bulkRootTx.transactions.data.bulkTx.schema.json",
+                                            "description": "The identifier of the network, to which the transaction will be submitted.",
+                                            "type": "string"
+                                        },
+                                        {
+                                            "$id": "contract.data.bulkRootTx.transactions.data.bulkTx.schema.json",
+                                            "description": "The reference to the smart contract called by the transaction.",
+                                            "type": "object"
+                                        },
+                                        {
+                                            "$id": "contractMethod.data.bulkRootTx.transactions.data.bulkTx.schema.json",
+                                            "description": "The name of the smart contract method called by the transaction.",
+                                            "type": "string"
+                                        },
+                                        {
+                                            "$id": "signer.data.bulkRootTx.transactions.data.bulkTx.schema.json",
+                                            "description": "Public key of the transaction signer.",
+                                            "type": "array",
+                                            "minItems": 3,
+                                            "maxItems": 3,
+                                            "items": [
+                                                {
+                                                    "$id": "algorithm.signer.data.bulkRootTx.transactions.data.bulkTx.schema.json",
+                                                    "description": "The algorithm of the signer public key.",
+                                                    "type": "string"
+                                                },
+                                                {
+                                                    "$id": "type.signer.data.bulkRootTx.transactions.data.bulkTx.schema.json",
+                                                    "description": "The variant of the algorithm of the signer public key.",
+                                                    "type": "string"
+                                                },
+                                                {
+                                                    "$id": "keyBytes.signer.data.bulkRootTx.transactions.data.bulkTx.schema.json",
+                                                    "description": "Bytes representing signer public key.",
+                                                    "type": "object"
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "$id": "arguments.data.bulkRootTx.transactions.data.bulkTx.schema.json",
+                                            "description": "Arguments which will be passed to the contract method called by the transaction represented by an array of bytes. Probably it's an object serialized using MessagePack format.",
+                                            "type": "object"
+                                        }
+                                    ]
+                                }
+                            ]
+                        },
+                        {
+                            "$id": "bulkNodeTxList.transactions.data.bulkTx.schema.json",
+                            "title": "Bulk node transactions list",
+                            "description": "A bulk node transaction list. Contains an array of bulk node transactions which all must depend on the root of this bulk transaction.",
+                            "type": "array",
+                            "minItems": 1,
+                            "items": {
+                                "$id": "bulkNodeTx.bulkNodeTxList.transactions.data.bulkTx.schema.json",
+                                "title": "Bulk Node Transaction",
+                                "description": "A bulk node transaction. Depends on a specific bulk root transaction and cannot be submitted without it. Must contain it's own signature like a unitary transaction.",
+                                "type": "array",
+                                "minItems": 2,
+                                "maxItems": 2,
+                                "items": [
+                                    {
+                                        "$id": "data.bulkNodeTx.bulkNodeTxList.transactions.data.bulkTx.schema.json",
+                                        "description": "Transaction data. This is the only part signed by signer's private key.",
+                                        "type": "array",
+                                        "minItems": 10,
+                                        "maxItems": 10,
+                                        "items": [
+                                            {
+                                                "$id": "schema.data.bulkNodeTx.bulkNodeTxList.transactions.data.bulkTx.schema.json",
+                                                "description": "Transaction schema. This is the hash of the file containing json schema whic can be used to validate and better explain the transaction. Just like this file.",
+                                                "type": "string"
+                                            },
+                                            {
+                                                "$id": "account.data.bulkNodeTx.bulkNodeTxList.transactions.data.bulkTx.schema.json",
+                                                "description": "Identifier of the account target of the transaction.",
+                                                "type": "string"
+                                            },
+                                            {
+                                                "$id": "maxFuel.data.bulkNodeTx.bulkNodeTxList.transactions.data.bulkTx.schema.json",
+                                                "description": "The maximum amount of fuel which signer is willing to spend.",
+                                                "type": "number",
+                                                "minimum": 0
+                                            },
+                                            {
+                                                "$id": "nonce.data.bulkNodeTx.bulkNodeTxList.transactions.data.bulkTx.schema.json",
+                                                "description": "Anti-replay value represented by an array of 8 bytes.",
+                                                "type": "object"
+                                            },
+                                            {
+                                                "$id": "network.data.bulkNodeTx.bulkNodeTxList.transactions.data.bulkTx.schema.json",
+                                                "description": "The identifier of the network, to which the transaction will be submitted.",
+                                                "type": "string"
+                                            },
+                                            {
+                                                "$id": "contract.data.bulkNodeTx.bulkNodeTxList.transactions.data.bulkTx.schema.json",
+                                                "description": "The reference to the smart contract called by the transaction.",
+                                                "type": "object"
+                                            },
+                                            {
+                                                "$id": "contractMethod.data.bulkNodeTx.bulkNodeTxList.transactions.data.bulkTx.schema.json",
+                                                "description": "The name of the smart contract method called by the transaction.",
+                                                "type": "string"
+                                            },
+                                            {
+                                                "$id": "signer.data.bulkNodeTx.bulkNodeTxList.transactions.data.bulkTx.schema.json",
+                                                "description": "Public key of the transaction signer.",
+                                                "type": "array",
+                                                "minItems": 3,
+                                                "maxItems": 3,
+                                                "items": [
+                                                    {
+                                                        "$id": "algorithm.signer.data.bulkNodeTx.bulkNodeTxList.transactions.data.bulkTx.schema.json",
+                                                        "description": "The algorithm of the signer public key.",
+                                                        "type": "string"
+                                                    },
+                                                    {
+                                                        "$id": "type.signer.data.bulkNodeTx.bulkNodeTxList.transactions.data.bulkTx.schema.json",
+                                                        "description": "The variant of the algorithm of the signer public key.",
+                                                        "type": "string"
+                                                    },
+                                                    {
+                                                        "$id": "keyBytes.signer.data.bulkNodeTx.bulkNodeTxList.transactions.data.bulkTx.schema.json",
+                                                        "description": "Bytes representing signer public key.",
+                                                        "type": "object"
+                                                    }
+                                                ]
+                                            },
+                                            {
+                                                "$id": "arguments.data.bulkNodeTx.bulkNodeTxList.transactions.data.bulkTx.schema.json",
+                                                "description": "Arguments which will be passed to the contract method called by the transaction represented by an array of bytes. Probably it's an object serialized using MessagePack format.",
+                                                "type": "object"
+                                            },
+                                            {
+                                                "$id": "dependsOn.data.bulkNodeTx.bulkNodeTxList.transactions.data.bulkTx.schema.json",
+                                                "description": "Ticket of the bulk root transaction, on which this transaction depends.",
+                                                "type": "object"
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "$id": "signature.bulkNodeTx.bulkNodeTxList.transactions.data.bulkTx.schema.json",
+                                        "description": "The digital signature of transaction data represented by an array of bytes.",
+                                        "type": "object"
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "$id": "signature.bulkTx.schema.json",
+            "description": "The digital signature of transaction data represented by an array of bytes. It must be produced using the private key associated with the public key contained in the signer field of the root transaction.",
+            "type": "object"
+        }
+    ]
+}
