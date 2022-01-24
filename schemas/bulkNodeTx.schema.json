@@ -15,12 +15,12 @@
             "items": [
                 {
                     "$id": "schema.data.bulkNodeTx.schema.json",
-                    "description": "Transaction schema. This is the hash of the file containing json schema whic can be used to validate and better explain the transaction. Just like this file.",
+                    "description": "Transaction schema. This is the hash of the file containing json schema which can be used to validate and better explain the transaction. Just like this file.",
                     "type": "string"
                 },
                 {
                     "$id": "account.data.bulkNodeTx.schema.json",
-                    "description": "Identifier of the account target of the transaction.",
+                    "description": "Identifier of the account target of the transaction. This account is an instance of a smart contract.",
                     "type": "string"
                 },
                 {
@@ -41,7 +41,7 @@
                 },
                 {
                     "$id": "contract.data.bulkNodeTx.schema.json",
-                    "description": "The reference to the smart contract called by the transaction.",
+                    "description": "The optional reference to the smart contract called by the transaction.",
                     "type": "object"
                 },
                 {
@@ -80,14 +80,14 @@
                 },
                 {
                     "$id": "dependsOn.data.bulkNodeTx.schema.json",
-                    "description": "Ticket of the bulk root transaction, on which this transaction depends.",
+                    "description": "Hash of the bulk root transaction, on which this transaction depends.",
                     "type": "object"
                 }
             ]
         },
         {
             "$id": "signature.bulkNodeTx.schema.json",
-            "description": "The digital signature of transaction data represented by an array of bytes.",
+            "description": "The digital signature of transaction data hash represented by an array of bytes.",
             "type": "object"
         }
     ]

@@ -14,10 +14,10 @@ export namespace TxSchemas {
 }
 // export namespace TxSchemas {
 //     export const EMPTY_TX: TTxSchemaType = '';
-//     export const UNITARY_TX: TTxSchemaType = 'ecd1f1480989f2ec04973aef33a9d399f78f06d47ad7349b3f494bae928a500c';
-//     export const BULK_TX: TTxSchemaType = '45bf1ce970ffe7c5314ae7d0a2bf0e956a62a67e811f1d282c5c1b1cdf54da42';
-//     export const BULK_ROOT_TX: TTxSchemaType = '45bf1ce970ffe7c5314ae7d0a2bf0e956a62a67e811f1d282c5c1b1cdf54da42';
-//     export const BULK_NODE_TX: TTxSchemaType = 'cd6c76ad5f0f46af9c86084d8f0b52e47d343140eae98a4ecc044d3958148f90';
+//     export const UNITARY_TX: TTxSchemaType = 'a1c8e9e1facd23b35f31e7891a72892d260124108b4232889e839ffc08879db0';
+//     export const BULK_TX: TTxSchemaType = 'dae7d4beeaf3236b180e50c8222e21119bf811bb9466f2a77ebc93f132357f9f';
+//     export const BULK_ROOT_TX: TTxSchemaType = '258413fa443fe4cc735077904a02930b23ac2f32142a8b18f86e14dfcc4bcd88';
+//     export const BULK_NODE_TX: TTxSchemaType = '76aa228fcde873e8eec3dc823747c62b8fdae221db93649b56f20e5656ee3327';
 // }
 
 export namespace SignableTypeTags {

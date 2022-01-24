@@ -7,12 +7,12 @@
     "items": [
         {
             "$id": "schema.data.bulkRootTx.schema.json",
-            "description": "Transaction schema. This is the hash of the file containing json schema whic can be used to validate and better explain the transaction. Just like this file.",
+            "description": "Transaction schema. This is the hash of the file containing json schema which can be used to validate and better explain the transaction. Just like this file.",
             "type": "string"
         },
         {
             "$id": "account.data.bulkRootTx.schema.json",
-            "description": "Identifier of the account target of the transaction.",
+            "description": "Identifier of the account target of the transaction. This account is an instance of a smart contract.",
             "type": "string"
         },
         {
@@ -33,7 +33,7 @@
         },
         {
             "$id": "contract.data.bulkRootTx.schema.json",
-            "description": "The reference to the smart contract called by the transaction.",
+            "description": "The optional reference to the smart contract called by the transaction.",
             "type": "object"
         },
         {
