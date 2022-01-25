@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Changed
 
-- Transactions schema field now contains hashes of correcponding schema files shipped wit library inside "schemas" directory.
+- Transactions schema field now contains hashes of corresponding schema files shipped with library inside "schemas" directory.
 
 ### Added
 
