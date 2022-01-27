@@ -1,7 +1,7 @@
 {
     "$id": "bulkTx.schema.json",
     "title": "Bulk Transaction",
-    "description": "A bulk transaction. It contains a bulk root transaction and at least one bulk node transaction. First root and then all node transactions get executed in order. A bulk transaction is considered successful only if root and every node transaction has been executed successfully. A bulk transaction data must be signed by the private key associated with the public key contained in the signer field of its root transaction.",
+    "description": "A bulk transaction. It contains a bulk root transaction and at least one bulk node transaction. First root and then all node transactions get executed in order. A bulk transaction is considered successful only if root and every node transaction have been executed successfully. A bulk transaction data must be signed by the private key associated with the public key contained in the signer field of its root transaction.",
     "type": "array",
     "minItems": 3,
     "maxItems": 3,
@@ -91,17 +91,17 @@
                                             "items": [
                                                 {
                                                     "$id": "algorithm.signer.data.bulkRootTx.transactions.data.bulkTx.schema.json",
-                                                    "description": "The algorithm of the signer public key.",
+                                                    "description": "The algorithm of the signer's public key.",
                                                     "type": "string"
                                                 },
                                                 {
                                                     "$id": "type.signer.data.bulkRootTx.transactions.data.bulkTx.schema.json",
-                                                    "description": "The variant of the algorithm of the signer public key.",
+                                                    "description": "The variant of the algorithm of the signer's public key.",
                                                     "type": "string"
                                                 },
                                                 {
                                                     "$id": "keyBytes.signer.data.bulkRootTx.transactions.data.bulkTx.schema.json",
-                                                    "description": "Bytes representing signer public key.",
+                                                    "description": "Bytes representing signer's public key.",
                                                     "type": "object"
                                                 }
                                             ]
@@ -124,7 +124,7 @@
                             "items": {
                                 "$id": "bulkNodeTx.bulkNodeTxList.transactions.data.bulkTx.schema.json",
                                 "title": "Bulk Node Transaction",
-                                "description": "A bulk node transaction. Depends on a specific bulk root transaction and cannot be submitted without it. Must contain it's own signature like a unitary transaction.",
+                                "description": "A bulk node transaction. Depends on a specific bulk root transaction and cannot be submitted without it. Must contain its own signature like a unitary transaction.",
                                 "type": "array",
                                 "minItems": 2,
                                 "maxItems": 2,
@@ -181,17 +181,17 @@
                                                 "items": [
                                                     {
                                                         "$id": "algorithm.signer.data.bulkNodeTx.bulkNodeTxList.transactions.data.bulkTx.schema.json",
-                                                        "description": "The algorithm of the signer public key.",
+                                                        "description": "The algorithm of the signer's public key.",
                                                         "type": "string"
                                                     },
                                                     {
                                                         "$id": "type.signer.data.bulkNodeTx.bulkNodeTxList.transactions.data.bulkTx.schema.json",
-                                                        "description": "The variant of the algorithm of the signer public key.",
+                                                        "description": "The variant of the algorithm of the signer's public key.",
                                                         "type": "string"
                                                     },
                                                     {
                                                         "$id": "keyBytes.signer.data.bulkNodeTx.bulkNodeTxList.transactions.data.bulkTx.schema.json",
-                                                        "description": "Bytes representing signer public key.",
+                                                        "description": "Bytes representing signer's public key.",
                                                         "type": "object"
                                                     }
                                                 ]
