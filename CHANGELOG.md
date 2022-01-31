@@ -6,11 +6,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/).
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## [2.0.2] - UNPUBLISHED
+## [2.0.2] - 22-01-31
 
 ### Changed
 
-- Transactions schema field now contains hashes of corresponding schema files shipped with library inside "schemas" directory.
+- ECDHKeyPair()/ECDSAKeyPair() constructors now accept custom parameters. If no params were provided, defaults are used.
 
 ### Added
 
