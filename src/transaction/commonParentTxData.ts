@@ -7,19 +7,11 @@ export type TTxSchemaType = string;
 
 export namespace TxSchemas {
     export const EMPTY_TX: TTxSchemaType = '';
-    export const UNITARY_TX: TTxSchemaType = 'v1';
-    export const BULK_TX: TTxSchemaType = 'bv1';
-    export const BULK_ROOT_TX: TTxSchemaType = 'brv1';
-    export const BULK_NODE_TX: TTxSchemaType = 'bnv1';
+    export const UNITARY_TX: TTxSchemaType = 'd8af8f563f25eb065651ccdd05b9726fd27ff9dc40e3b9c8b4d2c55fa9819f36';
+    export const BULK_TX: TTxSchemaType = '0ec3469e3509682d7599797a9d1c5cdf56b2d9bd435f853a3b999cbb717e0337';
+    export const BULK_ROOT_TX: TTxSchemaType = '0bccf5dce4f25036de1ef091ea9e862fa348e6de82ef16fbcfc84c1f1314b86e';
+    export const BULK_NODE_TX: TTxSchemaType = '097e5f552c79d4f64e15f853ad19d013973343aea557d5c1482d9cef71915db8';
 }
-
-// export namespace TxSchemas {
-//     export const EMPTY_TX: TTxSchemaType = '';
-//     export const UNITARY_TX: TTxSchemaType = 'd8af8f563f25eb065651ccdd05b9726fd27ff9dc40e3b9c8b4d2c55fa9819f36';
-//     export const BULK_TX: TTxSchemaType = '0ec3469e3509682d7599797a9d1c5cdf56b2d9bd435f853a3b999cbb717e0337';
-//     export const BULK_ROOT_TX: TTxSchemaType = '0bccf5dce4f25036de1ef091ea9e862fa348e6de82ef16fbcfc84c1f1314b86e';
-//     export const BULK_NODE_TX: TTxSchemaType = '097e5f552c79d4f64e15f853ad19d013973343aea557d5c1482d9cef71915db8';
-// }
 
 export namespace SignableTypeTags {
     export const EMPTY_TX: string = '';
