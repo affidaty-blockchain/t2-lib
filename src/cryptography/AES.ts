@@ -7,6 +7,24 @@ import {
     DEF_AES_SALT_BYTE_LEN as saltLength,
 } from './cryptoDefaults';
 
+interface ISaltAndIV {
+    salt: Uint8Array;
+    iv: Uint8Array;
+}
+
+export function getSaltAndIV(
+    data: Uint8Array,
+    saltLen: number = saltLength,
+    ivLen: number = ivLength,
+): ISaltAndIV {
+    const salt = data.slice(0, saltLen);
+    const iv = data.slice(saltLength, saltLength + ivLen);
+    return {
+        salt,
+        iv,
+    };
+}
+
 /* AES Password ENCRYPTION / DECRYPTION METHODS */
 /* based on: https://bradyjoslin.com/blog/encryption-webcrypto/  */
 function PasswordToPBKDF2(password: string): Promise<CryptoKey> {

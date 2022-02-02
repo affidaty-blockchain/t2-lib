@@ -6,6 +6,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/).
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [2.0.4] - 22-02-02
+
+### Added
+
+- Reintroduced t2lib.Utils.getSaltAndIV(); method.
+
 ## [2.0.3] - 22-01-31
 
 ### Changed
