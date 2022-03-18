@@ -21,10 +21,32 @@ export { getAccountId, Account } from './account';
 export { Delegation } from './delegation';
 export * as BlindRSA from './cryptography/RSABlindSignature';
 export { Transaction } from './transaction/transaction';
-export { UnitaryTransaction } from './transaction/unitaryTransaction';
-export { BulkRootTransaction } from './transaction/bulkRootTransaction';
-export { BulkNodeTransaction } from './transaction/bulkNodeTransaction';
-export { BulkTransaction } from './transaction/bulkTransaction';
+export {
+    UnitaryTransaction,
+    IUnitaryTxObject,
+    IUnitaryTxObjectWithBuffers,
+    IUnitaryTxUnnamedObject,
+} from './transaction/unitaryTransaction';
+export {
+    BulkRootTransaction,
+    IBulkRootTxObject,
+    IBulkRootTxObjectWithBuffers,
+    IBulkRootTxUnnamedObject,
+    IBulkRootTxUnnamedObjectNoTag,
+} from './transaction/bulkRootTransaction';
+export {
+    BulkNodeTransaction,
+    IBulkNodeTxObject,
+    IBulkNodeTxObjectWithBuffers,
+    IBulkNodeTxUnnamedObject,
+    IBulkNodeTxUnnamedObjectNoTag,
+} from './transaction/bulkNodeTransaction';
+export {
+    BulkTransaction,
+    IBulkTxObject,
+    IBulkTxObjectWithBuffers,
+    IBulkTxUnnamedObject,
+} from './transaction/bulkTransaction';
 export { stdTxPrepareUnsigned } from './stdTxPrepareUnsigned';
 export { Certificate } from './certificate';
 export * from './client';

@@ -16,17 +16,17 @@ import {
     IBaseTxObject,
 } from './baseTransaction';
 
-interface IUnitaryTxUnnamedObject extends IBaseTxUnnamedObject {
+export interface IUnitaryTxUnnamedObject extends IBaseTxUnnamedObject {
     [1]: IBaseTxDataUnnamedObject;
     [2]: Buffer;
 }
 
-interface IUnitaryTxObjectWithBuffers extends IBaseTxObjectWithBuffers {
+export interface IUnitaryTxObjectWithBuffers extends IBaseTxObjectWithBuffers {
     data: IBaseTxDataObjectWithBuffers;
     signature: Buffer;
 }
 
-interface IUnitaryTxObject extends IBaseTxObject {
+export interface IUnitaryTxObject extends IBaseTxObject {
     data: IBaseTxDataObject;
     signature: Uint8Array;
 }
