@@ -60,11 +60,6 @@ function createMerkleTree(
     }
     const [...leaves] = dataArray;
 
-    // making merkletree symmetrical
-    const missingLeaves = missingSymmetryLeaves(dataArray.length);
-    for (let i = 0; i < missingLeaves; i += 1) {
-        leaves.push(dataArray[dataArray.length - 1]);
-    }
     const tree = new MerkleTree(leaves);
     const resultObj: IMerkleData = {
         depth: tree.getDepth(),
@@ -80,19 +75,10 @@ function createLeaf(valueKey: string, value: string, salt: Buffer): Buffer {
     return Buffer.from(hash);
 }
 
-/**
- * verifies data using hData object created with createMerkleTreeHData() function
- *
- * @link https://github.com/miguelmota/merkletreejs
- *
- * @param hData object, created with createMerkleTreeHData() function
- * @param signedFields array of strings, names of all fields of data signed by a user
- * @param passedData subobject of data, containing all fields that will be sent
- */
 function verifyMerkleTree(
-    dataArray: Buffer[],
+    clearLeaves: Buffer[],
     clearIndexes: number[],
-    depth: number,
+    totalLeaves: number,
     root: Buffer,
     multiproof: Buffer[],
 ): boolean {
@@ -100,8 +86,8 @@ function verifyMerkleTree(
     return tree.verifyMultiProof(
         root,
         clearIndexes,
-        dataArray,
-        depth,
+        clearLeaves,
+        totalLeaves,
         multiproof,
     );
 }
@@ -749,7 +735,6 @@ export class Certificate extends Signable {
                     }
                     const clearLeaves: Buffer[] = [];
                     const clearIndexes: number[] = [];
-                    let missingFields = 0;
                     for (let i = 0; i < allKeys.length; i += 1) {
                         if (clearKeys.indexOf(allKeys[i]) >= 0) {
                             clearIndexes.push(i);
@@ -760,28 +745,15 @@ export class Certificate extends Signable {
                                     this._data.salt,
                                 ),
                             );
-                        } else {
-                            missingFields += 1;
                         }
                     }
 
-                    if (missingFields === 0
-                        && this._multiProof.length === 0
-                    ) {
-                        const missingSymLeaves = missingSymmetryLeaves(clearLeaves.length);
-                        const leafToDublicate = clearLeaves.length - 1;
-                        for (let i = 0; i < missingSymLeaves; i += 1) {
-                            clearLeaves.push(clearLeaves[leafToDublicate]);
-                            clearIndexes.push(clearLeaves.length - 1);
-                        }
-                    }
-
-                    let result = false;
+                    let result = true;
                     try {
                         result = verifyMerkleTree(
                             clearLeaves,
                             clearIndexes,
-                            calculateSymmetryDepth(allKeys.length),
+                            allKeys.length,
                             this._data.root,
                             this._multiProof,
                         );
