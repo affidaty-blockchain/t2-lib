@@ -72,7 +72,7 @@ export function base64urlToBuffer(base64urlString: string): Buffer {
 * @returns - Base58 encoded string
 */
 export function bufferToBase58(buffer: Buffer): string {
-    return b58Encode(buffer);
+    return b58Encode(new Uint8Array(buffer));
 }
 
 /**
@@ -82,7 +82,7 @@ export function bufferToBase58(buffer: Buffer): string {
 * @returns - binary data decoded from input string
 */
 export function base58ToBuffer(base58String: string): Buffer {
-    return b58Decode(base58String);
+    return Buffer.from(b58Decode(base58String));
 }
 
 /**
