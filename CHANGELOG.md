@@ -6,6 +6,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/).
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [2.0.6] - 22-03-28
+
+### Added
+
+- AES key management.
+
 ## [2.0.5] - 22-03-18
 
 ### Added

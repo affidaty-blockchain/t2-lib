@@ -1,6 +1,7 @@
 import * as Errors from '../errors';
 import { WebCrypto, Subtle } from './webCrypto';
-import { importCryptoKey } from './base';
+import { IKeyParams } from './baseTypes';
+import { importCryptoKey, BaseKey } from './base';
 import {
     AESGCM256KeyParams as defaultAesParams,
     DEF_AES_IV_BYTE_LEN as ivLength,
@@ -175,4 +176,93 @@ export function AESPassDecrypt(
                 return reject(error);
             });
     });
+}
+
+/**
+ * Basic elliptic curve key class, extended by other, more specific classes
+ */
+export class AESKey extends BaseKey {
+    private _raw: Uint8Array = new Uint8Array(0);
+
+    constructor(keyPairParams: IKeyParams = defaultAesParams) {
+        super(keyPairParams);
+    }
+
+    protected _clear(): void {
+        this._raw = new Uint8Array(0);
+        this._clearBase();
+    }
+
+    public generate(): Promise<boolean> {
+        return new Promise((resolve, reject) => {
+            this._clear();
+            Subtle.generateKey(
+                this.keyParams.genAlgorithm,
+                true,
+                this.keyParams.usages,
+            )
+                .then((generatedCryptoKey: CryptoKey) => {
+                    this.setCryptoKey(generatedCryptoKey);
+                    return resolve(true);
+                })
+                .catch((error: any) => {
+                    return reject(error);
+                });
+        });
+    }
+
+    /**
+     * Sets key value from raw bytes (public key)
+     * @param raw - raw key bytes
+     */
+    public setRaw(
+        raw: Uint8Array,
+    ): Promise<boolean> {
+        return new Promise((resolve, reject) => {
+            Subtle.importKey(
+                'raw',
+                raw,
+                this.keyParams.genAlgorithm,
+                true,
+                this.keyParams.usages
+            )
+                .then((importedCryptoKey: CryptoKey) => {
+                    try {
+                        this.setCryptoKey(importedCryptoKey)
+                    } catch (error) {
+                        return reject(error);
+                    }
+                    return resolve(true);
+                })
+                .catch((err: any) => {
+                    return reject(err);
+                });
+        });
+    }
+
+    /**
+     * Outputs key value as raw bytes (public key)
+     * @returns - raw key bytes
+     */
+    public getRaw(): Promise<Uint8Array> {
+        return new Promise((resolve, reject) => {
+            if (this._raw.length > 0 ) {
+                return resolve(this._raw);
+            }
+            this.getCryptoKey()
+                .then((cryptoKey: CryptoKey) => {
+                    Subtle.exportKey('raw', cryptoKey)
+                        .then((rawKeyBytes: ArrayBuffer) => {
+                            this._raw = new Uint8Array(rawKeyBytes);
+                            return resolve(this._raw);
+                        })
+                        .catch((err: any) => {
+                            return reject(err)
+                        });
+                })
+                .catch((err: any) => {
+                    return reject(err);
+                })
+        });
+    }
 }

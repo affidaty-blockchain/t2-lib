@@ -7,7 +7,12 @@ export * as Message from './messageFormat';
 export { BaseKey } from './cryptography/base';
 export * as CryptoDefaults from './cryptography/cryptoDefaults';
 export * as SystemDefaults from './systemDefaults';
-export { AESPassEncrypt, AESPassDecrypt, getSaltAndIV } from './cryptography/AES';
+export {
+    AESPassEncrypt,
+    AESPassDecrypt,
+    getSaltAndIV,
+    AESKey,
+} from './cryptography/AES';
 export { BaseECKey } from './cryptography/baseECKey';
 export { IBaseECKeyPair, BaseECKeyPair } from './cryptography/baseECKeyPair';
 export { ECDHKey, deriveKeyFromECDH } from './cryptography/ECDHKey';
