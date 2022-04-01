@@ -12,10 +12,7 @@
     "parser": "@typescript-eslint/parser",
     "parserOptions": {
         "ecmaVersion": 12,
-        "sourceType": "module",
-        "project": [
-            "./tsconfig.eslint.json"
-        ]
+        "sourceType": "module"
     },
     "settings": {
         "import/resolver": {
@@ -51,7 +48,9 @@
         "@typescript-eslint/no-shadow": ["error"],
 
         "no-unused-vars": "off",
-        "@typescript-eslint/no-unused-vars": ["error", { "vars": "all", "args": "after-used", "ignoreRestSiblings": true }]
+        "@typescript-eslint/no-unused-vars": ["error", { "vars": "all", "args": "after-used", "ignoreRestSiblings": true }],
+
+        "no-promise-executor-return": "off"
     }
 }
 

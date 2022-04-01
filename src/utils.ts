@@ -83,3 +83,11 @@ export function numRange(
         (_, i) => { return start + (i * step); },
     );
 }
+
+export function removeValuefromArray<T>(array: Array<T>, value: T): Array<T> {
+    const index = array.indexOf(value);
+    if (index !== -1) {
+        array.splice(index, 1);
+    }
+    return array;
+}

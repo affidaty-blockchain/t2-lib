@@ -4,8 +4,8 @@ import { IBaseTxUnnamedObject } from './transaction/baseTransaction';
 export namespace MessageTypes {
     export const Undefined = -1;
     export const Exception = 0;
-    // export const Subscribe = 1;
-    // export const Unsubscribe = 2;
+    export const Subscribe = 1;
+    export const Unsubscribe = 2;
     export const PutTransactionRequest = 3;
     export const PutTransactionResponse = 4;
     export const GetTransactionRequest = 5;
@@ -20,8 +20,6 @@ export namespace MessageTypes {
     export const Packed = 255;
 }
 
-export type TSubscribeEventType = 'Transaction' | 'Block';
-
 interface IMessagesSettings {
     [key: number]: {
         name: string;
@@ -30,56 +28,55 @@ interface IMessagesSettings {
 }
 
 const MsgStructs: IMessagesSettings = {
-    [MessageTypes.Undefined]: { // ok
+    [MessageTypes.Undefined]: {
         name: 'Undefined',
         bodyOrder: [],
     },
-    [MessageTypes.Exception]: { // ok
+    [MessageTypes.Exception]: {
         name: 'Exception',
         bodyOrder: ['type', 'source'],
     },
-    // [MessageTypes.Subscribe]: {
-    //     name: 'Subscribe',
-    //     bodyOrder: ['id', 'event', 'receivePacked'],
-    // },
-    // [MessageTypes.Unsubscribe]: {
-    //     name: 'Unsubscribe',
-    //     bodyOrder: ['id', 'event'],
-    // },
-    [MessageTypes.PutTransactionRequest]: { // ok
+    [MessageTypes.Subscribe]: {
+        name: 'Subscribe',
+        bodyOrder: ['id', 'events'],
+    },
+    [MessageTypes.Unsubscribe]: {
+        name: 'Unsubscribe',
+        bodyOrder: ['id', 'events'],
+    },
+    [MessageTypes.PutTransactionRequest]: {
         name: 'PutTransaction request',
         bodyOrder: ['confirmed', 'tx'],
     },
-    [MessageTypes.PutTransactionResponse]: { // ok
+    [MessageTypes.PutTransactionResponse]: {
         name: 'PutTransaction response',
         bodyOrder: ['ticket'],
     },
 
-    [MessageTypes.GetTransactionRequest]: { // ok
+    [MessageTypes.GetTransactionRequest]: {
         name: 'GetTransactions request',
         bodyOrder: ['ticket'],
     },
-    [MessageTypes.GetTransactionResponse]: { // ok
+    [MessageTypes.GetTransactionResponse]: {
         name: 'GetTransaction response',
         bodyOrder: ['tx'],
     },
-    [MessageTypes.GetReceiptRequest]: { // ok
+    [MessageTypes.GetReceiptRequest]: {
         name: 'GetReceipt request',
         bodyOrder: ['ticket'],
     },
-    [MessageTypes.GetReceiptResponse]: { // ok
+    [MessageTypes.GetReceiptResponse]: {
         name: 'GetReceipt response',
         bodyOrder: ['receipt'],
     },
-    [MessageTypes.GetBlockRequest]: { // ok
+    [MessageTypes.GetBlockRequest]: {
         name: 'GetBlock request',
         bodyOrder: ['height', 'showTickets'],
     },
-    [MessageTypes.GetBlockResponse]: { // ok
+    [MessageTypes.GetBlockResponse]: {
         name: 'GetBlock response',
         bodyOrder: ['blockInfo', 'ticketList'],
     },
-
     [MessageTypes.GetAccountRequest]: {
         name: 'GetAccount request',
         bodyOrder: ['accountId', 'keys'],
@@ -191,29 +188,45 @@ export class TrinciMessage {
     }
 }
 
+export type TSubscribeEventType = 'transaction' | 'block' | 'request' | 'contractEvents'
+
+const allEventsList: TSubscribeEventType[] = ['transaction', 'block', 'request', 'contractEvents'];
+
+function bitFlagConversion<T>(selectedList: T[], allList: T[]): number {
+    let bitFlags: number = 0;
+    for (let i = 0; i < selectedList.length; i += 1) {
+        const idx = allList.indexOf(selectedList[i]);
+        if (idx < 0) {
+            throw new Error('Unknown value.');
+        } else {
+            /* eslint-disable-next-line no-bitwise */
+            bitFlags |= 1 << idx;
+        }
+    }
+    return bitFlags;
+}
+
 /** Standard Trinci messagges */
 export namespace stdTrinciMessages {
-    // export function subscribe(
-    //     id: string,
-    //     event: TSubscribeEventType,
-    //     receivePacked: boolean,
-    // ): TrinciMessage {
-    //     return new TrinciMessage(MessageTypes.Subscribe, {
-    //         id,
-    //         event,
-    //         receivePacked,
-    //     });
-    // }
+    export function subscribe(
+        id: string,
+        events: TSubscribeEventType[],
+    ): TrinciMessage {
+        return new TrinciMessage(MessageTypes.Subscribe, {
+            id,
+            events: bitFlagConversion(events, allEventsList),
+        });
+    }
 
-    // export function unsubscribe(
-    //     id: string,
-    //     event: TSubscribeEventType,
-    // ): TrinciMessage {
-    //     return new TrinciMessage(MessageTypes.Subscribe, {
-    //         id,
-    //         event,
-    //     });
-    // }
+    export function unsubscribe(
+        id: string,
+        events: TSubscribeEventType[],
+    ): TrinciMessage {
+        return new TrinciMessage(MessageTypes.Unsubscribe, {
+            id,
+            events: bitFlagConversion(events, allEventsList),
+        });
+    }
 
     export function submitTransaction(
         confirmed: boolean,

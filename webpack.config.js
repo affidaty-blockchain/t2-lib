@@ -22,6 +22,7 @@ module.exports = {
             os: require.resolve('os-browserify/browser'),
             crypto: false,
             window: false,
+            net: false,
         },
     },
     plugins: [

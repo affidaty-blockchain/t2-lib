@@ -55,3 +55,4 @@ export {
 export { stdTxPrepareUnsigned } from './stdTxPrepareUnsigned';
 export { Certificate } from './certificate';
 export * from './client';
+export * from './bridgeClient';

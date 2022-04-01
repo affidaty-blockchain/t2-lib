@@ -3,6 +3,7 @@ import * as Errors from './errors';
 import { MessageTypes, TrinciMessage, stdTrinciMessages } from './messageFormat';
 import { arrayBufferToString } from './binConversions';
 import { bytesToObject } from './utils';
+import { mKeyPairParams, EKeyParamsIds } from './cryptography/cryptoDefaults';
 import { SERVICE_ACCOUNT_ID as defServiceAccountID } from './systemDefaults';
 import { BaseECKey } from './cryptography/baseECKey';
 import { Account } from './account';
@@ -123,6 +124,8 @@ export interface IAccountData {
 }
 
 interface IGeneralBlockInfo {
+    /** Public key of the entity that produced this block signature. */
+    signer: BaseECKey
     /** Block index(offset). Genesis block has height 0. */
     idx: number,
     /** Number of transactions within the block. */
@@ -141,6 +144,9 @@ interface IGeneralBlockInfo {
 export interface IBlockData {
     /** General data like merkle roots, number of txs etc. */
     info: IGeneralBlockInfo;
+
+    /** Block signature. */
+    signature: Uint8Array;
 
     /** list of transaction tickets within this block */
     tickets: string[];
@@ -236,14 +242,12 @@ export class Client {
      * your blockchain's default service account was changed
      */
     constructor(baseUrl: string = '', networkName: string = 'bootstrap', customServiceAcc: string = defServiceAccountID) {
-        let lastIdx = 0;
-        for (let i = baseUrl.length - 1; i >= 0; i -= 1) {
-            if (baseUrl[i] !== '/') {
-                lastIdx = i + 1;
-                break;
-            }
+        const urlObj = new URL(baseUrl);
+        if (urlObj.hostname.length < 1) {
+            this.t2CoreBaseUrl = `http://${urlObj.protocol}${urlObj.pathname.substring(0, urlObj.pathname.indexOf('/') >= 0 ? urlObj.pathname.indexOf('/') : urlObj.pathname.length)}`;
+        } else {
+            this.t2CoreBaseUrl = `${urlObj.protocol}//${urlObj.hostname}${urlObj.port ? `:${urlObj.port}` : ''}`;
         }
-        this.t2CoreBaseUrl = baseUrl.substring(0, lastIdx);
         this.t2CoreNetworkName = networkName;
         this._serviceAccount = customServiceAcc;
     }
@@ -564,15 +568,26 @@ export class Client {
             this.submitTrinciMessage(msg)
                 .then((resultMessage: TrinciMessage) => {
                     resultMessage.assertType(MessageTypes.GetBlockResponse);
+                    let signerKeyParamsId: string = resultMessage.body.blockInfo[0][0][0];
+                    if (resultMessage.body.blockInfo[0][0][1].length > 0) {
+                        signerKeyParamsId += `_${resultMessage.body.blockInfo[0][0][1]}`;
+                    }
+                    if (!mKeyPairParams.has(signerKeyParamsId)) {
+                        return reject(new Error(Errors.IMPORT_TYPE_ERROR));
+                    }
                     const blockDataObj: IBlockData = {
                         info: {
-                            idx: resultMessage.body.blockInfo[0],
-                            txCount: resultMessage.body.blockInfo[1],
-                            prevHash: Buffer.from(resultMessage.body.blockInfo[2]).toString('hex'),
-                            txsRoot: Buffer.from(resultMessage.body.blockInfo[3]).toString('hex'),
-                            receiptsRoot: Buffer.from(resultMessage.body.blockInfo[4]).toString('hex'),
-                            accountsRoot: Buffer.from(resultMessage.body.blockInfo[5]).toString('hex'),
+                            signer: new BaseECKey(
+                                mKeyPairParams.get(signerKeyParamsId)!.publicKey,
+                            ),
+                            idx: resultMessage.body.blockInfo[0][1],
+                            txCount: resultMessage.body.blockInfo[0][2],
+                            prevHash: Buffer.from(resultMessage.body.blockInfo[0][3]).toString('hex'),
+                            txsRoot: Buffer.from(resultMessage.body.blockInfo[0][4]).toString('hex'),
+                            receiptsRoot: Buffer.from(resultMessage.body.blockInfo[0][5]).toString('hex'),
+                            accountsRoot: Buffer.from(resultMessage.body.blockInfo[0][6]).toString('hex'),
                         },
+                        signature: new Uint8Array(resultMessage.body.blockInfo[1]),
                         tickets: [],
                     };
                     if (showTxs) {
@@ -580,7 +595,19 @@ export class Client {
                             blockDataObj.tickets.push(Buffer.from(resultMessage.body.ticketList[i]).toString('hex'));
                         }
                     }
-                    return resolve(blockDataObj);
+                    if (signerKeyParamsId === EKeyParamsIds.EMPTY) {
+                        return resolve(blockDataObj);
+                    }
+                    blockDataObj.info.signer.setRaw(resultMessage.body.blockInfo[0][0][2])
+                        .then((result) => {
+                            if (!result) {
+                                return reject(new Error('Key import returned false.'));
+                            }
+                            return resolve(blockDataObj);
+                        })
+                        .catch((error: any) => {
+                            return reject(error);
+                        });
                 })
                 .catch((error: any) => {
                     return reject(new Error(error));
@@ -831,7 +858,6 @@ export class Client {
                             }
                             const responseMessage = new TrinciMessage();
                             responseMessage.fromBytes(new Uint8Array(resBuffer));
-                            // console.log(bytesToObject(new Uint8Array(resBuffer)));
                             return resolve(responseMessage);
                         })
                         .catch((error: any) => {
