@@ -16,6 +16,9 @@ export namespace MessageTypes {
     export const GetBlockResponse = 10;
     export const GetAccountRequest = 11;
     export const GetAccountResponse = 12;
+    export const GetCoreStatsRequest = 13;
+    export const GetCoreStatsResponse = 14;
+    export const TransactionEvent = 15;
     export const Stop = 254;
     export const Packed = 255;
 }
@@ -52,7 +55,6 @@ const MsgStructs: IMessagesSettings = {
         name: 'PutTransaction response',
         bodyOrder: ['ticket'],
     },
-
     [MessageTypes.GetTransactionRequest]: {
         name: 'GetTransactions request',
         bodyOrder: ['ticket'],
@@ -84,6 +86,10 @@ const MsgStructs: IMessagesSettings = {
     [MessageTypes.GetAccountResponse]: {
         name: 'GetAccount response',
         bodyOrder: ['accountInfo', 'data'],
+    },
+    [MessageTypes.TransactionEvent]: {
+        name: 'SmartContract event',
+        bodyOrder: ['eventDataArray'],
     },
     [MessageTypes.Stop]: {
         name: 'Stop',
@@ -188,7 +194,7 @@ export class TrinciMessage {
     }
 }
 
-export type TSubscribeEventType = 'transaction' | 'block' | 'request' | 'contractEvents'
+export type TSubscribeEventType = 'transaction' | 'block' | 'request' | 'contractEvents';
 
 const allEventsList: TSubscribeEventType[] = ['transaction', 'block', 'request', 'contractEvents'];
 

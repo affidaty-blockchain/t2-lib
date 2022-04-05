@@ -763,7 +763,7 @@ export class Client {
     /**
      * This method waits for an array of transactions to be executed by core
      * by sending periodical requests to get the status of transactions.
-     * @param ticket - transaction ticket as returned by Client.submitTx()
+     * @param ticketList - transaction ticket as returned by Client.submitTx()
      * or Client.prepareAndSubmit() methods, or just a string.
      * @param maxTries - Max number of requests, after which method throws
      * @param sleepMs - Pause in milliseconds between requests
