@@ -13,27 +13,22 @@ import {
 import { SERVICE_ACCOUNT_ID as defServiceAccountID } from './systemDefaults';
 import { BaseECKey } from './cryptography/baseECKey';
 import { Transaction as TransactionClass } from './transaction/transaction';
-
-import { Client, IBlockData, ITxReceiptData } from './client';
+import {
+    Client,
+    IBlockData,
+    ITxReceiptData,
+    ITxEvent,
+} from './client';
 
 if (IS_BROWSER) {
     throw Error(Errors.NO_BRIDGE_IN_BROWSER);
 }
 
-export namespace BridgeEvents {
-    export const Connect: string = 'connect';
-    export const Ready: string = 'ready';
-    export const Close: string = 'close';
-    export const Error: string = 'error';
-    export const Timeout: string = 'timeout';
-    export const Data: string = 'data';
+export type TBridgeEventNameType = 'connect' | 'ready' | 'close' | 'error' | 'timeout' | 'data' | 'message' | 'transaction' | 'block' | 'txevent';
 
-    export const Transaction: string = 'transaction';
-    export const Block: string = 'block';
-    export const Message: string = 'message';
-}
 /**
- * Default http client to query a TRINCI node
+ * Default TCP socket client to query a TRINCI node.
+ * Available only in Node.js environment.
  */
 export class BridgeClient extends Client {
     private _maxMsgLength: number = 0xffffffff;
@@ -78,27 +73,27 @@ export class BridgeClient extends Client {
         this.bridgePort = bridgePort;
         this.socket = new net.Socket();
         this.socket.on('connect', () => {
-            this._eventEmitter.emit(BridgeEvents.Connect);
+            this._eventEmitter.emit('connect');
         });
         this.socket.on('ready', () => {
             this.connected = true;
-            this._eventEmitter.emit(BridgeEvents.Ready);
+            this._eventEmitter.emit('ready');
         });
         this.socket.on('end', () => {
             this.socket.end();
         });
         this.socket.on('close', (hadError) => {
             this.connected = false;
-            this._eventEmitter.emit(BridgeEvents.Close, (hadError));
+            this._eventEmitter.emit('close', (hadError));
         });
         this.socket.on('error', (error) => {
-            this._eventEmitter.emit(BridgeEvents.Error, (error));
+            this._eventEmitter.emit('error', (error));
         });
         this.socket.on('timeout', () => {
-            this._eventEmitter.emit(BridgeEvents.Timeout);
+            this._eventEmitter.emit('timeout');
         });
         this.socket.on('data', (recData: Buffer) => {
-            this._eventEmitter.emit(BridgeEvents.Data, (recData));
+            this._eventEmitter.emit('data', (recData));
             this._recBuffer = Buffer.concat([
                 this._recBuffer,
                 recData,
@@ -118,16 +113,16 @@ export class BridgeClient extends Client {
                         return;
                     }
                     this._recBuffer = Buffer.from([]);
-                    this._eventEmitter.emit(BridgeEvents.Message, (msg));
+                    this._eventEmitter.emit('message', (msg));
                 }
             }
         });
-        this.on(BridgeEvents.Message, async (msg: TrinciMessage) => {
+        this.on('message', async (msg: TrinciMessage) => {
             switch (msg.type) {
                 case MessageTypes.GetTransactionResponse: {
                     const tx = new TransactionClass();
                     await tx.fromUnnamedObject(msg.body.tx);
-                    this._eventEmitter.emit(BridgeEvents.Transaction, (tx));
+                    this._eventEmitter.emit('transaction', (tx));
                     break;
                 }
                 case MessageTypes.GetBlockResponse: {
@@ -157,7 +152,7 @@ export class BridgeClient extends Client {
                         blockDataObj.tickets.push(Buffer.from(msg.body.ticketList[i]).toString('hex'));
                     }
                     if (signerKeyParamsId === EKeyParamsIds.EMPTY) {
-                        this._eventEmitter.emit(BridgeEvents.Block, (blockDataObj));
+                        this._eventEmitter.emit('block', (blockDataObj));
                         return;
                     }
                     blockDataObj.info.signer.setRaw(msg.body.blockInfo[0][0][2])
@@ -165,18 +160,29 @@ export class BridgeClient extends Client {
                             if (!result) {
                                 throw new Error('Key import returned false.');
                             }
-                            this._eventEmitter.emit(BridgeEvents.Block, (blockDataObj));
+                            this._eventEmitter.emit('block', (blockDataObj));
                         })
                         .catch((error: any) => {
                             throw new Error(error);
                         });
                     break;
                 }
+                case MessageTypes.TransactionEvent: {
+                    const scEventObj: ITxEvent = {
+                        eventTx: Buffer.from(msg.body.eventDataArray[0]).toString('hex'),
+                        emitterAccount: msg.body.eventDataArray[1],
+                        emitterSmartContract: Buffer.from(msg.body.eventDataArray[2]).toString('hex'),
+                        eventName: msg.body.eventDataArray[3],
+                        eventData: new Uint8Array(msg.body.eventDataArray[4]),
+                    };
+                    this._eventEmitter.emit('txevent', (scEventObj));
+                    break;
+                }
                 default:
                     break;
             }
         });
-        this.on(BridgeEvents.Block, (blockData: IBlockData) => {
+        this.on('block', (blockData: IBlockData) => {
             for (let blkTktIdx = 0; blkTktIdx < blockData.tickets.length; blkTktIdx += 1) {
                 if (this._wantedTickets.indexOf(blockData.tickets[blkTktIdx]) >= 0) {
                     this._eventEmitter.emit(`receipt-${blockData.tickets[blkTktIdx]}`);
@@ -188,6 +194,58 @@ export class BridgeClient extends Client {
             }
         });
     }
+
+    /* eslint-disable no-dupe-class-members */
+    on(eventName: 'connect', eventHandler: () => any): void;
+
+    on(eventName: 'ready', eventHandler: () => any): void;
+
+    on(eventName: 'close', eventHandler: (hadError: boolean) => any): void;
+
+    on(eventName: 'error', eventHandler: (error: Error) => any): void;
+
+    on(eventName: 'timeout', eventHandler: () => any): void;
+
+    on(eventName: 'data', eventHandler: (data: Buffer) => any): void;
+
+    on(eventName: 'message', eventHandler: (message: TrinciMessage) => any): void;
+
+    on(eventName: 'transaction', eventHandler: (message: TransactionClass) => any): void;
+
+    on(eventName: 'block', eventHandler: (block: IBlockData) => any): void;
+
+    on(eventName: 'txevent', eventHandler: (txEvent: ITxEvent) => any): void;
+
+    on(eventName: TBridgeEventNameType, eventHandler: (...args: any[]) => any) {
+        this._eventEmitter.on(eventName, eventHandler);
+    }
+    /* eslint-enable no-dupe-class-members */
+
+    /* eslint-disable no-dupe-class-members */
+    once(eventName: 'connect', eventHandler: () => any): void;
+
+    once(eventName: 'ready', eventHandler: () => any): void;
+
+    once(eventName: 'close', eventHandler: (hadError: boolean) => any): void;
+
+    once(eventName: 'error', eventHandler: (error: Error) => any): void;
+
+    once(eventName: 'timeout', eventHandler: () => any): void;
+
+    once(eventName: 'data', eventHandler: (data: Buffer) => any): void;
+
+    once(eventName: 'message', eventHandler: (message: TrinciMessage) => any): void;
+
+    once(eventName: 'transaction', eventHandler: (message: TransactionClass) => any): void;
+
+    once(eventName: 'block', eventHandler: (block: IBlockData) => any): void;
+
+    once(eventName: 'txevent', eventHandler: (txEvent: ITxEvent) => any): void;
+
+    once(eventName: TBridgeEventNameType, eventHandler: (...args: any[]) => any) {
+        this._eventEmitter.once(eventName, eventHandler);
+    }
+    /* eslint-enable no-dupe-class-members */
 
     connectSocket():Promise<void> {
         return new Promise((resolve, reject) => {
@@ -283,14 +341,6 @@ export class BridgeClient extends Client {
             this._subscribedToBlocks = false;
         }
         return this.writeMessage(message);
-    }
-
-    on(eventName: string, eventHandler: (...args: any[]) => any) {
-        this._eventEmitter.on(eventName, eventHandler);
-    }
-
-    once(eventName: string, eventHandler: (...args: any[]) => any) {
-        this._eventEmitter.once(eventName, eventHandler);
     }
 
     waitForTicket(ticket: string, timeoutMs: number = 0): Promise<ITxReceiptData> {

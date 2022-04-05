@@ -1,32 +1,31 @@
 import {
-    Client,
     BridgeClient,
-    BridgeEvents as Events,
     Message,
     Transaction,
     IBlockData,
+    Utils,
 } from '../index';
 
 async function main() {
     const b = new BridgeClient('http://localhost', 8000, 8001);
     // console.log(await b.accountData('TRINCI'));
-    b.on(Events.Ready, () => {
+    b.on('ready', () => {
         console.log('Connection ready');
     });
 
-    b.on(Events.Close, (hadError: boolean) => {
+    b.on('close', (hadError: boolean) => {
         console.log(`Connection closed with${hadError ? '' : 'out'} errors.`);
     });
 
-    b.on(Events.Error, (err) => {
+    b.on('error', (err) => {
         console.log(`error event: ${err}`);
     });
 
-    b.on(Events.Message, (msg: Message.TrinciMessage) => {
+    b.on('message', (msg: Message.TrinciMessage) => {
         console.log(`new message    : [${msg.typeName}]`);
     });
 
-    b.on(Events.Transaction, async (tx: Transaction) => {
+    b.on('transaction', async (tx: Transaction) => {
         const ticket = await tx.getTicket();
         console.log(`new transaction: [${ticket}]`);
         b.waitForTicket(ticket)
@@ -40,12 +39,18 @@ async function main() {
             });
     });
 
-    b.on(Events.Block, (blockData: IBlockData) => {
+    b.on('block', (blockData: IBlockData) => {
         console.log(`new block      : [${blockData.info.idx}]`);
     });
 
+    b.on('txevent', (txEvent) => {
+        console.log('tx event:');
+        console.log(txEvent);
+        console.log(Utils.bytesToObject(txEvent.eventData));
+    });
+
     await b.connectSocket();
-    b.subscribe('CLIENT_TEST', ['transaction', 'block'])
+    b.subscribe('CLIENT_TEST', ['transaction', 'block', 'contractEvents'])
         .then(() => {
             console.log('Subscribe successful');
         })
