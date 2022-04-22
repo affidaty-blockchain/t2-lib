@@ -4,7 +4,7 @@ export { WebCrypto, Subtle } from './cryptography/webCrypto';
 export * as binConversions from './binConversions';
 export * as Utils from './utils';
 export * as Message from './messageFormat';
-export { BaseKey } from './cryptography/base';
+export { BaseKey, signData, verifyDataSignature } from './cryptography/base';
 export * as CryptoDefaults from './cryptography/cryptoDefaults';
 export * as SystemDefaults from './systemDefaults';
 export {
