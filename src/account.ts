@@ -74,7 +74,7 @@ export function getAccountId(input: BaseECKey): Promise<string> {
 export class Account {
     private _accountId: string = '';
 
-    private _keyPair: BaseECKeyPair = new BaseECKeyPair(defaultKeyPairParams);;
+    private _keyPair: BaseECKeyPair = new BaseECKeyPair(defaultKeyPairParams);
 
     private _clear(): void {
         this._accountId = '';

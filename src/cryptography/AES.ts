@@ -224,11 +224,11 @@ export class AESKey extends BaseKey {
                 raw,
                 this.keyParams.genAlgorithm,
                 true,
-                this.keyParams.usages
+                this.keyParams.usages,
             )
                 .then((importedCryptoKey: CryptoKey) => {
                     try {
-                        this.setCryptoKey(importedCryptoKey)
+                        this.setCryptoKey(importedCryptoKey);
                     } catch (error) {
                         return reject(error);
                     }
@@ -246,7 +246,7 @@ export class AESKey extends BaseKey {
      */
     public getRaw(): Promise<Uint8Array> {
         return new Promise((resolve, reject) => {
-            if (this._raw.length > 0 ) {
+            if (this._raw.length > 0) {
                 return resolve(this._raw);
             }
             this.getCryptoKey()
@@ -257,12 +257,12 @@ export class AESKey extends BaseKey {
                             return resolve(this._raw);
                         })
                         .catch((err: any) => {
-                            return reject(err)
+                            return reject(err);
                         });
                 })
                 .catch((err: any) => {
                     return reject(err);
-                })
+                });
         });
     }
 }

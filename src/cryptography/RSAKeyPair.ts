@@ -36,6 +36,7 @@ export class RSAKeyPair implements IRSAKeyPair {
                 true,
                 this.keyPairParams.usages,
             )
+                /* eslint-disable-next-line no-undef */
                 .then((cryptoKeyPair: CryptoKeyPair) => {
                     this.publicKey.setCryptoKey(cryptoKeyPair.publicKey!)
                         .then(() => {

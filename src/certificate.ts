@@ -28,14 +28,6 @@ const TYPE_TAG_VALUE = 'cert';
 
 const DEF_SALT_BYTE_LEN: number = 32;
 
-function calculateSymmetryDepth(totalLeaves: number): number {
-    return Math.ceil(Math.log2(totalLeaves));
-}
-
-function missingSymmetryLeaves(givenLeaves: number): number {
-    return (2 ** calculateSymmetryDepth(givenLeaves)) - givenLeaves;
-}
-
 interface IMerkleData {
     root: Buffer;
     depth: number;

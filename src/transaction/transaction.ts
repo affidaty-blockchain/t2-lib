@@ -10,27 +10,22 @@ import { BulkTxData } from './bulkTxData';
 import { TSchemaToDataMap, BaseTransaction } from './baseTransaction';
 
 const SCHEMA_TO_CLASS_MAP: TSchemaToDataMap = new Map();
-SCHEMA_TO_CLASS_MAP.set(
-    BaseTxData.defaultSchema, () => {
-        return new BaseTxData(BaseTxData.defaultSchema);
-    },
-);
-SCHEMA_TO_CLASS_MAP.set(
-    TxSchemas.BULK_ROOT_TX, () => {
-        return new BaseTxData(TxSchemas.BULK_ROOT_TX);
-    },
-);
-SCHEMA_TO_CLASS_MAP.set(
-    BulkNodeTxData.defaultSchema, () => {
-        return new BulkNodeTxData(BulkNodeTxData.defaultSchema);
-    },
-);
 
-SCHEMA_TO_CLASS_MAP.set(
-    BulkTxData.defaultSchema, () => {
-        return new BulkTxData(BulkTxData.defaultSchema);
-    },
-);
+SCHEMA_TO_CLASS_MAP.set(BaseTxData.defaultSchema, () => {
+    return new BaseTxData(BaseTxData.defaultSchema);
+});
+
+SCHEMA_TO_CLASS_MAP.set(TxSchemas.BULK_ROOT_TX, () => {
+    return new BaseTxData(TxSchemas.BULK_ROOT_TX);
+});
+
+SCHEMA_TO_CLASS_MAP.set(BulkNodeTxData.defaultSchema, () => {
+    return new BulkNodeTxData(BulkNodeTxData.defaultSchema);
+});
+
+SCHEMA_TO_CLASS_MAP.set(BulkTxData.defaultSchema, () => {
+    return new BulkTxData(BulkTxData.defaultSchema);
+});
 
 export class Transaction extends BaseTransaction {
     constructor(

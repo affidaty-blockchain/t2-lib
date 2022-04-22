@@ -37,6 +37,7 @@ export class BaseECKeyPair implements IBaseECKeyPair {
                 true,
                 this.keyPairParams.usages,
             )
+                /* eslint-disable-next-line no-undef */
                 .then((cryptoKeyPair: CryptoKeyPair) => {
                     this.publicKey.setCryptoKey(cryptoKeyPair.publicKey!)
                         .then(() => {
