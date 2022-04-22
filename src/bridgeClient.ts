@@ -387,7 +387,7 @@ export class BridgeClient extends Client {
                             this._eventEmitter.once(recEventName, receiptListener);
                         })
                         .catch((txDataErr) => {
-                            if (txReceiptErr.message.indexOf('resource not found') !== -1) {
+                            if (txDataErr.message.indexOf('resource not found') !== -1) {
                                 return reject(new Error(Errors.UNKNOWN_TX));
                             }
                             return reject(txDataErr);
