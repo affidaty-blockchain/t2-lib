@@ -6,6 +6,7 @@ import { Subtle } from '../../src/cryptography/webCrypto';
 
 describe('Testing elliptic curve cryptography implementations', () => {
     describe('Testing base EC key with ECDSA default parameters', () => {
+        /* eslint-disable-next-line no-undef */
         let ecdsaKeyPair: CryptoKeyPair;
         let ecdsaPublicKeyJwk: BaseTypes.IJwk;
         let ecdsaPublicKeyRaw: ArrayBuffer;
@@ -13,6 +14,7 @@ describe('Testing elliptic curve cryptography implementations', () => {
         let ecdsaPrivateKeyJwk: BaseTypes.IJwk;
         let ecdsaPrivateKeyPKCS8: ArrayBuffer;
 
+        /* eslint-disable-next-line no-undef */
         let ecdhKeyPair: CryptoKeyPair;
         let ecdhPublicKeyJwk: BaseTypes.IJwk;
         let ecdhPublicKeyRaw: ArrayBuffer;
@@ -20,6 +22,7 @@ describe('Testing elliptic curve cryptography implementations', () => {
         let ecdhPrivateKeyJwk: BaseTypes.IJwk;
         let ecdhPrivateKeyPKCS8: ArrayBuffer;
 
+        /* eslint-disable-next-line no-undef */
         let rsaKeyPair: CryptoKeyPair;
         let rsaPrivateKeyJwk: BaseTypes.IJwk;
         let rsaPrivateKeyPKCS8: ArrayBuffer;

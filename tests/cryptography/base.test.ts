@@ -6,11 +6,14 @@ import { Subtle } from '../../src/cryptography/webCrypto';
 
 describe('Testing base cryptography implementations', () => {
     describe('Testing base key with ECDSA default parameters', () => {
+        /* eslint-disable-next-line no-undef */
         let ecdhKeyPair1: CryptoKeyPair;
+        /* eslint-disable-next-line no-undef */
         let ecdsaKeyPair: CryptoKeyPair;
         let ecdsaPublicKeyJwk: BaseTypes.IJwk;
         let ecdsaPrivateKeyJwk: BaseTypes.IJwk;
 
+        /* eslint-disable-next-line no-undef */
         let rsaKeyPair: CryptoKeyPair;
         let rsaPrivateKeyJwk: BaseTypes.IJwk;
         let rsaPrivateKeyPKCS8: ArrayBuffer;

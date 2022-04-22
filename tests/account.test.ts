@@ -17,6 +17,7 @@ describe('Testing ACCOUNT CLASS implementations', () => {
         x: 'r7DpEuSCV9o86YR9UY3IQXRAPKTJA62kDzE-K_q-51TSl20TuyrWPqh99g_sdY8E',
         y: 'ycGxRyc2FbvsysfdSJvrIDkQFxJ04bFdJ01swPRikWYDaZLyohhEx8TA_d0bDphw',
     };
+    /* eslint-disable-next-line no-undef */
     let ecdsaKeyPair: CryptoKeyPair;
     let ecdsaPublicKeyJwk: BaseTypes.IJwk;
     let ecdsaPublicKeyRaw: ArrayBuffer;
@@ -24,6 +25,7 @@ describe('Testing ACCOUNT CLASS implementations', () => {
     let ecdsaPrivateKeyJwk: BaseTypes.IJwk;
     let ecdsaPrivateKeyPKCS8: ArrayBuffer;
 
+    /* eslint-disable-next-line no-undef */
     let ecdhKeyPair: CryptoKeyPair;
     let ecdhPublicKeyJwk: BaseTypes.IJwk;
     let ecdhPublicKeyRaw: ArrayBuffer;
@@ -31,6 +33,7 @@ describe('Testing ACCOUNT CLASS implementations', () => {
     let ecdhPrivateKeyJwk: BaseTypes.IJwk;
     let ecdhPrivateKeyPKCS8: ArrayBuffer;
 
+    /* eslint-disable-next-line no-undef */
     let rsaKeyPair: CryptoKeyPair;
     let rsaPrivateKeyJwk: BaseTypes.IJwk;
     let rsaPrivateKeyPKCS8: ArrayBuffer;
