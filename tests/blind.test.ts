@@ -66,7 +66,8 @@ describe('testing blind signature', () => {
         expect(decryptedUnblindedSaltedSignature).toEqual(plainSaltedMessage);
         const plainSaltedSignature = await encrypt(
             plainSaltedMessage,
-            privKey, (privKey.keyParams.genAlgorithm!.modulusLength! / 8),
+            privKey,
+            privKey.keyParams.genAlgorithm!.modulusLength! / 8,
         );
         expect(unblindedSaltedSignature).toEqual(plainSaltedSignature);
     });
