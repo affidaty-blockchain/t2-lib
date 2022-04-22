@@ -267,15 +267,18 @@ export class BaseKey {
 export function signData(
     key: BaseKey,
     data: Uint8Array,
-    hashAlgorithm: string,
+    hashAlgorithm?: baseTypes.TKeyGenAlgorithmValidHashValues,
 ): Promise<Uint8Array> {
     return new Promise((resolve, reject) => {
+        if (!hashAlgorithm && !key.keyParams.genAlgorithm!.hash) {
+            return reject(new Error(Errors.UNSURE_HASH_TYPE));
+        }
         key.getCryptoKey()
             .then((cryptoKey: CryptoKey) => {
                 Subtle.sign(
                     {
                         name: key.keyParams.genAlgorithm!.name,
-                        hash: hashAlgorithm,
+                        hash: hashAlgorithm || key.keyParams.genAlgorithm!.hash,
                     },
                     cryptoKey,
                     data.buffer,
@@ -303,15 +306,18 @@ export function verifyDataSignature(
     key: BaseKey,
     data: Uint8Array,
     signature: Uint8Array,
-    hashAlgorithm: string,
+    hashAlgorithm?: baseTypes.TKeyGenAlgorithmValidHashValues,
 ): Promise<boolean> {
     return new Promise((resolve, reject) => {
+        if (!hashAlgorithm && !key.keyParams.genAlgorithm!.hash) {
+            return reject(new Error(Errors.UNSURE_HASH_TYPE));
+        }
         key.getCryptoKey()
             .then((cryptoKey: CryptoKey) => {
                 Subtle.verify(
                     {
                         name: key.keyParams.genAlgorithm!.name,
-                        hash: hashAlgorithm,
+                        hash: hashAlgorithm || key.keyParams.genAlgorithm!.hash,
                     },
                     cryptoKey,
                     signature.buffer,
