@@ -3,7 +3,10 @@ import * as baseTypes from './baseTypes';
 import * as Errors from '../errors';
 import { Subtle } from './webCrypto';
 import { similarArrays } from '../utils';
-import { EmptyKeyParams } from './cryptoDefaults';
+import {
+    EmptyKeyParams,
+    DEF_SIGN_HASH_ALGORITHM,
+} from './cryptoDefaults';
 
 type TecKeyBinFormat = 'oct' | 'der' | 'pem';
 
@@ -267,7 +270,7 @@ export class BaseKey {
 export function signData(
     key: BaseKey,
     data: Uint8Array,
-    hashAlgorithm?: baseTypes.TKeyGenAlgorithmValidHashValues,
+    hashAlgorithm: baseTypes.TKeyGenAlgorithmValidHashValues = DEF_SIGN_HASH_ALGORITHM,
 ): Promise<Uint8Array> {
     return new Promise((resolve, reject) => {
         if (!hashAlgorithm && !key.keyParams.genAlgorithm!.hash) {
@@ -306,7 +309,7 @@ export function verifyDataSignature(
     key: BaseKey,
     data: Uint8Array,
     signature: Uint8Array,
-    hashAlgorithm?: baseTypes.TKeyGenAlgorithmValidHashValues,
+    hashAlgorithm: baseTypes.TKeyGenAlgorithmValidHashValues = DEF_SIGN_HASH_ALGORITHM,
 ): Promise<boolean> {
     return new Promise((resolve, reject) => {
         if (!hashAlgorithm && !key.keyParams.genAlgorithm!.hash) {
