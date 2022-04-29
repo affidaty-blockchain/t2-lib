@@ -228,6 +228,8 @@ function sendRequest(
  * Default http client to query a TRINCI node
  */
 export class Client {
+    static sendRequest = sendRequest;
+
     private t2CoreBaseUrl: string;
 
     private t2CoreNetworkName: string;
