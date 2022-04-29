@@ -20,10 +20,6 @@ import {
     ITxEvent,
 } from './client';
 
-if (IS_BROWSER) {
-    throw Error(Errors.NO_BRIDGE_IN_BROWSER);
-}
-
 export type TBridgeEventNameType = 'connect' | 'ready' | 'close' | 'error' | 'timeout' | 'data' | 'message' | 'transaction' | 'block' | 'txevent';
 
 /**
@@ -56,6 +52,9 @@ export class BridgeClient extends Client {
         networkName: string = 'bootstrap',
         customServiceAcc: string = defServiceAccountID,
     ) {
+        if (IS_BROWSER) {
+            throw Error(Errors.NO_BRIDGE_IN_BROWSER);
+        }
         const url = new URL(baseUrl);
         let hostname = '';
         let protocol = 'http:';
