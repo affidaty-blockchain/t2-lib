@@ -185,10 +185,10 @@ function sendRequest(
     method: TReqMethod,
     url: string,
     body?: Uint8Array,
-    customHeaders?: object,
+    customHeaders?: {[key: string]: string},
 ): Promise<Response> {
     return new Promise((resolve, reject) => {
-        let headers = { ...customHeaders };
+        let tempHeaders: {[key: string]: any} = {};
         switch (method) {
             case 'get': case 'GET':
                 break;
@@ -201,11 +201,17 @@ function sendRequest(
                     'Content-Type': 'application/octet-stream',
                     'Content-Length': bodylength,
                 };
-                headers = { ...headers, ...stdHeaders };
+                tempHeaders = stdHeaders;
                 break;
             }
             default:
                 throw new Error(Errors.REQUEST_UNSUPPORTED_METHOD);
+        }
+        tempHeaders = { ...tempHeaders, ...customHeaders };
+        const headers: {[key: string]: any} = {};
+        const tempEntries = Object.entries(tempHeaders);
+        for (let i = 0; i < tempEntries.length; i += 1) {
+            headers[tempEntries[i][0].toLowerCase()] = tempEntries[i][1];
         }
         fetch(
             url,
