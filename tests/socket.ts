@@ -22,32 +22,32 @@ async function main() {
         console.log(`error event: ${err}`);
     });
 
-    b.on('message', (msg: Message.TrinciMessage) => {
-        console.log(`new message    : [${msg.typeName}]`);
-    });
+    // b.on('message', (msg: Message.TrinciMessage) => {
+    //     console.log(`new message    : [${msg.typeName}]`);
+    // });
 
-    b.on('transaction', async (tx: Transaction) => {
-        const ticket = await tx.getTicket();
-        console.log(`new transaction: [${ticket}]`);
-        b.waitForTicket(ticket)
-            .then((receipt) => {
-                console.log('resolved');
-                console.log(receipt);
-            })
-            .catch((err) => {
-                console.log('rejected');
-                console.log(err);
-            });
-    });
+    // b.on('transaction', async (tx: Transaction) => {
+    //     const ticket = await tx.getTicket();
+    //     console.log(`new transaction: [${ticket}]`);
+    //     b.waitForTicket(ticket)
+    //         .then((receipt) => {
+    //             console.log('resolved');
+    //             console.log(receipt);
+    //         })
+    //         .catch((err) => {
+    //             console.log('rejected');
+    //             console.log(err);
+    //         });
+    // });
 
-    b.on('block', (blockData: IBlockData) => {
-        console.log(`new block      : [${blockData.info.idx}]`);
-    });
+    // b.on('block', (blockData: IBlockData) => {
+    //     console.log(`new block      : [${blockData.info.idx}]`);
+    // });
 
     b.on('txevent', (txEvent) => {
         console.log('tx event:');
         console.log(txEvent);
-        console.log(Utils.bytesToObject(txEvent.eventData));
+        // console.log(Utils.bytesToObject(txEvent.eventData));
     });
 
     await b.connectSocket();

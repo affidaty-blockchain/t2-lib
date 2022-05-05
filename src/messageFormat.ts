@@ -277,6 +277,31 @@ export namespace stdTrinciMessages {
         });
     }
 
+    /**
+     * @param emitterTx - emitter transaction ticket(hex string)
+     * @param emitterAccount - emitter account
+     * @param emitterContract - emitter smart contract hash (hex string)
+     * @param eventName - name of the emitter event
+     * @param eventData - data emitted with the event
+     */
+    export function txEvent(
+        emitterTx: string,
+        emitterAccount: string,
+        emitterContract: string,
+        eventName: string,
+        eventData: Uint8Array,
+    ): TrinciMessage {
+        return new TrinciMessage(MessageTypes.TransactionEvent, {
+            eventDataArray: [
+                Buffer.from(emitterTx, 'hex'),
+                emitterAccount,
+                Buffer.from(emitterContract, 'hex'),
+                eventName,
+                Buffer.from(eventData),
+            ],
+        });
+    }
+
     export function packed(messages: TrinciMessage[]): TrinciMessage {
         const messageList: TMessageArray[] = [];
         messages.forEach((message: TrinciMessage) => {
