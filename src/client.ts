@@ -41,7 +41,7 @@ export interface ITxEvent {
     emitterSmartContract: string,
 
     /** Event name. */
-    eventName: String,
+    eventName: string,
 
     eventData: Uint8Array,
 }
