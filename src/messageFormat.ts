@@ -57,11 +57,11 @@ const MsgStructs: IMessagesSettings = {
     },
     [MessageTypes.GetTransactionRequest]: {
         name: 'GetTransactions request',
-        bodyOrder: ['ticket', 'destination'],
+        bodyOrder: ['ticket'],
     },
     [MessageTypes.GetTransactionResponse]: {
         name: 'GetTransaction response',
-        bodyOrder: ['tx', 'origin'],
+        bodyOrder: ['tx'],
     },
     [MessageTypes.GetReceiptRequest]: {
         name: 'GetReceipt request',
@@ -73,11 +73,11 @@ const MsgStructs: IMessagesSettings = {
     },
     [MessageTypes.GetBlockRequest]: {
         name: 'GetBlock request',
-        bodyOrder: ['height', 'showTickets', 'destination'],
+        bodyOrder: ['height', 'showTickets'],
     },
     [MessageTypes.GetBlockResponse]: {
         name: 'GetBlock response',
-        bodyOrder: ['blockInfo', 'ticketList', 'origin'],
+        bodyOrder: ['blockInfo', 'ticketList'],
     },
     [MessageTypes.GetAccountRequest]: {
         name: 'GetAccount request',
@@ -249,7 +249,7 @@ export namespace stdTrinciMessages {
     ): TrinciMessage {
         const binTicket = Buffer.from(ticket, 'hex');
         return new TrinciMessage(MessageTypes.GetTransactionRequest, {
-            ticket: binTicket, destination: null,
+            ticket: binTicket,
         });
     }
 
@@ -266,7 +266,6 @@ export namespace stdTrinciMessages {
         return new TrinciMessage(MessageTypes.GetBlockRequest, {
             height,
             showTickets: showTxs,
-            destination: null,
         });
     }
 
@@ -274,31 +273,6 @@ export namespace stdTrinciMessages {
         return new TrinciMessage(MessageTypes.GetAccountRequest, {
             accountId,
             keys,
-        });
-    }
-
-    /**
-     * @param emitterTx - emitter transaction ticket(hex string)
-     * @param emitterAccount - emitter account
-     * @param emitterContract - emitter smart contract hash (hex string)
-     * @param eventName - name of the emitter event
-     * @param eventData - data emitted with the event
-     */
-    export function txEvent(
-        emitterTx: string,
-        emitterAccount: string,
-        emitterContract: string,
-        eventName: string,
-        eventData: Uint8Array,
-    ): TrinciMessage {
-        return new TrinciMessage(MessageTypes.TransactionEvent, {
-            eventDataArray: [
-                Buffer.from(emitterTx, 'hex'),
-                emitterAccount,
-                Buffer.from(emitterContract, 'hex'),
-                eventName,
-                Buffer.from(eventData),
-            ],
         });
     }
 
