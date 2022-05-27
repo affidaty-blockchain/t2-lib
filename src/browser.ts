@@ -1,7 +1,12 @@
-const os = require('os');
-
 /** will be true if lib is executed in a browser */
-export const IS_BROWSER = os.platform() === 'browser';
+export let IS_BROWSER = true;
+
+try {
+    const os = require('os');
+    IS_BROWSER = ((!os) || (os.platform() === 'browser'));
+} catch (error) {
+    // DO NOTHING
+}
 
 /** False if lib is executed outside a secure context.
  * Crypto and SubtleCrypto api, on which this lib relies,

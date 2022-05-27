@@ -4,7 +4,7 @@
     "compilerOptions": {
         "outDir": "./dist/esm",
         "declaration": true,
-        "declarationMap": true,
+        "declarationMap": false,
         "declarationDir": "./dist/types"
     }
 }
