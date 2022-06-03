@@ -57,11 +57,11 @@ const MsgStructs: IMessagesSettings = {
     },
     [MessageTypes.GetTransactionRequest]: {
         name: 'GetTransactions request',
-        bodyOrder: ['ticket'],
+        bodyOrder: ['ticket', 'destination'],
     },
     [MessageTypes.GetTransactionResponse]: {
         name: 'GetTransaction response',
-        bodyOrder: ['tx'],
+        bodyOrder: ['tx', 'origin'],
     },
     [MessageTypes.GetReceiptRequest]: {
         name: 'GetReceipt request',
@@ -73,11 +73,11 @@ const MsgStructs: IMessagesSettings = {
     },
     [MessageTypes.GetBlockRequest]: {
         name: 'GetBlock request',
-        bodyOrder: ['height', 'showTickets'],
+        bodyOrder: ['height', 'showTickets', 'destination'],
     },
     [MessageTypes.GetBlockResponse]: {
         name: 'GetBlock response',
-        bodyOrder: ['blockInfo', 'ticketList'],
+        bodyOrder: ['blockInfo', 'ticketList', 'origin'],
     },
     [MessageTypes.GetAccountRequest]: {
         name: 'GetAccount request',

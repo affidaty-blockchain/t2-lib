@@ -1,4 +1,5 @@
 import { encode as b58Encode, decode as b58Decode } from 'bs58';
+import { Buffer } from 'buffer';
 
 /**
 * Converts a given ArrayBuffer to Buffer
