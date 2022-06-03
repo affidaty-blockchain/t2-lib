@@ -97,21 +97,28 @@ export class BridgeClient extends Client {
                 this._recBuffer,
                 recData,
             ]);
-            if (this._recBuffer.byteLength >= 4) {
+            /* eslint-disable-next-line no-constant-condition */
+            while (true) {
+                if (this._recBuffer.byteLength < 4) {
+                    break;
+                }
                 const msgSize = new Uint32Array(
                     new Uint8Array(
                         this._recBuffer.subarray(0, 4),
                     ).reverse().buffer,
                 )[0];
-                if (this._recBuffer.byteLength >= 4 + msgSize) {
-                    const msg = new TrinciMessage();
-                    try {
-                        msg.fromBytes(this._recBuffer.subarray(4));
-                    } catch (error) {
-                        this._recBuffer = Buffer.from([]);
-                        return;
-                    }
-                    this._recBuffer = Buffer.from([]);
+                if (this._recBuffer.byteLength < 4 + msgSize) {
+                    break;
+                }
+                const msg = new TrinciMessage();
+                let validMsg = true;
+                try {
+                    msg.fromBytes(this._recBuffer.subarray(4));
+                } catch (error) {
+                    validMsg = false;
+                }
+                this._recBuffer = this._recBuffer.subarray(4 + msgSize);
+                if (validMsg) {
                     this._eventEmitter.emit('message', (msg));
                 }
             }
