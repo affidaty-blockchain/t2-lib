@@ -250,6 +250,7 @@ export namespace stdTrinciMessages {
         const binTicket = Buffer.from(ticket, 'hex');
         return new TrinciMessage(MessageTypes.GetTransactionRequest, {
             ticket: binTicket,
+            destination: null,
         });
     }
 
@@ -266,6 +267,7 @@ export namespace stdTrinciMessages {
         return new TrinciMessage(MessageTypes.GetBlockRequest, {
             height,
             showTickets: showTxs,
+            destination: null,
         });
     }
 
