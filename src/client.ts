@@ -377,12 +377,12 @@ export class Client {
      */
     submitTx(txToSubmit: BaseTransaction): Promise<string> {
         return new Promise((resolve, reject) => {
-            if (
-                (this.t2CoreNetworkName !== '')
-                && (txToSubmit.data.networkName !== this.t2CoreNetworkName)
-            ) {
-                return reject(new Error(Errors.WRONG_TX_NETWORK));
-            }
+            // if (
+            //     (this.t2CoreNetworkName !== '')
+            //     && (txToSubmit.data.networkName !== this.t2CoreNetworkName)
+            // ) {
+            //     return reject(new Error(Errors.WRONG_TX_NETWORK));
+            // }
             txToSubmit.toUnnamedObject()
                 .then((txObj: IBaseTxUnnamedObject) => {
                     const msg = stdTrinciMessages.submitTransaction(true, txObj);
