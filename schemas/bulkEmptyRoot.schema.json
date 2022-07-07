@@ -1,0 +1,54 @@
+{
+    "$id": "data.bulkEmptyRootTx.schema.json",
+    "description": "Empty bulk root. Doesn't do anything itself, instead it allows for its signer to pay for all the other transactions inside the same bulk.",
+    "type": "array",
+    "minItems": 9,
+    "maxItems": 9,
+    "items": [
+        {
+            "$id": "schema.data.bulkEmptyRootTx.schema.json",
+            "description": "Transaction schema. This is the hash of the file containing json schema which can be used to validate and better explain the transaction. Just like this file.",
+            "type": "string"
+        },
+        {
+            "$id": "maxFuel.data.bulkEmptyRootTx.schema.json",
+            "description": "The maximum amount of fuel which signer is willing to spend.",
+            "type": "number",
+            "minimum": 0
+        },
+        {
+            "$id": "nonce.data.bulkEmptyRootTx.schema.json",
+            "description": "Anti-replay value represented by an array of 8 bytes.",
+            "type": "object"
+        },
+        {
+            "$id": "network.data.bulkEmptyRootTx.schema.json",
+            "description": "The identifier of the network, to which the transaction will be submitted.",
+            "type": "string"
+        },
+        {
+            "$id": "signer.data.bulkEmptyRootTx.schema.json",
+            "description": "Public key of the transaction signer.",
+            "type": "array",
+            "minItems": 3,
+            "maxItems": 3,
+            "items": [
+                {
+                    "$id": "algorithm.signer.data.bulkEmptyRootTx.schema.json",
+                    "description": "The algorithm of the signer's public key.",
+                    "type": "string"
+                },
+                {
+                    "$id": "type.signer.data.bulkEmptyRootTx.schema.json",
+                    "description": "The variant of the algorithm of the signer's public key.",
+                    "type": "string"
+                },
+                {
+                    "$id": "keyBytes.signer.data.bulkEmptyRootTx.schema.json",
+                    "description": "Bytes representing signer's public key.",
+                    "type": "object"
+                }
+            ]
+        }
+    ]
+}
