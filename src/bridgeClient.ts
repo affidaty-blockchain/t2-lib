@@ -49,7 +49,7 @@ export class BridgeClient extends Client {
         baseUrl: string = '',
         restPort: number = 8000,
         bridgePort: number = 8001,
-        networkName: string = 'bootstrap',
+        networkName: string = '',
         customServiceAcc: string = defServiceAccountID,
     ) {
         if (IS_BROWSER) {

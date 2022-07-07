@@ -249,7 +249,7 @@ export class Client {
      * @param customServiceAcc - Account ID hosting service smart contract. Set this only if
      * your blockchain's default service account was changed
      */
-    constructor(baseUrl: string = '', networkName: string = 'bootstrap', customServiceAcc: string = defServiceAccountID) {
+    constructor(baseUrl: string = '', networkName: string = '', customServiceAcc: string = defServiceAccountID) {
         const urlObj = new URL(baseUrl);
         if (urlObj.hostname.length < 1) {
             this.t2CoreBaseUrl = `http://${urlObj.protocol}${urlObj.pathname.substring(0, urlObj.pathname.indexOf('/') >= 0 ? urlObj.pathname.indexOf('/') : urlObj.pathname.length)}`;
