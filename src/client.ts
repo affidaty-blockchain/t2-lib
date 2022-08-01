@@ -4,7 +4,12 @@ import { MessageTypes, TrinciMessage, stdTrinciMessages } from './messageFormat'
 import { arrayBufferToString } from './binConversions';
 import { bytesToObject } from './utils';
 import { mKeyPairParams, EKeyParamsIds } from './cryptography/cryptoDefaults';
-import { SERVICE_ACCOUNT_ID as defServiceAccountID } from './systemDefaults';
+import {
+    SERVICE_ACCOUNT_ID as defServiceAccountID,
+    SUBMIT_MESSAGE_PATH as submitMessaggePath,
+    NODE_VISA_PATH as nodeVisaPath,
+    BOOTSTRAP_DL_PATH as nodeBootstrapDlPath,
+} from './systemDefaults';
 import { BaseECKey } from './cryptography/baseECKey';
 import { Account } from './account';
 import { BaseTransaction, IBaseTxUnnamedObject } from './transaction/baseTransaction';
@@ -23,8 +28,6 @@ interface IBlockchainSettings {
     blockTimeout: number;
     burningFuelMethod: string;
 }
-
-const submitMessaggePath = '/api/v1/message';
 
 /**
  * Transaction event.
@@ -576,12 +579,18 @@ export class Client {
             this.submitTrinciMessage(msg)
                 .then((resultMessage: TrinciMessage) => {
                     resultMessage.assertType(MessageTypes.GetBlockResponse);
-                    let signerKeyParamsId: string = resultMessage.body.blockInfo[0][0][0];
-                    if (resultMessage.body.blockInfo[0][0][1].length > 0) {
-                        signerKeyParamsId += `_${resultMessage.body.blockInfo[0][0][1]}`;
-                    }
-                    if (!mKeyPairParams.has(signerKeyParamsId)) {
-                        return reject(new Error(Errors.IMPORT_TYPE_ERROR));
+                    let signerKeyParamsId: string = EKeyParamsIds.EMPTY;
+
+                    // In case of the genesis block this field will be "null" and
+                    // no key should be imported
+                    if (resultMessage.body.blockInfo[0][0]) {
+                        signerKeyParamsId = resultMessage.body.blockInfo[0][0][0];
+                        if (resultMessage.body.blockInfo[0][0][1].length > 0) {
+                            signerKeyParamsId += `_${resultMessage.body.blockInfo[0][0][1]}`;
+                        }
+                        if (!mKeyPairParams.has(signerKeyParamsId)) {
+                            return reject(new Error(Errors.IMPORT_TYPE_ERROR));
+                        }
                     }
                     const blockDataObj: IBlockData = {
                         info: {
@@ -867,6 +876,50 @@ export class Client {
                             const responseMessage = new TrinciMessage();
                             responseMessage.fromBytes(new Uint8Array(resBuffer));
                             return resolve(responseMessage);
+                        })
+                        .catch((error: any) => {
+                            return reject(error);
+                        });
+                })
+                .catch((error: any) => {
+                    return reject(error);
+                });
+        });
+    }
+
+    getNodeVisa(): Promise<string> {
+        return new Promise((resolve, reject) => {
+            const url = `${this.t2CoreBaseUrl}${nodeVisaPath}`;
+            sendRequest('get', url)
+                .then((result: Response) => {
+                    result.arrayBuffer()
+                        .then((resBuffer: ArrayBuffer) => {
+                            if (result.status !== 200) {
+                                return reject(new Error(`${result.status}: ${arrayBufferToString(resBuffer)}`));
+                            }
+                            return resolve(Buffer.from(resBuffer).toString());
+                        })
+                        .catch((error: any) => {
+                            return reject(error);
+                        });
+                })
+                .catch((error: any) => {
+                    return reject(error);
+                });
+        });
+    }
+
+    getNodeBootstrap(): Promise<Uint8Array> {
+        return new Promise((resolve, reject) => {
+            const url = `${this.t2CoreBaseUrl}${nodeBootstrapDlPath}`;
+            sendRequest('get', url)
+                .then((result: Response) => {
+                    result.arrayBuffer()
+                        .then((resBuffer: ArrayBuffer) => {
+                            if (result.status !== 200) {
+                                return reject(new Error(`${result.status}: ${arrayBufferToString(resBuffer)}`));
+                            }
+                            return resolve(new Uint8Array(resBuffer));
                         })
                         .catch((error: any) => {
                             return reject(error);
