@@ -123,7 +123,7 @@ export interface IAccountData {
     dataHash: string | null;
 
     /** Data requested from this account. */
-    requestedData: any[];
+    requestedData: Uint8Array[];
 }
 
 interface IGeneralBlockInfo {
@@ -655,8 +655,13 @@ export class Client {
                         assets: {},
                         contractHash: null,
                         dataHash: null,
-                        requestedData: resultMessage.body.data,
+                        requestedData: [],
                     };
+                    if (resultMessage.body.data && resultMessage.body.data.length) {
+                        for (let i = 0; i < resultMessage.body.data.length; i += 1) {
+                            accDataObj.requestedData.push(new Uint8Array(resultMessage.body.data[i]));
+                        }
+                    }
                     if (resultMessage.body.accountInfo[2]) {
                         accDataObj.contractHash = Buffer.from(
                             resultMessage.body.accountInfo[2],
