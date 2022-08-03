@@ -892,7 +892,7 @@ export class Client {
         });
     }
 
-    getNodeVisa(): Promise<string> {
+    getNodeInfo(): Promise<string> {
         return new Promise((resolve, reject) => {
             const url = `${this.t2CoreBaseUrl}${nodeVisaPath}`;
             sendRequest('get', url)
