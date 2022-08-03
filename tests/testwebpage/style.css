@@ -54,7 +54,40 @@ button {
     background-color: #ccc;
 }
 
-/* ACCOUNTS TAB STYLES BEGIN */
+/* ========================================================================== */
+
+.stringValue {
+    max-width: 100%;
+}
+
+.valueLabel {
+    display: inline-block;
+    width: 13%;
+}
+.valueLabel.fullLine {
+    display: block;
+    width: inherit;
+}
+
+.stringValueValue {
+    display: inline-block;
+    max-width: inherit;
+    word-wrap: break-word;
+}
+
+.stringValueValue.overflowHide {
+    display: inline-block;
+    max-width: 80%;
+    max-height: 1.1em;
+    word-wrap: break-word;
+    overflow: hidden;
+}
+
+.inlineCopyButton {
+    display: inline;
+}
+
+/* ========================================================================== */
 
 #accTab #accControlPanel {
     display: flex;
@@ -64,7 +97,6 @@ button {
     max-height: 300px;
     overflow-y: scroll;
     background-color: #f1f1f1;
-    /* box-shadow: inset 0px 0px 4px black; */
 }
 #accTab #accControlPanel #importedAccList div {
     display: flex;
@@ -84,42 +116,22 @@ button {
     display: block;
 }
 
-#accTab #accControlPanel #accImportExportDiv #accTabAccIdField .textCopyButton {
-    display: inline;
-}
-
 #accTab #accDataPanelControlSection {
     display: flex;
 }
 
 #accTab #accDataPanel #accDataPanelAccDataOutputField {
     display: block;
-    background-color: #f1f1f1;
 }
 
-#accTab #accDataPanel #accDataPanelAccDataOutputField .stringValue {
-    max-width: 100%;
-    /* background-color: red; */
-    /* border: 1px solid yellow; */
+#msgPackTabBinDataField {
+    resize: none;
+    width: 80%;
+    height: 10em;
 }
 
-#accTab #accDataPanel #accDataPanelAccDataOutputField .valueLabel {
-    display: inline-block;
-    width: 120px;
-    /* background-color: green; */
-    /* border: 1px solid black; */
-}
-#accTab #accDataPanel #accDataPanelAccDataOutputField .valueLabel.fullLine {
-    display: block;
-    width: auto;
-    /* background-color: green; */
-    /* border: 1px solid black; */
-}
-
-#accTab #accDataPanel #accDataPanelAccDataOutputField .stringValueValue {
-    display: inline-block;
-    max-width: 100%;
-    /* background-color: blue; */
-    /* border: 1px solid white; */
-    word-wrap: break-word;
+#msgPackTabJsonField {
+    resize: none;
+    width: 80%;
+    height: 30em;
 }

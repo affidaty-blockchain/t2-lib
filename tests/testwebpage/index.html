@@ -22,17 +22,23 @@
         <![endif]-->
         <!-- <script src="../dist/browser/t2lib.min.js" async defer></script> -->
         <div id="connectionPanel">
+            <label for="connectionPanelDefaultNodesSelector">Defaults:</label>
+            <select name="defaultNodesSelector" id="connectionPanelDefaultNodesSelector" onchange="selectDefaultNode('connectionPanelDefaultNodesSelector', 'nodeUrlField', 'nodeNetworkField'); document.getElementById('trinciConnBtn').click();">
+                <option value="localhost">localhost</option>
+                <option value="testnet">TestNet</option>
+                <option value="mainnet">MainNet</option>
+            </select>
             <input id="nodeUrlField" type="text", placeholder="http://localhost:8000", value="">
             <input id="nodeNetworkField" type="text", placeholder="<network, optional>", value="">
             <button id="trinciConnBtn" onclick="testConnection(
-                document.getElementById('nodeUrlField').value, document.getElementById('nodeNetworkField').value, document.getElementById('connectionIndicator'))">TEST CONN</button>
+                document.getElementById('nodeUrlField').value, document.getElementById('nodeNetworkField').value, document.getElementById('connectionIndicator'))">CONNECT</button>
             <span id="connectionIndicator" class="indicator off"></span>
         </div>
         <div class="tabsPanel">
-            <button class="tabButton active" onclick="switchTab(event, 'nodeTab')">Node</button>
-            <button class="tabButton" onclick="switchTab(event, 'accTab')">Accounts</button>
-            <button class="tabButton" onclick="switchTab(event, 'txTab')">Transactions</button>
-            <button class="tabButton" onclick="switchTab(event, 'msgPackTab')">MsgPack</button>
+            <button class="tabButton active" id="nodeTabBtn" onclick="switchTab('nodeTabBtn', 'nodeTab')">Node</button>
+            <button class="tabButton" id="accTabBtn" onclick="switchTab('accTabBtn', 'accTab')">Accounts</button>
+            <button class="tabButton" id="txTabBtn" onclick="switchTab('txTabBtn', 'txTab')">Transactions</button>
+            <button class="tabButton" id="msgPackTabBtn" onclick="switchTab('msgPackTabBtn', 'msgPackTab')">MsgPack</button>
         </div>
         <div id="accTab" class="tabContent"> <!-- Open by default because of inline style-->
             <div id="accControlPanel">
@@ -48,13 +54,13 @@
                         <label for="accTabAccIdField">Account ID</label>
                         <br>
                         <input id="accTabAccIdField" type="text", placeholder="<Account ID>" value="">
-                        <button class="textCopyButton" onclick="copyTextToClipboard(document.getElementById('accTabAccIdField').value)">CPY</button>
+                        <button class="inlineCopyButton" onclick="copyTextToClipboard(document.getElementById('accTabAccIdField').value)">CPY</button>
                     </div>
                     <div>
                         <label for="accTabPubKeyField">Account Public Key</label>
                         <br>
                         <input id="accTabPubKeyField" type="text", placeholder="<Public Key>" value="">
-                        <button class="textCopyButton" onclick="copyTextToClipboard(document.getElementById('accTabPubKeyField').value)">CPY</button>
+                        <button class="inlineCopyButton" onclick="copyTextToClipboard(document.getElementById('accTabPubKeyField').value)">CPY</button>
                         <span id="accTabPubKeyEncodingSelectorSpan">
                             <span><input type="radio" name="accTabPubKeyEncodingSelector" value="hex">hex</span>
                             <span><input type="radio" name="accTabPubKeyEncodingSelector" value="b58" checked>Base58</span>
@@ -65,7 +71,7 @@
                         <label for="accTabPrivKeyField">Account Private Key</label>
                         <br>
                         <input id="accTabPrivKeyField" type="text", placeholder="<Private Key>" value="">
-                        <button class="textCopyButton" onclick="copyTextToClipboard(document.getElementById('accTabPrivKeyField').value)">CPY</button>
+                        <button class="inlineCopyButton" onclick="copyTextToClipboard(document.getElementById('accTabPrivKeyField').value)">CPY</button>
                         <span id="accTabPrivKeyEncodingSelectorSpan">
                             <span><input type="radio" name="accTabPrivKeyEncodingSelector" value="hex">hex</span>
                             <span><input type="radio" name="accTabPrivKeyEncodingSelector" value="b58" checked>Base58</span>
@@ -77,7 +83,7 @@
             <div id="accDataPanel">
                 <div id="accDataPanelControlSection">
                     <input type="text" id="accDataPanelControlSectionAccIdField", value="TRINCI", placeholder="<Account ID>">
-                    <input type="text" id="accDataPanelControlSectionAccKeysField", value="", placeholder="List sep by ';' key1;key2">
+                    <input type="text" id="accDataPanelControlSectionAccKeysField", value="*", placeholder="List sep by ';' key1;key2">
                     <button onclick="getAccInfo(
                             document.getElementById('accDataPanelControlSectionAccIdField').value,
                             document.getElementById('accDataPanelControlSectionAccKeysField').value,
@@ -114,8 +120,8 @@
         <div id="txTab" class="tabContent">
             <div id="txTabControlPanel">
                 <input type="text" id="txTabControlPanelTicketInputField" value="" placeholder="<tx ticket>">
-                <button onclick="getTxData('txTabOutputField')">TX DETAILS</button>
-                <button onclick="getTxReceipt('txTabOutputField')">RECEIPT</button>
+                <button onclick="getTxData(document.getElementById('txTabControlPanelTicketInputField').value, 'txTabOutputField')">TX DETAILS</button>
+                <button onclick="getTxReceipt(document.getElementById('txTabControlPanelTicketInputField').value, 'txTabOutputField')">RECEIPT</button>
             </div>
             <div id="txTabOutputField">
                 <!-- <span class="valueLabel fullLine">Smart contracts:</span>
@@ -128,11 +134,11 @@
         </div>
         <div id="nodeTab" class="tabContent" style="display: block;">
             <div id="nodeDataControlPanel">
+                <button onclick="viewNodeInfo('nodeDataOutputField')">INFO</button>
                 <button onclick="viewTrinciSettings('nodeDataOutputField')">SETTINGS</button>
                 <button onclick="viewTrinciAdmins('nodeDataOutputField')">ADMINS</button>
                 <button onclick="viewTrinciValidators('nodeDataOutputField')">VALIDATORS</button>
                 <button onclick="viewTrinciContracts('nodeDataOutputField')">CONTRACTS</button>
-                <button onclick="viewNodeVisa('nodeDataOutputField')">VISA</button>
                 <button onclick="getNodeBootstrap('nodeDataOutputField')">BOOTSTRAP DL</button>
                 <input type="text" id="nodeDataControlPanelBlockNumInputField" value="", placeholder="<block num>">
                 <span><input type="checkbox" id="nodeDataControlPanelBlockTxListCheck" checked>TxList</span>
@@ -146,16 +152,17 @@
             </div>
         </div>
         <div id="msgPackTab" class="tabContent"">
-            <div id="msgPackTabBinDataField">
-                BIN DATA WILL GO HERE
-            </div>
+            <textarea id="msgPackTabBinDataField" value="" placeholder="<encoded bin data>"></textarea>
             <div id="msgPackTabButtonsPanel">
-                <button>&#8595&#8595&#8595</button>
-                <button>&#8593&#8593&#8593</button>
+                <button onclick="msgPackDecode(document.getElementById('msgPackTabBinDataField').value, document.querySelector('input[name=\'msgPackTabBinDataEncodingSelector\']:checked').value, 'msgPackTabJsonField');">DEC(&#8595)</button>
+                <button onclick="msgPackEncode(document.getElementById('msgPackTabJsonField').value, document.querySelector('input[name=\'msgPackTabBinDataEncodingSelector\']:checked').value, 'msgPackTabBinDataField');">ENC(&#8593)</button>
+                <span id="msgPackTabBinDataEncodingSelectorSpan">
+                    <span><input type="radio" name="msgPackTabBinDataEncodingSelector" value="hex" checked>hex</span>
+                    <span><input type="radio" name="msgPackTabBinDataEncodingSelector" value="b58">Base58</span>
+                    <span><input type="radio" name="msgPackTabBinDataEncodingSelector" value="b64">Base64</span>
+                </span>
             </div>
-            <div id="msgPackTabJsonField">
-                JSON WILL GO HERE
-            </div>
+            <textarea id="msgPackTabJsonField" value="" placeholder="<json string>"></textarea>
         </div>
     </body>
 </html>

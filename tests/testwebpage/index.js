@@ -1,5 +1,46 @@
 /* eslint-disable */
 
+getTxData = (ticket, outputElemId) => {
+    const outputElem = document.getElementById(outputElemId);
+    outputElem.innerHTML = '';
+    if (!window.trinciClient) {
+        outputElem.innerHTML = 'Connection error.';
+        return;
+    }
+    window.trinciClient.txData(ticket)
+        .then((tx) => {
+            tx.toObject()
+                .then((txObj) => {
+                    outputElem.innerHTML = `<pre>${JSON.stringify(txObj, null, 4)}</pre>`;
+                })
+                .catch((error) => {
+                    console.error(error);
+                    outputElem.innerHTML = error.message;
+                });
+        })
+        .catch((error) => {
+            console.error(error);
+            outputElem.innerHTML = error.message;
+        });
+}
+
+getTxReceipt = (ticket, outputElemId) => {
+    const outputElem = document.getElementById(outputElemId);
+    outputElem.innerHTML = '';
+    if (!window.trinciClient) {
+        outputElem.innerHTML = 'Connection error.';
+        return;
+    }
+    window.trinciClient.txReceipt(ticket)
+        .then((txReceipt) => {
+            outputElem.innerHTML = `<pre>${JSON.stringify(txReceipt, null, 4)}</pre>`;
+        })
+        .catch((error) => {
+            console.error(error);
+            outputElem.innerHTML = error.message;
+        });
+}
+
 getBlockInfo = (index, txlist, outputElemId) => {
     const outputElem = document.getElementById(outputElemId);
     outputElem.innerHTML = '';
@@ -16,7 +57,7 @@ getBlockInfo = (index, txlist, outputElemId) => {
                 receiptsRoot: result.info.receiptsRoot,
                 prevHash: result.info.prevHash,
                 accountsRoot: result.info.accountsRoot,
-                signer: null,
+                signerNode: null,
                 tickets: result.tickets,
             };
 
@@ -35,7 +76,7 @@ getBlockInfo = (index, txlist, outputElemId) => {
                     finalElemInnerHtml += '<span class="valueLabel fullLine">tickets:</span><hr>';
                     finalElemInnerHtml += '<div class="valuesList">';
                     for (const ticket of tempObj.tickets) {
-                        const elemHtml = `<div class="stringValue"><span class="stringValueValue">${JSON.stringify(ticket)}</span><button class="inlineInfoButton">DATA</button><button class="inlineInfoButton">REC</button></div>`;
+                        const elemHtml = `<div class="stringValue"><span class="stringValueValue">${JSON.stringify(ticket)}</span><button class="inlineInfoButton" onclick="document.getElementById('txTabControlPanelTicketInputField').value = '${ticket}'; getTxData('${ticket}', 'txTabOutputField'); switchTab('txTabBtn', 'txTab');">DATA</button><button class="inlineInfoButton" onclick="document.getElementById('txTabControlPanelTicketInputField').value = '${ticket}'; getTxReceipt('${ticket}', 'txTabOutputField'); switchTab('txTabBtn', 'txTab');">REC</button></div>`;
                         finalElemInnerHtml += elemHtml;
                     }
                     finalElemInnerHtml += '</div>';
@@ -51,15 +92,23 @@ getBlockInfo = (index, txlist, outputElemId) => {
             if (!result.info.signer.keyParams.paramsId.length) {
                 outputToElem(tempObj);
             } else {
-                t2lib.getAccountId(result.info.signer)
-                    .then((accId) => {
-                        tempObj.signer = accId;
+                result.info.signer.getSPKI()
+                    .then((blockSignerPubKeySPKI) => {
+                        const bytes = new Uint8Array(4 + blockSignerPubKeySPKI.byteLength);
+                        bytes.set([0x08, 0x03, 0x12, blockSignerPubKeySPKI.byteLength], 0);
+                        bytes.set(blockSignerPubKeySPKI, 4);
+                        const sha256 = t2lib.Utils.sha256(bytes);
+                        const multiHash = new Uint8Array(2 + sha256.byteLength);
+                        multiHash.set([0x12, 0x20], 0);
+                        multiHash.set(sha256, 2);
+                        const nodeId = t2lib.binConversions.arrayBufferToBase58(multiHash.buffer);
+                        tempObj.signerNode = nodeId;
                         outputToElem(tempObj);
                     })
                     .catch((error) => {
-                        outputElem.innerHTML = error.message;
                         console.error(error);
-                    });
+                        outputElem.innerHTML = error.message;
+                    })
             }
         })
         .catch((error) => {
@@ -68,9 +117,28 @@ getBlockInfo = (index, txlist, outputElemId) => {
         });
 }
 
+smartContractDl = (scHashHex, filename) => {
+    if (!window.trinciClient) {
+        outputElem.innerHTML = 'Connection error.';
+        return;
+    }
+    window.trinciClient.accountData(window.trinciClient.serviceAccount, [`contracts:code:${scHashHex}`])
+        .then((serviceAccData) => {
+            if (!serviceAccData.requestedData[0]) {
+                console.error('Smart contract not found.');
+                return;
+            }
+            downloadBlob(serviceAccData.requestedData[0], filename);
+        })
+        .catch((error) => {
+            console.error(error);
+        });
+}
+
 downloadBlob = (data, fileName, mimeType = 'application/octet-stream') => {
     let blob, url;
     blob = new Blob([data], {
+        endings: 'transparent',
         type: mimeType
     });
     url = window.URL.createObjectURL(blob);
@@ -108,7 +176,7 @@ getNodeBootstrap = (outputElemId) => {
         });
 }
 
-viewNodeVisa = (outputElemId) => {
+viewNodeInfo = (outputElemId) => {
     const outputElem = document.getElementById(outputElemId);
     outputElem.innerHTML = '';
     if (!window.trinciClient) {
@@ -116,7 +184,7 @@ viewNodeVisa = (outputElemId) => {
         return;
     }
     let finalElemInnerHtml = '<span class="valueLabel fullLine">TRINCI node visa:</span><hr>';
-    window.trinciClient.getNodeVisa()
+    window.trinciClient.getNodeInfo()
         .then((result) => {
             const parsedObj = JSON.parse(result);
             const keys = Object.keys(parsedObj);
@@ -172,7 +240,8 @@ viewTrinciAdmins = (outputElemId) => {
         .then((result) => {
             const admins = t2lib.Utils.bytesToObject(result.requestedData[0]);
             for (const admin of admins) {
-                const elemHtml = `<div class="stringValue"><span class="stringValueValue">${JSON.stringify(admin)}</span></div>`;
+                const dataBtnOnClickCode = `document.getElementById('accDataPanelControlSectionAccIdField\').value = \'${admin}\'; document.getElementById('accDataPanelControlSectionAccKeysField').value = ''; getAccInfo('${admin}', '', 'accDataOutputFieldAccIdValue', 'accDataOutputFieldContractHashValue', 'accDataOutputFieldDataHashValue', 'accDataOutputFieldAssetsList', 'accDataOutputFieldRequestedDataList', document.querySelector('input[name=\\'accDataOutputFieldEncodingSelector\\']:checked').value); switchTab('accTabBtn', 'accTab');`;
+                const elemHtml = `<div class="stringValue"><span class="stringValueValue">${JSON.stringify(admin)}</span><button class="inlineInfoButton" onclick="${dataBtnOnClickCode}">DATA</button></div>`;
                 finalElemInnerHtml += elemHtml;
             }
             outputElem.innerHTML = finalElemInnerHtml;
@@ -196,8 +265,10 @@ viewTrinciValidators = (outputElemId) => {
         .then((result) => {
             const accKeysList = t2lib.Utils.bytesToObject(result.requestedData[0]);
             for (const key of accKeysList) {
+                const validator = key.substring(validatorMarker.length);
                 if (key.startsWith(validatorMarker)) {
-                    const elemHtml = `<div class="stringValue"><span class="stringValueValue">${JSON.stringify(key.substring(validatorMarker.length))}</span></div>`;
+                    const dataBtnOnClickCode = `document.getElementById('accDataPanelControlSectionAccIdField\').value = \'${validator}\'; document.getElementById('accDataPanelControlSectionAccKeysField').value = ''; getAccInfo('${validator}', '', 'accDataOutputFieldAccIdValue', 'accDataOutputFieldContractHashValue', 'accDataOutputFieldDataHashValue', 'accDataOutputFieldAssetsList', 'accDataOutputFieldRequestedDataList', document.querySelector('input[name=\\'accDataOutputFieldEncodingSelector\\']:checked').value); switchTab('accTabBtn', 'accTab');`;
+                    const elemHtml = `<div class="stringValue"><span class="stringValueValue">${JSON.stringify(validator)}</span><button class="inlineInfoButton" onclick="${dataBtnOnClickCode}">DATA</button></div>`;
                     finalElemInnerHtml += elemHtml;
                 }
             }
@@ -221,8 +292,9 @@ viewTrinciContracts = (outputElemId) => {
         .then((result) => {
             const hashes = Object.keys(result);
             for (const hash of hashes) {
+                const dlBtnOnClickCode = `smartContractDl('${hash}', '${result[hash]['name']}_${result[hash]['version']}.wasm');`;
                 finalElemInnerHtml += '<hr><div class="valuesList">';
-                finalElemInnerHtml += `<div class="stringValue"><span class="valueLabel">Hash: </span><span class="stringValueValue">${JSON.stringify(hash)}</span></div>`;
+                finalElemInnerHtml += `<div class="stringValue"><span class="valueLabel">Hash: </span><span class="stringValueValue">${JSON.stringify(hash)}</span><button class="inlineInfoButton" onclick="${dlBtnOnClickCode}">DL</button></div>`;
                 const dataKeys = Object.keys(result[hash]);
                 for (const dataKey of dataKeys) {
                     const elemHtml = `<div class="stringValue"><span class="valueLabel">${dataKey}: </span><span class="stringValueValue">${JSON.stringify(result[hash][dataKey])}</span></div>`;
@@ -230,13 +302,6 @@ viewTrinciContracts = (outputElemId) => {
                 }
                 finalElemInnerHtml += '</div>';
             }
-            // const accKeysList = t2lib.Utils.bytesToObject(result.requestedData[0]);
-            // for (const key of accKeysList) {
-            //     if (key.startsWith(validatorMarker)) {
-            //         const elemHtml = `<div class="stringValue"><span class="stringValueValue">${JSON.stringify(key.substring(validatorMarker.length))}</span></div>`;
-            //         finalElemInnerHtml += elemHtml;
-            //     }
-            // }
             outputElem.innerHTML = finalElemInnerHtml;
         })
         .catch((error) => {
@@ -355,7 +420,7 @@ encodeBinData = (binData, outputFormat) => {
                 return null;
             }
         default:
-            return null;
+            throw(new Error(`Unknown output format: ${outputFormat}`));
     }
 }
 
@@ -386,7 +451,7 @@ decodeBinData = (inputString, inputFormat) => {
                 return null;
             }
         default:
-            return null;
+            throw(new Error(`Unknown input format: ${inputFormat}`));
     }
 }
 genNewAccount = (listContainerId) => {
@@ -400,6 +465,27 @@ genNewAccount = (listContainerId) => {
             console.error(error);
         })
 }
+
+selectDefaultNode = (selectElemId, urlFieldElemId, networkFieldElemId) => {
+    const defaultNodes = {
+        'localhost': ['http://localhost:8000', ''],
+        'testnet': ['http://testnet.trinci.net', 'QmcvHfPC6XYpgxvJSZQCVBd7QAMEHnLbbK1ytA4McWx5UY'],
+        'mainnet': ['http://t27.trinci.net:8000', 'QmPSjKEWBHshyvCAkppsfKAxoxqRn3RyW1n222zT1UFupd'],
+    };
+    const nodesSelector = document.getElementById(selectElemId);
+    const selectedNode = nodesSelector.options[nodesSelector.selectedIndex].value;
+
+    const urlField = document.getElementById(urlFieldElemId);
+    const networkField = document.getElementById(networkFieldElemId);
+    urlField.value = '';
+    networkField.value = '';
+
+    if (defaultNodes[selectedNode]) {
+        urlField.value = defaultNodes[selectedNode][0];
+        networkField.value = defaultNodes[selectedNode][1];
+    }
+}
+
 // window.trinciClient = new t2lib.Client('');
 testConnection = (url, network, indicatorElem) => {
     window.trinciClient = null;
@@ -411,7 +497,7 @@ testConnection = (url, network, indicatorElem) => {
     tempClient.accountData('TRINCI')
         .then((result) => {
             window.trinciClient = tempClient;
-            indicatorElem.textContent = 'Connected.';
+            indicatorElem.textContent = `Connected to "${internalUrl}".`;
             setElemClassList(indicatorElem, ['indicator', 'green']);
         })
         .catch((error) => {
@@ -420,6 +506,58 @@ testConnection = (url, network, indicatorElem) => {
             setElemClassList(indicatorElem, ['indicator', 'red']);
             console.error(error);
         })
+}
+
+msgPackDecode = (encodedDataStr, encodingFormat, outputElemId) => {
+    const jsonOutputElem = document.getElementById(outputElemId);
+    jsonOutputElem.value = '';
+    const binData = decodeBinData(encodedDataStr, encodingFormat);
+    let decodeError;
+    let jsonObj;
+    try {
+        jsonObj = t2lib.Utils.bytesToObject(binData);
+    } catch (error) {
+        decodeError = true;
+        console.error(error);
+        jsonOutputElem.value = error.message;
+    }
+
+    if (!decodeError) {
+        jsonOutputElem.value = JSON.stringify(jsonObj, null, 4);
+    }
+}
+
+msgPackEncode = (jsonStr, encodingFormat, outputElemId) => {
+    const binDataOutputElem = document.getElementById(outputElemId);
+    binDataOutputElem.value = '';
+
+    let parsedObj;
+    try {
+        parsedObj = JSON.parse(jsonStr);
+    } catch (error) {
+        console.error(error);
+        binDataOutputElem.value = error.message;
+        return;
+    }
+
+    let msgPackBytes;
+    try {
+        msgPackBytes = t2lib.Utils.objectToBytes(parsedObj);
+    } catch (error) {
+        console.error(error);
+        binDataOutputElem.value = error.message;
+        return;
+    }
+
+    let encodedString;
+    try {
+        encodedString = encodeBinData(msgPackBytes, encodingFormat);
+    } catch (error) {
+        console.error(error);
+        binDataOutputElem.value = error.message;
+        return;
+    }
+    binDataOutputElem.value = encodedString;
 }
 
 getAccInfo = (
@@ -455,7 +593,9 @@ getAccInfo = (
             let finalHtmlString = '';
             for (let i = 0; i < keysArray.length; i++) {
                 const elemId = `${accountId}_dataKeys_${keysArray[i]}`;
-                const elemHtmlString = `<div class="stringValue"><span class="valueLabel fullLine">${keysArray[i]}:</span><span class="stringValueValue" id="${elemId}">${encodeBinData(result.requestedData[i], dataEncodingFormat)}</span></div>`;
+                const copyBtnOnClickCode = `copyTextToClipboard(document.getElementById('${elemId}').innerHTML);`
+                const decBtnOnClickCode = `document.getElementById('msgPackTabBinDataField').value = document.getElementById('${elemId}').innerHTML; document.querySelector('input[name=\\'msgPackTabBinDataEncodingSelector\\'][value=\\'${dataEncodingFormat}\\']').checked = true; msgPackDecode(document.getElementById('${elemId}').innerHTML, '${dataEncodingFormat}', 'msgPackTabJsonField'); switchTab('msgPackTabBtn', 'msgPackTab');`;
+                const elemHtmlString = `<div class="stringValue"><span class="valueLabel">${keysArray[i]}:</span><button class="inlineCopyButton" onclick="${copyBtnOnClickCode}">CPY</button><button class="inlineInfoButton" onclick="${decBtnOnClickCode}">UNPACK</button><span class="stringValueValue overflowHide" id="${elemId}">${encodeBinData(result.requestedData[i], dataEncodingFormat)}</span></div>`;
                 finalHtmlString += elemHtmlString;
             }
             dataListOutputElem.innerHTML = finalHtmlString;
@@ -464,7 +604,9 @@ getAccInfo = (
             finalHtmlString = '';
             for (let i = 0; i < assetsList.length; i++) {
                 const elemId = `${accountId}_assets_${assetsList[i]}`;
-                const elemHtmlString = `<div class="stringValue"><span class="valueLabel fullLine">${assetsList[i]}:</span><span class="stringValueValue" id="${elemId}">${encodeBinData(result.assets[assetsList[i]], dataEncodingFormat)}</span></div>`;
+                const copyBtnOnClickCode = `copyTextToClipboard(document.getElementById('${elemId}').innerHTML);`
+                const decBtnOnClickCode = `document.getElementById('msgPackTabBinDataField').value = document.getElementById('${elemId}').innerHTML; document.querySelector('input[name=\\'msgPackTabBinDataEncodingSelector\\'][value=\\'${dataEncodingFormat}\\']').checked = true; msgPackDecode(document.getElementById('${elemId}').innerHTML, '${dataEncodingFormat}', 'msgPackTabJsonField'); switchTab('msgPackTabBtn', 'msgPackTab');`;
+                const elemHtmlString = `<div class="stringValue"><span class="valueLabel">${assetsList[i]}:</span><button class="inlineCopyButton" onclick="${copyBtnOnClickCode}">CPY</button><button class="inlineInfoButton" onclick="${decBtnOnClickCode}">UNPACK</button><span class="stringValueValue" id="${elemId}">${encodeBinData(result.assets[assetsList[i]], dataEncodingFormat)}</span></div>`;
                 finalHtmlString += elemHtmlString;
             }
             assetsListOutputElem.innerHTML = finalHtmlString;
@@ -475,7 +617,7 @@ getAccInfo = (
         });
 }
 
-switchTab = (event, tabName) => {
+switchTab = (buttonElemId, tabName) => {
     let i, tabcontent, tablinks;
     tabcontent = document.getElementsByClassName("tabContent");
     for (i = 0; i < tabcontent.length; i++) {
@@ -486,7 +628,7 @@ switchTab = (event, tabName) => {
         tablinks[i].className = tablinks[i].className.replace(" active", "");
     }
     document.getElementById(tabName).style.display = "block";
-    event.currentTarget.className += " active";
+    document.getElementById(buttonElemId).className += " active";
 }
 
 getElemClassList = (elem) => {
@@ -541,4 +683,4 @@ function deepLog(obj) {
 
 // INITIALIZATION SCRIPTS
 window.importedAccountsList = {};
-// updateImportedAccList('importedAccList');
+updateImportedAccList('importedAccList');
