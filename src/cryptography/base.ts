@@ -1,8 +1,9 @@
 import { Key as UtilKey } from 'js-crypto-key-utils';
+import { modPow } from 'bigint-mod-arith';
 import * as baseTypes from './baseTypes';
 import * as Errors from '../errors';
 import { Subtle } from './webCrypto';
-import { similarArrays } from '../utils';
+import { similarArrays, padStrWithZeroes } from '../utils';
 import {
     EmptyKeyParams,
     DEF_SIGN_HASH_ALGORITHM,
@@ -401,4 +402,62 @@ export interface IBaseKeyPair {
     keyPairParams: baseTypes.IKeyPairParams;
     publicKey: BaseKey;
     privateKey: BaseKey;
+}
+
+export function compressRawCurvePoint(fullCurvePoint: Uint8Array | ArrayBufferLike): Uint8Array {
+    const u8full = new Uint8Array(fullCurvePoint);
+    const len = u8full.byteLength;
+    /* eslint-disable no-bitwise */
+    const u8 = u8full.slice(0, 1 + len >>> 1); // drop `y`
+    u8[0] = 0x2 | (u8full[len - 1] & 0x01); // encode sign of `y` in first bit
+    /* eslint-enable no-bitwise */
+    return u8;
+}
+
+export function decompressRawCurvePoint(
+    compPubKey: Uint8Array | ArrayBufferLike,
+    curveName: string = 'secp384r1',
+): Uint8Array {
+    const u8CompPubKey = new Uint8Array(compPubKey);
+    // isolating X bytes
+    const x = BigInt(`0x${Buffer.from(u8CompPubKey.subarray(1)).toString('hex')}`);
+    // getting Y parity value
+    const signY = BigInt(u8CompPubKey[0] - 2);
+
+    // setting const values for selected curve
+    // TODO: implement the possibility to use other named NIST curves
+    // curves const values: https://neuromancer.sk/std/nist
+    let p = 0n;
+    let b = 0n;
+    let pIdent = 0n;
+    switch (curveName) {
+        case 'secp384r1':
+            p = BigInt('0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffeffffffff0000000000000000ffffffff');
+            b = BigInt('0xb3312fa7e23ee7e4988e056be3f82d19181d9c6efe8141120314088f5013875ac656398d8a2ed19d2a85c8edd3ec2aef');
+            pIdent = (p + 1n) / 4n;
+            break;
+        default:
+            throw new Error(Errors.DECOMPRESS_UNSUPPORTED_EC_NAME);
+    }
+
+    // solving equation
+    let y = modPow(((x ** 3n) - (x * 3n) + b), pIdent, p);
+
+    // determining which Y to use
+    if ((y % 2n) !== signY) {
+        y = p - y;
+    }
+    const fullCurvePointHex = `04${padStrWithZeroes(x.toString(16), 96)}${padStrWithZeroes(y.toString(16), 96)}`;
+    return new Uint8Array(Buffer.from(fullCurvePointHex, 'hex'));
+}
+
+export function isCompressedCurvePoint(curvePoint: Uint8Array | ArrayBufferLike): boolean {
+    const u8CurvePoint = new Uint8Array(curvePoint);
+    return (
+        u8CurvePoint.byteLength
+        && (
+            u8CurvePoint[0] === 0x02
+            || u8CurvePoint[0] === 0x03
+        )
+    ) as boolean;
 }

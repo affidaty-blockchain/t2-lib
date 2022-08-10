@@ -1,3 +1,4 @@
+import { Uint64BE } from 'int64-buffer';
 import { bytesToObject, objectToBytes } from './utils';
 import { IBaseTxUnnamedObject } from './transaction/baseTransaction';
 
@@ -263,9 +264,9 @@ export namespace stdTrinciMessages {
         });
     }
 
-    export function getBlock(height: number, showTxs: boolean = true): TrinciMessage {
+    export function getBlock(height: number | string, showTxs: boolean = true): TrinciMessage {
         return new TrinciMessage(MessageTypes.GetBlockRequest, {
-            height,
+            height: typeof height === 'number' ? height : new Uint64BE(height as string, 16),
             showTickets: showTxs,
             destination: null,
         });

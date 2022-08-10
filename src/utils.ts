@@ -91,3 +91,11 @@ export function removeValuefromArray<T>(array: Array<T>, value: T): Array<T> {
     }
     return array;
 }
+
+export function padStrWithZeroes(stringToPad: string, length: number) {
+    let paddedStr = stringToPad;
+    while (paddedStr.length < length) {
+        paddedStr = `0${paddedStr}`;
+    }
+    return paddedStr;
+}

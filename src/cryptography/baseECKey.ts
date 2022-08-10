@@ -7,6 +7,9 @@ import {
     BaseKey,
     keyBinToJWK,
     keyJWKToBin,
+    compressRawCurvePoint,
+    decompressRawCurvePoint,
+    isCompressedCurvePoint,
 } from './base';
 import { mKeyPairParams } from './cryptoDefaults';
 
@@ -108,11 +111,14 @@ export class BaseECKey extends BaseKey {
         raw: Uint8Array,
     ): Promise<boolean> {
         return new Promise((resolve, reject) => {
-            keyBinToJWK(raw, 'oct', { namedCurve: this.keyParams.genAlgorithm!.namedCurve })
+            const _raw = isCompressedCurvePoint(raw)
+                ? decompressRawCurvePoint(raw, this.paramsId.substring(this.paramsId.indexOf('_') + 1))
+                : raw;
+            keyBinToJWK(_raw, 'oct', { namedCurve: this.keyParams.genAlgorithm!.namedCurve })
                 .then((importedJwk: IJwk) => {
                     if (ecKeyTypeFromJWK(importedJwk) === 'public') {
                         this.setJWK(importedJwk);
-                        this._raw = raw;
+                        this._raw = _raw;
                         return resolve(true);
                     }
                     return reject(new Error(Errors.NOT_PUBLIC_EC_BYTES));
@@ -125,20 +131,20 @@ export class BaseECKey extends BaseKey {
      * Outputs key value as raw bytes (public key)
      * @returns - raw public key bytes
      */
-    public getRaw(): Promise<Uint8Array> {
+    public getRaw(compress: boolean = false): Promise<Uint8Array> {
         return new Promise((resolve, reject) => {
             if (this.type !== 'public') {
                 return reject(new Error(Errors.ONLY_FOR_PUBKEY));
             }
             if (this._raw.byteLength > 0) {
-                return resolve(this._raw);
+                return resolve(compress ? compressRawCurvePoint(this._raw) : this._raw);
             }
             this.getJWK()
                 .then((jwk: IJwk) => {
                     keyJWKToBin(jwk, 'oct')
                         .then((exportedBin) => {
                             this._raw = exportedBin;
-                            return resolve(exportedBin);
+                            return resolve(compress ? compressRawCurvePoint(this._raw) : this._raw);
                         })
                         .catch((error:any) => { return reject(error); });
                 })
@@ -298,7 +304,7 @@ export class BaseECKey extends BaseKey {
             const firstByte: number = binaryKey[0];
             if (this.type === 'public') {
                 switch (firstByte) {
-                    case 4:
+                    case 4: case 2: case 3:
                         this.setRaw(binaryKey)
                             .then((result: boolean) => {
                                 return resolve(result);

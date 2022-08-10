@@ -8,6 +8,7 @@ export const UNDEF_SETTER_ARG = 'Undefined setter argument.';
 export const NO_BASE_KEY_VALUE = 'No value has been set for this key.';
 export const UNDEF_KEY_IMPORT_ALGORITHM = 'Key import algorithm not defined.';
 export const UNDEF_EXPORTED_KEY = 'Exported key not defined.';
+export const DECOMPRESS_UNSUPPORTED_EC_NAME = 'Elliptic curve name not supported for curve point decompression.';
 export const NOT_PUBLIC_EC_BYTES = 'Given bytes must encode a public EC key.';
 export const NOT_PRIVATE_EC_BYTES = 'Given bytes must encode a private EC key.';
 export const ONLY_FOR_PUBKEY = 'Function available only for public keys.';
