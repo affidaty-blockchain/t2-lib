@@ -570,12 +570,16 @@ export class Client {
 
     /**
      * Method that returns info about a block in blockchain.
-     * @param height - Block's index.
+     * @param height - Block's index. Can be a hex string to input numbers beyond JS capabilities.
      * @returns - Block info.
      */
-    blockData(height: number, showTxs: boolean = true): Promise<IBlockData> {
+    blockData(height: number | string, showTxs: boolean = true): Promise<IBlockData> {
         return new Promise((resolve, reject) => {
-            const msg = stdTrinciMessages.getBlock(height, showTxs);
+            let getBlockMsgArg = height;
+            if (getBlockMsgArg === 'max' || getBlockMsgArg === 'MAX') {
+                getBlockMsgArg = 'ffffffffffffffff';
+            }
+            const msg = stdTrinciMessages.getBlock(getBlockMsgArg, showTxs);
             this.submitTrinciMessage(msg)
                 .then((resultMessage: TrinciMessage) => {
                     resultMessage.assertType(MessageTypes.GetBlockResponse);
@@ -659,7 +663,9 @@ export class Client {
                     };
                     if (resultMessage.body.data && resultMessage.body.data.length) {
                         for (let i = 0; i < resultMessage.body.data.length; i += 1) {
-                            accDataObj.requestedData.push(new Uint8Array(resultMessage.body.data[i]));
+                            accDataObj.requestedData.push(
+                                new Uint8Array(resultMessage.body.data[i]),
+                            );
                         }
                     }
                     if (resultMessage.body.accountInfo[2]) {
