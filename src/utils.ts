@@ -29,6 +29,33 @@ export function arrayUnion<T>(array: Array<Array<T>>): Array<T> {
     return result;
 }
 
+export function concatBytes(...arrays: Array<ArrayBufferView | ArrayBufferLike>): ArrayBuffer {
+    let arraysLenSum = 0;
+    const offsets: number[] = [];
+    const _arrays: Array<Uint8Array> = [];
+    arrays.forEach((array) => {
+        let temp: Uint8Array | null = null;
+        if (array.byteLength) {
+            if ((array as ArrayBufferView).buffer) {
+                temp = new Uint8Array((array as ArrayBufferView).buffer);
+            } else {
+                temp = new Uint8Array(array as ArrayBufferLike);
+            }
+        }
+        if (temp) {
+            _arrays.push(temp);
+            offsets.push(arraysLenSum);
+            arraysLenSum += temp.byteLength;
+        }
+    });
+
+    const finalResult = new Uint8Array(arraysLenSum);
+    for (let i = 0; i < _arrays.length; i += 1) {
+        finalResult.set(_arrays[i], offsets[i]);
+    }
+    return finalResult.buffer;
+}
+
 /** Checks if two gived arrays are similar( have all the same elements,
  * regardless of the order ) */
 export function similarArrays<T>(array1: Array<T>, array2: Array<T>): boolean {

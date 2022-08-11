@@ -11,6 +11,7 @@ export {
     compressRawCurvePoint,
     decompressRawCurvePoint,
     isCompressedCurvePoint,
+    ieeeP1363ToAsn1,
 } from './cryptography/base';
 export * as CryptoDefaults from './cryptography/cryptoDefaults';
 export * as SystemDefaults from './systemDefaults';

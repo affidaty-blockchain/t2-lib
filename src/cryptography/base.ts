@@ -3,7 +3,11 @@ import { modPow } from 'bigint-mod-arith';
 import * as baseTypes from './baseTypes';
 import * as Errors from '../errors';
 import { Subtle } from './webCrypto';
-import { similarArrays, padStrWithZeroes } from '../utils';
+import {
+    similarArrays,
+    padStrWithZeroes,
+    concatBytes,
+} from '../utils';
 import {
     EmptyKeyParams,
     DEF_SIGN_HASH_ALGORITHM,
@@ -279,6 +283,7 @@ export function signData(
         }
         key.getCryptoKey()
             .then((cryptoKey: CryptoKey) => {
+                console.log(`data to sign(${data.byteLength}): [${Buffer.from(data).toString('hex')}]`);
                 Subtle.sign(
                     {
                         name: key.keyParams.genAlgorithm!.name,
@@ -287,6 +292,7 @@ export function signData(
                     cryptoKey,
                     data.buffer,
                 ).then((signature: ArrayBuffer) => {
+                    console.log(`signature(${signature.byteLength}): [${Buffer.from(signature).toString('hex')}]`);
                     return resolve(new Uint8Array(signature));
                 }).catch((error: any) => {
                     return reject(error);
@@ -461,3 +467,66 @@ export function isCompressedCurvePoint(curvePoint: Uint8Array | ArrayBufferLike)
         )
     ) as boolean;
 }
+
+/**
+ * Converts an IEEE P1363 signature into ASN.1/DER.
+ *
+ * @param string $p1363 Binary IEEE P1363 signature.
+ */
+export function ieeeP1363ToAsn1(p1363: ArrayBufferLike | Uint8Array): any {
+    const _p1363 = new Uint8Array(p1363);
+    let asn1 = new Uint8Array(0);
+
+    // P1363 format: r followed by s.
+    // ASN.1 format:
+    // 0x30
+    //  b1 0x02 b2 r 0x02 b3 s.
+    //
+    // r and s must be prefixed with 0x00 if their first byte is > 0x7f.
+    //
+    // b1 = length of contents.
+    // b2 = length of r after being prefixed if necessary.
+    // b3 = length of s after being prefixed if necessary.
+    const cLen: number = Math.floor(_p1363.length / 2); // Length of each P1363 component.
+
+    // Separate P1363 signature into its two equally sized components.
+    // split signature into r and s components
+    const sValues = [
+        new Uint8Array(p1363.slice(0, cLen)),
+        new Uint8Array(p1363.slice(cLen)),
+    ];
+    for (let i = 0; i < sValues.length; i += 1) {
+        // 0x02 prefix before each component.
+        let tmp = new Uint8Array([0x02]);
+        if (sValues[i][0] > 0x7f) {
+            // append length (+1 because 0x00 will also be added)
+            tmp = new Uint8Array(concatBytes(tmp, new Uint8Array([cLen + 1])));
+            // Add 0x00 because first byte of component > 0x7f.
+            tmp = new Uint8Array(concatBytes(tmp, new Uint8Array([0x00])));
+            // Add actual value.
+            tmp = new Uint8Array(concatBytes(tmp, sValues[i]));
+        } else {
+            // just add length and actual value
+            tmp = new Uint8Array(concatBytes(tmp, new Uint8Array([cLen])));
+            tmp = new Uint8Array(concatBytes(tmp, sValues[i]));
+        }
+        asn1 = new Uint8Array(concatBytes(asn1, tmp));
+    }
+    // 0x30 b1, then contents
+    asn1 = new Uint8Array(concatBytes(new Uint8Array([0x30, asn1.byteLength]), asn1));
+    return asn1;
+}
+
+// currently not enabled
+// function ASN1ToIEEEP1363(asn1: Uint8Array | ArrayBufferLike): ArrayBuffer {
+//     const _asn1 = new Uint8Array(asn1);
+//     const buffer = new ArrayBuffer(_asn1.length);
+//     const int8View = new Int8Array(buffer);
+//     for (let i = 0, strLen = _asn1.length; i < strLen; i += 1) {
+//         int8View[i] = _asn1.charCodeAt(i);
+//     }
+//     //Currently these bytes getting for SHA256. for other hashings need to make it dynamic
+//     const r = new Uint8Array(buffer.slice(4, 36));
+//     const s = new Uint8Array(buffer.slice(39));
+//     return appendBuffer(r, s);
+// }
