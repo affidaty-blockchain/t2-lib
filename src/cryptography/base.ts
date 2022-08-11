@@ -283,7 +283,6 @@ export function signData(
         }
         key.getCryptoKey()
             .then((cryptoKey: CryptoKey) => {
-                console.log(`data to sign(${data.byteLength}): [${Buffer.from(data).toString('hex')}]`);
                 Subtle.sign(
                     {
                         name: key.keyParams.genAlgorithm!.name,
@@ -292,7 +291,6 @@ export function signData(
                     cryptoKey,
                     data.buffer,
                 ).then((signature: ArrayBuffer) => {
-                    console.log(`signature(${signature.byteLength}): [${Buffer.from(signature).toString('hex')}]`);
                     return resolve(new Uint8Array(signature));
                 }).catch((error: any) => {
                     return reject(error);
