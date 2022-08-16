@@ -129,7 +129,7 @@ export class BaseECKey extends BaseKey {
 
     /**
      * Outputs key value as raw bytes (public key)
-     * @param compress - if true, value returned is a compressed curve point {y parity byte; x bytes}
+     * @param compress - if true, value returned is a compressed curve point
      * @returns - raw public key bytes
      */
     public getRaw(compress: boolean = false): Promise<Uint8Array> {
