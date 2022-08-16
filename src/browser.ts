@@ -1,12 +1,15 @@
 /** will be true if lib is executed in a browser */
-export let IS_BROWSER = true;
+let isBrowser = true;
 
 try {
+    /* eslint-disable-next-line global-require */
     const os = require('os');
-    IS_BROWSER = ((!os) || (os.platform() === 'browser'));
+    isBrowser = ((!os) || (os.platform() === 'browser'));
 } catch (error) {
     // DO NOTHING
 }
+
+export const IS_BROWSER = isBrowser;
 
 /** False if lib is executed outside a secure context.
  * Crypto and SubtleCrypto api, on which this lib relies,
