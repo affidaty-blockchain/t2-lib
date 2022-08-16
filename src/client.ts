@@ -1,4 +1,4 @@
-import fetch, { Response } from 'node-fetch';
+import fetch, { RequestInit, Response } from 'node-fetch';
 import * as Errors from './errors';
 import { MessageTypes, TrinciMessage, stdTrinciMessages } from './messageFormat';
 import { arrayBufferToString } from './binConversions';
@@ -189,6 +189,7 @@ function sendRequest(
     url: string,
     body?: Uint8Array,
     customHeaders?: {[key: string]: string},
+    options?: Omit<RequestInit, 'body' | 'headers' | 'method'>,
 ): Promise<Response> {
     return new Promise((resolve, reject) => {
         let tempHeaders: {[key: string]: any} = {};
@@ -216,18 +217,31 @@ function sendRequest(
         for (let i = 0; i < tempEntries.length; i += 1) {
             headers[tempEntries[i][0].toLowerCase()] = tempEntries[i][1];
         }
+        const _opts = { ...options };
+
+        if (!_opts.timeout) _opts.timeout = 5000;
+        if (!_opts.signal) _opts.timeout = 5000;
+        const abortController = new AbortController();
+        const timeout = setTimeout(() => {
+            abortController.abort(Errors.TIMEOUT_ERR);
+            return reject(new Error(Errors.TIMEOUT_ERR));
+        }, _opts.timeout);
+
         fetch(
             url,
             {
                 method,
                 headers,
-                body,
+                body: body ? Buffer.from(body) : undefined,
+                ..._opts,
             },
         )
             .then((res: Response) => {
+                clearTimeout(timeout);
                 return resolve(res);
             })
             .catch((err: any) => {
+                clearTimeout(timeout);
                 return reject(err);
             });
     });
@@ -245,6 +259,8 @@ export class Client {
 
     private _serviceAccount: string;
 
+    private _timeout: number = 5000;
+
     /**
      * @param baseUrl - Base URL to connect to (e.g. 'https://my.server.net:8000/')
      * @param networkName - Name of the TRINCI network (a network will not accept transactions
@@ -261,6 +277,20 @@ export class Client {
         }
         this.t2CoreNetworkName = networkName;
         this._serviceAccount = customServiceAcc;
+    }
+
+    /**
+     * Timeout as number of milliseconds
+     */
+    public set timeout(timeout: number) {
+        this._timeout = new Uint32Array([timeout])[0];
+    }
+
+    /**
+     * Timeout as number of milliseconds
+     */
+    public get timeout(): number {
+        return this._timeout;
     }
 
     /** Base URL to connect to (e.g. 'https://my.server.net:8000/') */
@@ -877,7 +907,7 @@ export class Client {
         return new Promise((resolve, reject) => {
             const msgBytes = message.toBytes();
             const url = `${this.t2CoreBaseUrl}${submitMessaggePath}`;
-            sendRequest('post', url, msgBytes)
+            sendRequest('post', url, msgBytes, undefined, { timeout: this._timeout })
                 .then((result: Response) => {
                     result.arrayBuffer()
                         .then((resBuffer: ArrayBuffer) => {
@@ -901,7 +931,7 @@ export class Client {
     getNodeInfo(): Promise<string> {
         return new Promise((resolve, reject) => {
             const url = `${this.t2CoreBaseUrl}${nodeVisaPath}`;
-            sendRequest('get', url)
+            sendRequest('get', url, undefined, undefined, { timeout: this._timeout })
                 .then((result: Response) => {
                     result.arrayBuffer()
                         .then((resBuffer: ArrayBuffer) => {
@@ -923,7 +953,7 @@ export class Client {
     getNodeBootstrap(): Promise<Uint8Array> {
         return new Promise((resolve, reject) => {
             const url = `${this.t2CoreBaseUrl}${nodeBootstrapDlPath}`;
-            sendRequest('get', url)
+            sendRequest('get', url, undefined, undefined, { timeout: this._timeout })
                 .then((result: Response) => {
                     result.arrayBuffer()
                         .then((resBuffer: ArrayBuffer) => {
