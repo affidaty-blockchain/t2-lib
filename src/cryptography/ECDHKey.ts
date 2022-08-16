@@ -13,12 +13,12 @@ export class ECDHKey extends BaseECKey {
         super();
         switch (keyType) {
             case 'public':
-                super.keyParams = typeof keyParams === 'undefined' ? defaultParams.publicKey : keyParams;
-                super.type = 'public';
+                this.keyParams = typeof keyParams === 'undefined' ? defaultParams.publicKey : keyParams;
+                this.type = 'public';
                 break;
             default:
-                super.keyParams = typeof keyParams === 'undefined' ? defaultParams.privateKey : keyParams;
-                super.type = 'private';
+                this.keyParams = typeof keyParams === 'undefined' ? defaultParams.privateKey : keyParams;
+                this.type = 'private';
                 break;
         }
     }
