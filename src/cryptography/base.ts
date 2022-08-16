@@ -431,24 +431,24 @@ export function decompressRawCurvePoint(
     // setting const values for selected curve
     // TODO: implement the possibility to use other named NIST curves
     // curves const values: https://neuromancer.sk/std/nist
-    let p = 0n;
-    let b = 0n;
-    let pIdent = 0n;
+    let p = BigInt(0);
+    let b = BigInt(0);
+    let pIdent = BigInt(0);
     switch (curveName) {
         case 'secp384r1':
             p = BigInt('0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffeffffffff0000000000000000ffffffff');
             b = BigInt('0xb3312fa7e23ee7e4988e056be3f82d19181d9c6efe8141120314088f5013875ac656398d8a2ed19d2a85c8edd3ec2aef');
-            pIdent = (p + 1n) / 4n;
+            pIdent = (p + BigInt(1)) / BigInt(4);
             break;
         default:
             throw new Error(Errors.DECOMPRESS_UNSUPPORTED_EC_NAME);
     }
 
     // solving equation
-    let y = modPow(((x ** 3n) - (x * 3n) + b), pIdent, p);
+    let y = modPow(((x ** BigInt(3)) - (x * BigInt(3)) + b), pIdent, p);
 
     // determining which Y to use
-    if ((y % 2n) !== signY) {
+    if ((y % BigInt(2)) !== signY) {
         y = p - y;
     }
     const fullCurvePointHex = `04${padStrWithZeroes(x.toString(16), 96)}${padStrWithZeroes(y.toString(16), 96)}`;
