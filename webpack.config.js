@@ -23,6 +23,7 @@ module.exports = {
             crypto: false,
             window: false,
             net: false,
+            'node-fetch': false,
         },
     },
     plugins: [
