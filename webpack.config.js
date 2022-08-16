@@ -24,6 +24,7 @@ module.exports = {
             window: false,
             net: false,
             'node-fetch': false,
+            'node-abort-controller': false,
         },
     },
     plugins: [

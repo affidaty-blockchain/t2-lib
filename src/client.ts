@@ -1,4 +1,5 @@
 import fetch, { RequestInit, Response } from 'node-fetch';
+import { AbortController } from 'node-abort-controller';
 import * as Errors from './errors';
 import { MessageTypes, TrinciMessage, stdTrinciMessages } from './messageFormat';
 import { arrayBufferToString } from './binConversions';
@@ -9,6 +10,7 @@ import {
     SUBMIT_MESSAGE_PATH as submitMessaggePath,
     NODE_VISA_PATH as nodeVisaPath,
     BOOTSTRAP_DL_PATH as nodeBootstrapDlPath,
+    REQ_DEF_ABORT_TIMEOUT_MS as defaultTimeoutMs,
 } from './systemDefaults';
 import { BaseECKey } from './cryptography/baseECKey';
 import { Account } from './account';
@@ -16,9 +18,13 @@ import { BaseTransaction, IBaseTxUnnamedObject } from './transaction/baseTransac
 import { UnitaryTransaction } from './transaction/unitaryTransaction';
 import { Transaction } from './transaction/transaction';
 
-export function sleep(ms: number) {
+export { AbortController };
+
+function sleep(ms: number) {
     return new Promise((resolve) => { setTimeout(resolve, ms); });
 }
+
+type ReqOpts = Omit<RequestInit, 'body' | 'headers' | 'method'>;
 
 type TReqMethod = 'get' | 'GET' | 'post' | 'POST';
 
@@ -189,7 +195,7 @@ function sendRequest(
     url: string,
     body?: Uint8Array,
     customHeaders?: {[key: string]: string},
-    options?: Omit<RequestInit, 'body' | 'headers' | 'method'>,
+    options?: ReqOpts,
 ): Promise<Response> {
     return new Promise((resolve, reject) => {
         let tempHeaders: {[key: string]: any} = {};
@@ -217,16 +223,30 @@ function sendRequest(
         for (let i = 0; i < tempEntries.length; i += 1) {
             headers[tempEntries[i][0].toLowerCase()] = tempEntries[i][1];
         }
+
+        // creating temp options object
         const _opts = { ...options };
 
-        if (!_opts.timeout) _opts.timeout = 5000;
-        if (!_opts.signal) _opts.timeout = 5000;
-        const abortController = new AbortController();
-        const timeout = setTimeout(() => {
-            abortController.abort(Errors.TIMEOUT_ERR);
-            return reject(new Error(Errors.TIMEOUT_ERR));
-        }, _opts.timeout);
+        // if no abort signal was defined in options, then create a new one
+        let abortController: AbortController | undefined;
+        let timeoutHandler: NodeJS.Timeout | undefined;
+        // if no abort signal was set, then create a new one in place
+        if (!_opts.signal && _opts.timeout !== 0) {
+            // if neither a timeout was set, then use the default one
+            if (!_opts.timeout) _opts.timeout = defaultTimeoutMs;
+            abortController = new AbortController();
+            _opts.signal = abortController.signal;
+            timeoutHandler = setTimeout(() => {
+                abortController!.abort();
+            }, _opts.timeout);
+        }
+        if (_opts.signal) {
+            _opts.signal.onabort = () => {
+                return reject(new Error(Errors.REQ_ABORT_ERR));
+            };
+        }
 
+        // launch fetch request
         fetch(
             url,
             {
@@ -237,11 +257,15 @@ function sendRequest(
             },
         )
             .then((res: Response) => {
-                clearTimeout(timeout);
+                if (timeoutHandler) {
+                    clearTimeout(timeoutHandler);
+                }
                 return resolve(res);
             })
             .catch((err: any) => {
-                clearTimeout(timeout);
+                if (timeoutHandler) {
+                    clearTimeout(timeoutHandler);
+                }
                 return reject(err);
             });
     });
@@ -259,7 +283,9 @@ export class Client {
 
     private _serviceAccount: string;
 
-    private _timeout: number = 5000;
+    private _timeout: number = defaultTimeoutMs;
+
+    private _abortController: AbortController | undefined;
 
     /**
      * @param baseUrl - Base URL to connect to (e.g. 'https://my.server.net:8000/')
@@ -291,6 +317,32 @@ export class Client {
      */
     public get timeout(): number {
         return this._timeout;
+    }
+
+    /**
+     * Custom AbortController for aborting pending requests.
+     * If set, timeout will be completely ignored.
+     */
+    public set abortController(customAC: AbortController | undefined) {
+        this._abortController = customAC;
+    }
+
+    /**
+     * Custom AbortController for aborting pending requests.
+     * If set, timeout will be completely ignored.
+     */
+    public get abortController(): AbortController | undefined {
+        return this._abortController;
+    }
+
+    protected getReqOpts(): ReqOpts {
+        const opts: ReqOpts = {};
+        if (this._abortController) {
+            opts.signal = this._abortController.signal;
+        } else if (typeof this._timeout === 'number') {
+            opts.timeout = this._timeout;
+        }
+        return opts;
     }
 
     /** Base URL to connect to (e.g. 'https://my.server.net:8000/') */
@@ -907,7 +959,7 @@ export class Client {
         return new Promise((resolve, reject) => {
             const msgBytes = message.toBytes();
             const url = `${this.t2CoreBaseUrl}${submitMessaggePath}`;
-            sendRequest('post', url, msgBytes, undefined, { timeout: this._timeout })
+            sendRequest('post', url, msgBytes, undefined, this.getReqOpts())
                 .then((result: Response) => {
                     result.arrayBuffer()
                         .then((resBuffer: ArrayBuffer) => {
@@ -931,7 +983,7 @@ export class Client {
     getNodeInfo(): Promise<string> {
         return new Promise((resolve, reject) => {
             const url = `${this.t2CoreBaseUrl}${nodeVisaPath}`;
-            sendRequest('get', url, undefined, undefined, { timeout: this._timeout })
+            sendRequest('get', url, undefined, undefined, this.getReqOpts())
                 .then((result: Response) => {
                     result.arrayBuffer()
                         .then((resBuffer: ArrayBuffer) => {
@@ -953,7 +1005,7 @@ export class Client {
     getNodeBootstrap(): Promise<Uint8Array> {
         return new Promise((resolve, reject) => {
             const url = `${this.t2CoreBaseUrl}${nodeBootstrapDlPath}`;
-            sendRequest('get', url, undefined, undefined, { timeout: this._timeout })
+            sendRequest('get', url, undefined, undefined, this.getReqOpts())
                 .then((result: Response) => {
                     result.arrayBuffer()
                         .then((resBuffer: ArrayBuffer) => {

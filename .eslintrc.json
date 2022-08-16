@@ -26,6 +26,7 @@
         "jest"
     ],
     "rules": {
+        "no-undef": "off",
         "prefer-const": 1,
         "no-await-in-loop": "off",
         "prefer-destructuring": "off",
