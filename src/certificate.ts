@@ -28,6 +28,14 @@ const TYPE_TAG_VALUE = 'cert';
 
 const DEF_SALT_BYTE_LEN: number = 32;
 
+function calculateSymmetryDepth(totalLeaves: number): number {
+    return Math.ceil(Math.log2(totalLeaves));
+}
+
+function missingSymmetryLeaves(givenLeaves: number): number {
+    return (2 ** calculateSymmetryDepth(givenLeaves)) - givenLeaves;
+}
+
 interface IMerkleData {
     root: Buffer;
     depth: number;
@@ -51,7 +59,6 @@ function createMerkleTree(
         throw new Error(Errors.MERK_WRONG_IDXS);
     }
     const [...leaves] = dataArray;
-
     const tree = new MerkleTree(leaves);
     const resultObj: IMerkleData = {
         depth: tree.getDepth(),
@@ -320,16 +327,20 @@ export class Certificate extends Signable {
             leaves.push(createLeaf(allKeys[i], this._dataToCertify[allKeys[i]], this._data.salt));
         }
 
-        let missingFields = 0;
-        for (let i = 0; i < this._data.fields.length; i += 1) {
-            if (fieldsT.indexOf(this._data.fields[i]) < 0) {
-                missingFields += 1;
+        const missingLeaves = missingSymmetryLeaves(leaves.length);
+        const allClear = clearIndexes.length === leaves.length;
+        if (missingLeaves) {
+            const leaveToDuplicate = leaves[leaves.length - 1];
+            const idxStart = clearIndexes.length;
+            for (let i = 0; i < missingLeaves; i += 1) {
+                leaves.push(leaveToDuplicate);
+                if (allClear) clearIndexes.push(idxStart + i);
             }
         }
         const merkleData = createMerkleTree(leaves, clearIndexes);
         this._data.root = merkleData.root;
         this._multiProof = [];
-        if (missingFields > 0) {
+        if (!allClear) {
             this._multiProof = merkleData.multiProof;
         }
         return true;
@@ -740,12 +751,27 @@ export class Certificate extends Signable {
                         }
                     }
 
+                    // create missing leaves only if all data was provided.
+                    // otherwise multiproof should contain missing links
+                    if (clearIndexes.length === allKeys.length) {
+                        const missingSymLeaves = missingSymmetryLeaves(allKeys.length);
+                        // do it only if passed tree is asymmetrical
+                        if (missingSymLeaves) {
+                            const leafToDublicate = clearLeaves[clearLeaves.length - 1];
+                            const idxStart = clearLeaves.length;
+                            for (let i = 0; i < missingSymLeaves; i += 1) {
+                                clearLeaves.push(leafToDublicate);
+                                clearIndexes.push(idxStart + i);
+                            }
+                        }
+                    }
+
                     let result = true;
                     try {
                         result = verifyMerkleTree(
                             clearLeaves,
                             clearIndexes,
-                            allKeys.length,
+                            (allKeys.length + missingSymmetryLeaves(allKeys.length)),
                             this._data.root,
                             this._multiProof,
                         );
