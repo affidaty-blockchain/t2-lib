@@ -70,7 +70,7 @@ export function similarArrays<T>(array1: Array<T>, array2: Array<T>): boolean {
     return true;
 }
 
-export function toBuffer(arg: Uint8Array | string): Buffer {
+export function toBuffer(arg: Uint8Array | ArrayBufferLike | string): Buffer {
     let result = Buffer.from([]);
     if (typeof arg === 'string') {
         result = Buffer.from(arg, 'hex');
