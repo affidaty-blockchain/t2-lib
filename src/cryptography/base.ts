@@ -1,5 +1,5 @@
 import { Key as UtilKey } from 'js-crypto-key-utils';
-import { modPow } from 'bigint-mod-arith';
+import { modPow } from '../bigIntModArith';
 import * as baseTypes from './baseTypes';
 import * as Errors from '../errors';
 import { Subtle } from './webCrypto';
