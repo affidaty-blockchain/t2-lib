@@ -3,3 +3,6 @@
 - [Account](3.account.md)
 - [Signable](4.signable.md)
 - [Transaction](5.transaction.md)
+- [Bulk Transaction](6.bulk_transaction.md)
+- [Client](6.client.md)
+- [Bridge Client](7.bridge_client.md)
