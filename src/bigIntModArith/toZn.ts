@@ -12,8 +12,8 @@
  * @returns A bigint with the smallest positive representation of a modulo n
  */
 export function toZn(a: number|bigint, n: number|bigint): bigint {
-    let _a = typeof a === 'number' ? BigInt(a) : a;
-    let _n = typeof n === 'number' ? BigInt(n) : n;
+    const _a = typeof a === 'number' ? BigInt(a) : a;
+    const _n = typeof n === 'number' ? BigInt(n) : n;
 
     if (_n <= BigInt(0)) {
         throw new RangeError('n must be > 0');

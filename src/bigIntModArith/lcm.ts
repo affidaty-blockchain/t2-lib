@@ -8,8 +8,8 @@ import { gcd } from './gcd';
  * @returns The least common multiple of a and b
  */
 export function lcm(a: number|bigint, b: number|bigint): bigint {
-    let _a = typeof a === 'number' ? BigInt(a) : a;
-    let _b = typeof b === 'number' ? BigInt(b) : b;
+    const _a = typeof a === 'number' ? BigInt(a) : a;
+    const _b = typeof b === 'number' ? BigInt(b) : b;
 
     if (_a === BigInt(0) && _b === BigInt(0)) return BigInt(0);
     return abs((_a / gcd(_a, _b)) * _b) as bigint;
