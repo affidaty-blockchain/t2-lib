@@ -236,7 +236,7 @@ describe('transaction', () => {
         await tx3.fromBase58(tx1B58);
         let tx3Ticket = await tx3.getTicket();
         expect(tx3Ticket).toEqual(tx1Ticket);
-        await expect(tx3.verify()).rejects.toEqual(new Error(Errors.NO_BASE_KEY_VALUE));
+        await expect(tx3.verify()).rejects.toEqual(new Error(Errors.BULK_ROOT_TX_NO_VERIFY));
         tx3.data.networkName = 'testVal';
         tx3Ticket = await tx3.getTicket();
         expect(tx3Ticket).not.toEqual(tx1Ticket);
@@ -342,7 +342,7 @@ describe('transaction', () => {
         (tx3 as BulkTransaction).data.root.data.networkName = 'testVal';
         tx3Ticket = await tx3.getTicket();
         expect(tx3Ticket).not.toEqual(tx1Ticket);
-        await expect(tx3.verify()).resolves.toBeFalsy();
+        await expect(tx3.verify()).rejects.toBeDefined();
         await tx3.fromObject(tx1Obj);
         tx3Ticket = await tx3.getTicket();
         expect(tx3Ticket).toEqual(tx1Ticket);
@@ -350,6 +350,13 @@ describe('transaction', () => {
         (tx3 as BulkTransaction).data.root.data.networkName = 'testVal';
         tx3Ticket = await tx3.getTicket();
         expect(tx3Ticket).not.toEqual(tx1Ticket);
-        await expect(tx3.verify()).resolves.toBeFalsy();
+        await expect(tx3.verify()).rejects.toBeDefined();
     }, 30000);
+
+    it('checking generic Transaction class verify() with invalid bulk transaction', async () => {
+        const tx = new Transaction();
+        const txB58 = 'GiS8eZtkudLnPbAJpgGjJFLM9GXiTpaHED7Yauxyyjgx5udbmm4mkvjKP1yBcHc5Qnp3AxjNozrLGzxk6sJmfdFWDrPpNatV5WdvBBL9W1fj11C1bwB2u9XwpHdkn4bPPuQhJbEcH4S6aRft2Jehmf9hTT4X2j6kPT5TjM1iJ7hXvcik7G4cbyYFBNoHuvgyFYFfqdCyzCigw7PSX7RCQNDPNkJx9epiRmKDgQfydXwcTArMgp3xQi8QdEb9vtAUJjBrAPiG1RUhCaEZ6K2igB1th4ZDw1Vh1R8TJLsuTkSK2Cdn6cc5rQkSDZwiwYuaSvaCnQZfa7mVNFjFkPpcYpztyau2aA8Z79pWEW33qNLbLPNeWtdBpdWtLkXbdR1v45NVaQPu8LD7jv1KKPBAhECt5sAxe8VzMBhUeyTQe6FVmvKknJJbosmwT3ufYmLjecwXYKG57WsymYHLBDqSM2kn19YyLTC4mvRCwVrcqp6AkqjZbwi2aUVtnjvsgy4KKKnmC8Bd41sTPuQ2K7pSSCM57fkPerPxr8HrXMkDZmYe58SdGx1d9CC7vuAq5N1BBPPodgEVimF1qeajPjhD61Md7AP5ZP3Z1sEnk7NmjxPw2tGXhkp6bH2cSNfxyGRecPpT7YqcgScvDG4WA1Tk4m3ohTsZEM22EJQ89xBvY42WT8SWqaN16b6hFYrWzySC1XS5Bbowej5khzUR1W9BtrUu59dNg6saVutebLJ3w8JV5tFmYQwcXcpQzai6WXtDg2PA1EJxjPB153TivXcMq8XLsVP99guPDRBkqr3dHL7voNzEnk65MsYr2prcwDSnvvtK4dEsnEnP1cTFg7ERvjMShcLAippVqsho6qZrUFaPtXtxKm869cLe6DncEU5M9Eem5wvCW42ztUvUdB8vNULUaopoY9wSwMjNXucaeXEnD5oVeapxb8Pp63SKg5884sP2G31Hu276VtM6bbypGebjYcCjjyi5jkg7xCTtNmGgoTe1xUHf1JmGMJCSKxZtFkW8nEqhHaJfFn2zohqxu1gJ79DtknTkRXqArt7P6C2pA92hvqZWovv4HGFkZ191WbGKZhGsLLYorxtLmovxMaDA2AhdzfNugnrmMdVkFifLxPZWKp88EhBXegUC7yHxhN5sjV24TvaMdPUnUrTvauwG8kX4RXoQwjUyoNGoXChgemMHQiRSeck4w14zjgpA1UnqcH96VMeBAnEHNyCNNZmsbVYFtEc3Un5TsqFxSz5VWZCRhYiJGj6dV26FYbGVviewdDbdUrSQsQoxG5RsZ3K4hJ4B2fBiKZdW45QSfSnUrSDGRLPY49SqbWCsTASxDjn6jDHDDKmq1tSYLp839P2zSoJv46wiGPzauiKa59c6KJ3esgaXxmE5PcDCTegMEE8EnLGmSPcBbped5qY8RPvdfmNAcv8mrCXZLpTdwQVyHwCo9RNG4sGS7Hw7QGN';
+        await tx.fromBase58(txB58);
+        await expect(tx.verify()).rejects.toBeDefined();
+    });
 });

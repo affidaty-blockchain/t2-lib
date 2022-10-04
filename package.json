@@ -1,7 +1,7 @@
 {
     "$schema": "https://json.schemastore.org/package.json",
     "name": "@affidaty/t2-lib",
-    "version": "2.0.35",
+    "version": "2.0.36",
     "description": "Official Trinci 2 SDK JavaScript library",
     "main": "dist/cjs/index.js",
     "module": "dist/esm/index.js",
@@ -60,8 +60,8 @@
         "webpack-cli": "^4.7.0"
     },
     "scripts": {
-        "test": "jest --coverage",
-        "test-no-cov": "jest",
+        "test": "jest",
+        "test-cov": "jest --coverage",
         "build-cjs": "tsc -p tsconfig.cjs.json",
         "build-esm": "tsc -p tsconfig.esm.json",
         "build-browser": "webpack --config webpack.config.js",
