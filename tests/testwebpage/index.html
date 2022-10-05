@@ -22,25 +22,26 @@
         <![endif]-->
         <!-- <script src="../dist/browser/t2lib.min.js" async defer></script> -->
         <div id="connectionPanel">
-            <label for="connectionPanelDefaultNodesSelector">Defaults:</label>
-            <select name="defaultNodesSelector" id="connectionPanelDefaultNodesSelector" onchange="selectDefaultNode('connectionPanelDefaultNodesSelector', 'nodeUrlField', 'nodeNetworkField'); document.getElementById('trinciConnBtn').click();">
-                <option value="localhost">localhost</option>
-                <option value="testnet">TestNet</option>
-                <option value="mainnet">MainNet</option>
-            </select>
             <input id="nodeUrlField" type="text", placeholder="http://localhost:8000", value="">
             <input id="nodeNetworkField" type="text", placeholder="<network, optional>", value="">
             <button id="trinciConnBtn" onclick="testConnection(
                 document.getElementById('nodeUrlField').value, document.getElementById('nodeNetworkField').value, document.getElementById('connectionIndicator'))">CONNECT</button>
+            <select name="defaultNodesSelector" id="connectionPanelDefaultNodesSelector" onchange="selectDefaultNode('connectionPanelDefaultNodesSelector', 'nodeUrlField', 'nodeNetworkField'); document.getElementById('trinciConnBtn').click();">
+                <option value="localhost" selected disabled hidden>Or select a connection preset</option>
+                <option value="localhost">localhost</option>
+                <option value="testnet">TestNet</option>
+                <option value="stagingnet">StagingNet</option>
+                <option value="mainnet">MainNet</option>
+            </select>
             <span id="connectionIndicator" class="indicator off"></span>
         </div>
         <div class="tabsPanel">
-            <button class="tabButton active" id="nodeTabBtn" onclick="switchTab('nodeTabBtn', 'nodeTab')">Node</button>
+            <button class="tabButton" id="nodeTabBtn" onclick="switchTab('nodeTabBtn', 'nodeTab')">Node</button>
             <button class="tabButton" id="accTabBtn" onclick="switchTab('accTabBtn', 'accTab')">Accounts</button>
-            <button class="tabButton" id="txTabBtn" onclick="switchTab('txTabBtn', 'txTab')">Transactions</button>
+            <button class="tabButton active" id="txTabBtn" onclick="switchTab('txTabBtn', 'txTab')">Transactions</button>
             <button class="tabButton" id="msgPackTabBtn" onclick="switchTab('msgPackTabBtn', 'msgPackTab')">MsgPack</button>
         </div>
-        <div id="accTab" class="tabContent"> <!-- Open by default because of inline style-->
+        <div id="accTab" class="tabContent">
             <div id="accControlPanel">
                 <div id="importedAccList">
                 </div>
@@ -117,22 +118,111 @@
                 </div>
             </div>
         </div>
-        <div id="txTab" class="tabContent">
+        <div id="txTab" class="tabContent" style="display: block;">
             <div id="txTabControlPanel">
-                <input type="text" id="txTabControlPanelTicketInputField" value="" placeholder="<tx ticket>">
-                <button onclick="getTxData(document.getElementById('txTabControlPanelTicketInputField').value, 'txTabOutputField')">TX DETAILS</button>
-                <button onclick="getTxReceipt(document.getElementById('txTabControlPanelTicketInputField').value, 'txTabOutputField')">RECEIPT</button>
+                <div id="txTabControlPanelTxListSubdiv">
+                    <div id="importedTxList">
+                    </div>
+                    <div id="txListActions">
+                        <button onclick="
+                                importAccount('importedAccList', 'accTabAccIdField', 'accTabPubKeyField', document.querySelector('input\[name=\'accTabPubKeyEncodingSelector\'\]:checked').value, 'accTabPrivKeyField', document.querySelector('input\[name=\'accTabPrivKeyEncodingSelector\'\]:checked').value); ">IMPORT</button>
+                    </div>
+                    <div id="listTxInfo">
+                        <div class="tabsPanel txSubtabsPanel">
+                            <button class="tabButton txSubtabBtn" id="txDataSubtabBtn" onclick="switchTab('txDataSubtabBtn', 'txDataSubtab', 'txSubtabBtn', 'txSubtab')">TX DATA</button>
+                            <button class="tabButton txSubtabBtn" id="txSerializedSubtabBtn" onclick="switchTab('txSerializedSubtabBtn', 'txSerializedSubtab', 'txSubtabBtn', 'txSubtab')">SERIALIZATION</button>
+                            <button class="tabButton txSubtabBtn" id="txBulkSubtabBtn" onclick="switchTab('txBulkSubtabBtn', 'txBulkSubtab', 'txSubtabBtn', 'txSubtab')">BULK MANAGE</button>
+                        </div>
+                        <div id="txDataSubtab" class="tabContent txSubtab" style="display: block;">
+                            <label for="txTabTxDataFieldAccountId">Account ID</label>
+                            <br>
+                            <input id="txTabTxDataFieldAccountId" type="text", placeholder="<Account ID>" value="">
+                            <button class="inlineCopyButton" onclick="copyTextToClipboard(document.getElementById('txTabTxDataFieldAccountId').value)">CPY</button>
+                            <br>
+
+                            <label for="txTabTxDataFieldNonce">Nonce</label>
+                            <br>
+                            <input id="txTabTxDataFieldNonce" type="text", placeholder="<Nonce, autogen if none>" value="">
+                            <button class="inlineCopyButton" onclick="copyTextToClipboard(document.getElementById('txTabTxDataFieldNonce').value)">CPY</button>
+                            <br>
+                            <label for="txTabTxDataFieldMaxFuel">Max Fuel</label>
+                            <br>
+                            <input id="txTabTxDataFieldMaxFuel" type="text", placeholder="<Max Fuel>" value="">
+                            <button class="inlineCopyButton" onclick="copyTextToClipboard(document.getElementById('txTabTxDataFieldMaxFuel').value)">CPY</button>
+                            <br>
+                            <label for="txTabTxDataFieldNetworkName">Network name</label>
+                            <br>
+                            <input id="txTabTxDataFieldNetworkName" type="text", placeholder="<Network Name>" value="">
+                            <button class="inlineCopyButton" onclick="copyTextToClipboard(document.getElementById('txTabTxDataFieldNetworkName').value)">CPY</button>
+                            <br>
+                            <label for="txTabTxDataFieldContractHash">Contract Hash</label>
+                            <br>
+                            <input id="txTabTxDataFieldContractHash" type="text", placeholder="<Contract Hash>" value="">
+                            <button class="inlineCopyButton" onclick="copyTextToClipboard(document.getElementById('txTabTxDataFieldContractHash').value)">CPY</button>
+                            <br>
+                            <label for="txTabTxDataFieldContractMethod">Contract Method</label>
+                            <br>
+                            <input id="txTabTxDataFieldContractMethod" type="text", placeholder="<Contract Method>" value="">
+                            <button class="inlineCopyButton" onclick="copyTextToClipboard(document.getElementById('txTabTxDataFieldContractMethod').value)">CPY</button>
+                            <br>
+                            <label for="txTabTxDataFieldContractArgs">Contract Args</label>
+                            <br>
+                            <input id="txTabTxDataFieldContractArgs" type="text", placeholder="<Contract Args>" value="">
+                            <button class="inlineCopyButton" onclick="copyTextToClipboard(document.getElementById('txTabTxDataFieldContractArgs').value)">CPY</button>
+                            <span id="txTabTxDataFieldContractArgsEncodingSelectorSpan">
+                                <span><input type="radio" name="txTabTxDataFieldContractArgsEncodingSelector" value="hex">hex</span>
+                                <span><input type="radio" name="txTabTxDataFieldContractArgsEncodingSelector" value="b58" checked>Base58</span>
+                                <span><input type="radio" name="txTabTxDataFieldContractArgsEncodingSelector" value="b64">Base64</span>
+                            </span>
+                            <br>
+                            <label for="txTabTxDataFieldDependsOn">Depends On</label>
+                            <br>
+                            <input id="txTabTxDataFieldDependsOn" type="text", placeholder="<ticket>" value="">
+                            <button class="inlineCopyButton" onclick="copyTextToClipboard(document.getElementById('txTabTxDataFieldDependsOn').value)">CPY</button>
+                            <br>
+                            <label for="txTabTxDataFieldSignerPubKey">Signer Pub Key</label>
+                            <br>
+                            <input id="txTabTxDataFieldSignerPubKey" type="text", placeholder="<Signer Pub Key>" value="">
+                            <button class="inlineCopyButton" onclick="copyTextToClipboard(document.getElementById('txTabTxDataFieldSignerPubKey').value)">CPY</button>
+                            <span id="txTabTxDataFieldSignerPubKeyEncodingSelectorSpan">
+                                <span><input type="radio" name="txTabTxDataFieldSignerPubKeyEncodingSelector" value="hex">hex</span>
+                                <span><input type="radio" name="txTabTxDataFieldSignerPubKeyEncodingSelector" value="b58" checked>Base58</span>
+                                <span><input type="radio" name="txTabTxDataFieldSignerPubKeyEncodingSelector" value="b64">Base64</span>
+                            </span>
+                            <br>
+                            <label for="txTabTxDataFieldSignerPrivKey">Signer Priv Key</label>
+                            <br>
+                            <input id="txTabTxDataFieldSignerPrivKey" type="text", placeholder="<Signer Priv Key>" value="">
+                            <button class="inlineCopyButton" onclick="copyTextToClipboard(document.getElementById('txTabTxDataFieldSignerPrivKey').value)">CPY</button>
+                            <span id="txTabTxDataFieldSignerPrivKeyEncodingSelectorSpan">
+                                <span><input type="radio" name="txTabTxDataFieldSignerPrivKeyEncodingSelector" value="hex">hex</span>
+                                <span><input type="radio" name="txTabTxDataFieldSignerPrivKeyEncodingSelector" value="b58" checked>Base58</span>
+                                <span><input type="radio" name="txTabTxDataFieldSignerPrivKeyEncodingSelector" value="b64">Base64</span>
+                            </span>
+                        </div>
+                        <div id="txSerializedSubtab" class="tabContent txSubtab">
+                            <span id="txSubtabSerializedDataEncodingSelectorSpan">
+                                <span><input type="radio" name="txSerializedDataEncodingSelector" value="hex">hex</span>
+                                <span><input type="radio" name="txSerializedDataEncodingSelector" value="b58" checked>Base58</span>
+                                <span><input type="radio" name="txSerializedDataEncodingSelector" value="b64">Base64</span>
+                            </span>
+                            <textarea name="txTabSerializedTxField" id="txTabSerializedTxField" ></textarea>
+                        </div>
+                        <div id="txBulkSubtab" class="tabContent txSubtab">
+                            BULK
+                        </div>
+                    </div>
+                </div>
+                <div id="txTabControlPanelNodeActions">
+                    <input type="text" id="txTabControlPanelTicketInputField" placeholder="<tx ticket>" value="1220fb4a29eff4bf994803f08990d4682a65a0f607b1a9a4b715ce31db963cef012d">
+                    <button onclick="importTxFromNode(document.getElementById('txTabControlPanelTicketInputField').value, 'txTabOutputField');">GET TX DATA</button>
+                    <button onclick="viewTxReceipt(document.getElementById('txTabControlPanelTicketInputField').value, 'txTabOutputField')">GET TX REC</button>
+                </div>
             </div>
             <div id="txTabOutputField">
-                <!-- <span class="valueLabel fullLine">Smart contracts:</span>
-                <div class="valuesList">
-                    <div class="stringValue"><span class="valueLabel">Contract Hash: </span><span class="stringValueValue" id="accDataOutputFieldAccIdValue">1220ff00ff0ff00</span></div>
-                    <div class="stringValue"><span class="valueLabel">name: </span><span class="stringValueValue" id="accDataOutputFieldAccIdValue">my contract</span></div>
-                    <div class="stringValue"><span class="valueLabel">creator: </span><span class="stringValueValue" id="accDataOutputFieldAccIdValue">asd</span></div>
-                </div> -->
             </div>
         </div>
-        <div id="nodeTab" class="tabContent" style="display: block;">
+        <div id="nodeTab" class="tabContent">
             <div id="nodeDataControlPanel">
                 <button onclick="viewNodeInfo('nodeDataOutputField')">INFO</button>
                 <button onclick="viewTrinciSettings('nodeDataOutputField')">SETTINGS</button>
@@ -151,7 +241,7 @@
             <div id="nodeDataOutputField">
             </div>
         </div>
-        <div id="msgPackTab" class="tabContent"">
+        <div id="msgPackTab" class="tabContent">
             <textarea id="msgPackTabBinDataField" value="" placeholder="<encoded bin data>"></textarea>
             <div id="msgPackTabButtonsPanel">
                 <button onclick="msgPackDecode(document.getElementById('msgPackTabBinDataField').value, document.querySelector('input[name=\'msgPackTabBinDataEncodingSelector\']:checked').value, 'msgPackTabJsonField');">DEC(&#8595)</button>

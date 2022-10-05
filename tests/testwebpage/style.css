@@ -26,6 +26,9 @@ button {
 #connectionPanel .indicator.green {
     background-color: green;
 }
+#connectionPanel .indicator.yellow {
+    background-color: yellow;
+}
 #connectionPanel .indicator.red {
     background-color: red;
 }
@@ -35,13 +38,13 @@ button {
     border: 1px solid #ccc;
     background-color: #f1f1f1;
 }
-.tabsPanel button {
+.tabButton {
     background-color: inherit;
     float: left;
     border: none;
     outline: none;
     cursor: pointer;
-    padding: 14px 16px;
+    padding: 10px 10px;
 }
 .tabsPanel button:hover {
     background-color: #ddd;
@@ -123,6 +126,57 @@ button {
 #accTab #accDataPanel #accDataPanelAccDataOutputField {
     display: block;
 }
+
+/* ========================================================================== */
+#txTab #txTabControlPanel {
+    display: block;
+}
+
+/* #txTab #txTabControlPanel #importedTxList {
+    width: 40%;
+    min-height: 5em;
+    max-height: 300px;
+    overflow-y: scroll;
+    background-color: #f1f1f1;
+} */
+
+#txTab #txTabControlPanel #txTabControlPanelTxListSubdiv {
+    display: flex;
+}
+
+#txTab #txTabControlPanel #importedTxList {
+    width: 40%;
+    height: 29em;
+    overflow-y: scroll;
+    background-color: #f1f1f1;
+}
+
+#importedTxList div:hover {
+    background-color: #ddd;
+    cursor: pointer;
+}
+
+.tabButton.txSubtabBtn {
+    padding: 3px 10px;
+}
+
+#txListActions {
+    width: 10%;
+    min-width: 30px;
+}
+
+#listTxInfo {
+    width: 50%;
+    height: 30em;
+}
+
+#txTabSerializedTxField {
+    resize: none;
+    width: 100%;
+    height: 25em;
+}
+
+/* ========================================================================== */
 
 #msgPackTabBinDataField {
     resize: none;
