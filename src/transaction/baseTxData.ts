@@ -11,6 +11,7 @@ import {
     ICommonParentTxDataUnnamedObject,
     ICommonParentTxDataObjectWithBuffers,
     ICommonParentTxDataObject,
+    SCHEMA_TO_TYPE_TAG_MAP,
 } from './commonParentTxData';
 
 const DEFAULT_SCHEMA = TxSchemas.UNITARY_TX;
@@ -203,7 +204,7 @@ export class BaseTxData extends CommonParentTxData {
 
     public fromUnnamedObject(passedObj: IBaseTxDataUnnamedObject): Promise<boolean> {
         return new Promise((resolve, reject) => {
-            if (passedObj[0] !== this._schema) {
+            if (!SCHEMA_TO_TYPE_TAG_MAP.has(passedObj[0])) {
                 return reject(new Error(Errors.INVALID_SCHEMA));
             }
             this._schema = passedObj[0];

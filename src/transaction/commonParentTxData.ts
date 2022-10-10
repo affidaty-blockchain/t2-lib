@@ -11,6 +11,7 @@ export namespace TxSchemas {
     export const BULK_TX: TTxSchemaType = '0ec3469e3509682d7599797a9d1c5cdf56b2d9bd435f853a3b999cbb717e0337';
     export const BULK_ROOT_TX: TTxSchemaType = '0bccf5dce4f25036de1ef091ea9e862fa348e6de82ef16fbcfc84c1f1314b86e';
     export const BULK_NODE_TX: TTxSchemaType = '097e5f552c79d4f64e15f853ad19d013973343aea557d5c1482d9cef71915db8';
+    export const BULK_EMPTY_ROOT_TX: TTxSchemaType = 'f76bce109213ee2204e218f000b7c67770812e4b26f4dba90c532a10865968ff';
 }
 
 export namespace SignableTypeTags {
@@ -19,13 +20,15 @@ export namespace SignableTypeTags {
     export const BULK_TX: string = 'bulk_tx';
     export const BULK_ROOT_TX: string = 'bulk_root_tx';
     export const BULK_NODE_TX: string = 'bulk_node_tx';
+    export const BULK_EMPTY_ROOT_TX: string = 'bulk_empty_root_tx';
 }
 
-const SCHEMA_TO_TYPE_TAG_MAP = new Map<TTxSchemaType, string>();
+export const SCHEMA_TO_TYPE_TAG_MAP = new Map<TTxSchemaType, string>();
 SCHEMA_TO_TYPE_TAG_MAP.set(TxSchemas.EMPTY_TX, SignableTypeTags.EMPTY_TX);
 SCHEMA_TO_TYPE_TAG_MAP.set(TxSchemas.UNITARY_TX, SignableTypeTags.UNITARY_TX);
 SCHEMA_TO_TYPE_TAG_MAP.set(TxSchemas.BULK_TX, SignableTypeTags.BULK_TX);
 SCHEMA_TO_TYPE_TAG_MAP.set(TxSchemas.BULK_ROOT_TX, SignableTypeTags.BULK_ROOT_TX);
+SCHEMA_TO_TYPE_TAG_MAP.set(TxSchemas.BULK_EMPTY_ROOT_TX, SignableTypeTags.BULK_EMPTY_ROOT_TX);
 SCHEMA_TO_TYPE_TAG_MAP.set(TxSchemas.BULK_NODE_TX, SignableTypeTags.BULK_NODE_TX);
 
 const DEFAULT_SCHEMA: TTxSchemaType = TxSchemas.EMPTY_TX;
@@ -418,8 +421,11 @@ export class CommonParentTxData {
             this.toUnnamedObject()
                 .then((unnamedDataObj: ICommonParentTxDataUnnamedObject) => {
                     try {
+                        // console.log(unnamedDataObj);
                         const dataHash = sha256(objectToBytes(unnamedDataObj));
-                        return resolve(`1220${Buffer.from(dataHash).toString('hex')}`);
+                        const ticket = `1220${Buffer.from(dataHash).toString('hex')}`;
+                        // console.log(ticket);
+                        return resolve(ticket);
                     } catch (error) {
                         return reject(error);
                     }

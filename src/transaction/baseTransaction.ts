@@ -190,9 +190,8 @@ export class BaseTransaction extends Signable {
             this._data = this._schemaClassMap.get(passedObj[1][0])!();
             this._data.fromUnnamedObject(passedObj[1])
                 .then((result: boolean) => {
-                    this._typeTag = passedObj[0];
+                    this._typeTag = this._data.typeTag;
                     if (result && passedObj[2]) {
-                        this._typeTag = this._data.typeTag;
                         this._signature = passedObj[2];
                     }
                     return resolve(result);
@@ -236,8 +235,8 @@ export class BaseTransaction extends Signable {
             this._data = this._schemaClassMap.get(passedObj.data.schema)!();
             this._data.fromObjectWithBuffers(passedObj.data)
                 .then((result: boolean) => {
+                    this._typeTag = this._data.typeTag;
                     if (result && passedObj.signature) {
-                        this._typeTag = this._data.typeTag;
                         this._signature = passedObj.signature;
                     }
                     return resolve(result);
@@ -261,8 +260,8 @@ export class BaseTransaction extends Signable {
             this._data = this._schemaClassMap.get(passedObj.data.schema)!();
             this._data.fromObject(passedObj.data)
                 .then((result: boolean) => {
+                    this._typeTag = this._data.typeTag;
                     if (result && passedObj.signature) {
-                        this._typeTag = this._data.typeTag;
                         this._signature = Buffer.from(passedObj.signature);
                     }
                     return resolve(result);

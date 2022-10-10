@@ -9,6 +9,7 @@ import {
     SignableTypeTags,
 } from './commonParentTxData';
 import { BaseTxData } from './baseTxData';
+import { BulkRootTxData } from './bulkRootTxData';
 import { BulkNodeTxData } from './bulkNodeTxData';
 import { BulkTxData } from './bulkTxData';
 import { TSchemaToDataMap, BaseTransaction } from './baseTransaction';
@@ -22,7 +23,10 @@ SCHEMA_TO_DATA_CLASS_MAP.set(BaseTxData.defaultSchema, () => {
     return new BaseTxData(BaseTxData.defaultSchema);
 });
 SCHEMA_TO_DATA_CLASS_MAP.set(TxSchemas.BULK_ROOT_TX, () => {
-    return new BaseTxData(TxSchemas.BULK_ROOT_TX);
+    return new BulkRootTxData(TxSchemas.BULK_ROOT_TX);
+});
+SCHEMA_TO_DATA_CLASS_MAP.set(TxSchemas.BULK_EMPTY_ROOT_TX, () => {
+    return new BulkRootTxData(TxSchemas.BULK_EMPTY_ROOT_TX);
 });
 SCHEMA_TO_DATA_CLASS_MAP.set(BulkNodeTxData.defaultSchema, () => {
     return new BulkNodeTxData(BulkNodeTxData.defaultSchema);
@@ -39,6 +43,9 @@ TYPE_TAG_TO_TX_CLASS_MAP.set(SignableTypeTags.UNITARY_TX, (hash?) => {
 });
 TYPE_TAG_TO_TX_CLASS_MAP.set(SignableTypeTags.BULK_TX, (hash?) => {
     return new BulkTransaction(hash);
+});
+TYPE_TAG_TO_TX_CLASS_MAP.set(SignableTypeTags.BULK_EMPTY_ROOT_TX, (hash?) => {
+    return new BulkRootTransaction(hash);
 });
 TYPE_TAG_TO_TX_CLASS_MAP.set(SignableTypeTags.BULK_ROOT_TX, (hash?) => {
     return new BulkRootTransaction(hash);

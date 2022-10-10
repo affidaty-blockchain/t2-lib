@@ -4,13 +4,20 @@ import {
     DEF_SIGN_HASH_ALGORITHM as defaultSignHash,
 } from '../cryptography/cryptoDefaults';
 import { BaseECKey } from '../cryptography/baseECKey';
-import { TxSchemas } from './commonParentTxData';
+import {
+    TxSchemas,
+    SCHEMA_TO_TYPE_TAG_MAP,
+} from './commonParentTxData';
 import {
     BaseTxData,
     IBaseTxDataUnnamedObject,
     IBaseTxDataObjectWithBuffers,
     IBaseTxDataObject,
 } from './baseTxData';
+
+import {
+    BulkRootTxData,
+} from './bulkRootTxData';
 import {
     BaseTransaction,
     IBaseTxUnnamedObject,
@@ -20,6 +27,7 @@ import {
 } from './baseTransaction';
 
 const DEFAULT_SCHEMA = TxSchemas.BULK_ROOT_TX;
+const EMPTY_SCHEMA = TxSchemas.BULK_EMPTY_ROOT_TX;
 
 export interface IBulkRootTxUnnamedObject extends IBaseTxUnnamedObject {
     [1]: IBaseTxDataUnnamedObject;
@@ -44,7 +52,7 @@ export class BulkRootTransaction extends BaseTransaction {
         hash: TKeyGenAlgorithmValidHashValues = defaultSignHash,
     ) {
         super(BaseTxData.defaultSchema, hash);
-        this._data = new BaseTxData(DEFAULT_SCHEMA);
+        this._data = new BulkRootTxData(DEFAULT_SCHEMA);
         this._typeTag = this._data.typeTag;
     }
 
@@ -116,7 +124,9 @@ export class BulkRootTransaction extends BaseTransaction {
 
     public fromUnnamedObject(passedObj: IBulkRootTxUnnamedObject): Promise<boolean> {
         return new Promise((resolve, reject) => {
-            if (passedObj[1][0] !== DEFAULT_SCHEMA) {
+            if (passedObj[1][0] !== DEFAULT_SCHEMA
+                && passedObj[1][0] !== EMPTY_SCHEMA
+            ) {
                 return reject(new Error(Errors.INVALID_SCHEMA));
             }
             this._data.fromUnnamedObject(passedObj[1])
@@ -134,8 +144,11 @@ export class BulkRootTransaction extends BaseTransaction {
 
     public fromUnnamedObjectNoTag(passedObj: IBulkRootTxUnnamedObjectNoTag): Promise<boolean> {
         return new Promise((resolve, reject) => {
+            if (!SCHEMA_TO_TYPE_TAG_MAP.has(passedObj[0][0])) {
+                return reject(new Error(Errors.UNKNOWN_TX_TYPE));
+            }
             const unnamedArg: IBulkRootTxUnnamedObject = [
-                '',
+                SCHEMA_TO_TYPE_TAG_MAP.get(passedObj[0][0])!,
                 passedObj[0],
             ];
             if (passedObj[1]) {
