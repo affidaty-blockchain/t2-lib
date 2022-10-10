@@ -187,7 +187,7 @@ export interface IAssetsList {
  * @param method - method string
  * @param url - url string
  * @param body - data to send (only with post, null if 'get')
- * @param customHeaders - object with additional custom headers. Es: {header:'value'}
+ * @param customHeaders - object with additional custom headers. Es: \{"header_name":"value"\}
  * @returns - server's response
  */
 function sendRequest(
