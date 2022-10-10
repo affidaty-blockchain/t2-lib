@@ -1,7 +1,7 @@
 import {
     TTxSchemaType,
     TxSchemas,
-    SCHEMA_TO_TYPE_TAG_MAP
+    SCHEMA_TO_TYPE_TAG_MAP,
 } from './commonParentTxData';
 import {
     BaseTxData,
