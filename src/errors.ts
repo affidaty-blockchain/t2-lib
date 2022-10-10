@@ -45,3 +45,4 @@ export const NOT_SUB_TO_BLOCKS = 'Not subscribed to blocks.';
 export const NO_BRIDGE_IN_BROWSER = 'Bridge is not available in browser context.';
 export const UNSURE_HASH_TYPE = 'Unsure about what hash type to use during sign/verify.';
 export const REQ_ABORT_ERR = 'Request aborted.';
+export const UNKNOWN_TX_TYPE = 'Unknown transaction type.';
