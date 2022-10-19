@@ -16,7 +16,7 @@ import {
 
 const DEFAULT_SCHEMA = TxSchemas.UNITARY_TX;
 
-interface IBaseTxDataPublicKeyUnnamedObject extends Array<any> {
+export interface IBaseTxDataPublicKeyUnnamedObject extends Array<any> {
     /** Public key algorithm type. E.g. "ecdsa". */
     [0]: string;
     /** Public key curve type. E.g. 'secp384r1' */
