@@ -23,10 +23,10 @@ export class BulkRootTxData extends BaseTxData {
     }
 
     public isEmpty(): boolean {
-        if (!this._account.length
+        if ((!this._account || this._account.length)
             && (!this._contract || !this._contract.byteLength)
-            && !this.smartContractMethod.length
-            && !this.smartContractMethodArgsBytes.byteLength
+            && (!this.smartContractMethod || !this.smartContractMethod.length)
+            && (!this.smartContractMethodArgsBytes || !this.smartContractMethodArgsBytes.byteLength)
         ) {
             return true;
         }
