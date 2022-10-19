@@ -81,6 +81,7 @@ export interface ITxReceiptData {
 
 export interface IBulkSingleResult {
     success: boolean;
+    burnedFuel: number;
     result: Uint8Array;
 }
 
@@ -847,7 +848,6 @@ export class Client {
             this.txReceipt(ticket)
                 .then((unitReceipt: ITxReceiptData) => {
                     const resultsTemp = bytesToObject(unitReceipt.result);
-                    const resultsKeys = Object.keys(resultsTemp);
                     const bulkReceipt: IBulkTxReceiptData = {
                         blockIdx: unitReceipt.blockIdx,
                         txIdx: unitReceipt.txIdx,
@@ -856,10 +856,11 @@ export class Client {
                         results: {},
                         events: unitReceipt.events,
                     };
-                    for (let i = 0; i < resultsKeys.length; i += 1) {
-                        bulkReceipt.results[resultsKeys[i]] = {
-                            success: resultsTemp[resultsKeys[i]][0] as boolean,
-                            result: new Uint8Array(resultsTemp[resultsKeys[i]][1]),
+                    for (let i = 0; i < resultsTemp.length; i += 1) {
+                        bulkReceipt.results[resultsTemp[i][0]] = {
+                            success: resultsTemp[i][1][0] as boolean,
+                            burnedFuel: resultsTemp[i][1][2],
+                            result: new Uint8Array(resultsTemp[i][1][1]),
                         };
                     }
                     return resolve(bulkReceipt);
