@@ -421,10 +421,8 @@ export class CommonParentTxData {
             this.toUnnamedObject()
                 .then((unnamedDataObj: ICommonParentTxDataUnnamedObject) => {
                     try {
-                        // console.log(unnamedDataObj);
                         const dataHash = sha256(objectToBytes(unnamedDataObj));
                         const ticket = `1220${Buffer.from(dataHash).toString('hex')}`;
-                        // console.log(ticket);
                         return resolve(ticket);
                     } catch (error) {
                         return reject(error);
