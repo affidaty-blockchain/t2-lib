@@ -207,6 +207,7 @@ export class BaseTxData extends CommonParentTxData {
             if (!SCHEMA_TO_TYPE_TAG_MAP.has(passedObj[0])) {
                 return reject(new Error(Errors.INVALID_SCHEMA));
             }
+            this._typeTag = SCHEMA_TO_TYPE_TAG_MAP.get(passedObj[0])!;
             this._schema = passedObj[0];
             this._account = passedObj[1];
             this._maxFuel = passedObj[2];
