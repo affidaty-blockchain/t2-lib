@@ -133,7 +133,7 @@ button {
 }
 
 /* #txTab #txTabControlPanel #importedTxList {
-    width: 40%;
+    width: 450px;
     min-height: 5em;
     max-height: 300px;
     overflow-y: scroll;
@@ -145,7 +145,7 @@ button {
 }
 
 #txTab #txTabControlPanel #importedTxList {
-    width: 40%;
+    width: 650px;
     height: 29em;
     overflow-y: scroll;
     background-color: #f1f1f1;

@@ -38,7 +38,7 @@
         <div class="tabsPanel">
             <button class="tabButton" id="nodeTabBtn" onclick="switchTab('nodeTabBtn', 'nodeTab')">Node</button>
             <button class="tabButton" id="accTabBtn" onclick="switchTab('accTabBtn', 'accTab')">Accounts</button>
-            <button class="tabButton active" id="txTabBtn" onclick="switchTab('txTabBtn', 'txTab')">Transactions</button>
+            <button class="tabButton active" id="txTabBtn" onclick="switchTab('txTabBtn', 'txTab'); switchTab('txDataSubtabBtn', 'txDataSubtab', 'txSubtabBtn', 'txSubtab');">Transactions</button>
             <button class="tabButton" id="msgPackTabBtn" onclick="switchTab('msgPackTabBtn', 'msgPackTab')">MsgPack</button>
         </div>
         <div id="accTab" class="tabContent">
@@ -129,7 +129,7 @@
                     </div>
                     <div id="listTxInfo">
                         <div class="tabsPanel txSubtabsPanel">
-                            <button class="tabButton txSubtabBtn" id="txDataSubtabBtn" onclick="switchTab('txDataSubtabBtn', 'txDataSubtab', 'txSubtabBtn', 'txSubtab')">TX DATA</button>
+                            <button class="tabButton txSubtabBtn active" id="txDataSubtabBtn" onclick="switchTab('txDataSubtabBtn', 'txDataSubtab', 'txSubtabBtn', 'txSubtab')">TX DATA</button>
                             <button class="tabButton txSubtabBtn" id="txSerializedSubtabBtn" onclick="switchTab('txSerializedSubtabBtn', 'txSerializedSubtab', 'txSubtabBtn', 'txSubtab')">SERIALIZATION</button>
                             <button class="tabButton txSubtabBtn" id="txBulkSubtabBtn" onclick="switchTab('txBulkSubtabBtn', 'txBulkSubtab', 'txSubtabBtn', 'txSubtab')">BULK MANAGE</button>
                         </div>
@@ -168,12 +168,24 @@
                             <label for="txTabTxDataFieldContractArgs">Contract Args</label>
                             <br>
                             <input id="txTabTxDataFieldContractArgs" type="text", placeholder="<Contract Args>" value="">
-                            <button class="inlineCopyButton" onclick="copyTextToClipboard(document.getElementById('txTabTxDataFieldContractArgs').value)">CPY</button>
+                            <button class="inlineCopyButton" onclick="copyTextToClipboard(document.getElementById('txTabTxDataFieldContractArgs').value)">
+                                CPY
+                            </button>
                             <span id="txTabTxDataFieldContractArgsEncodingSelectorSpan">
                                 <span><input type="radio" name="txTabTxDataFieldContractArgsEncodingSelector" value="hex">hex</span>
                                 <span><input type="radio" name="txTabTxDataFieldContractArgsEncodingSelector" value="b58" checked>Base58</span>
                                 <span><input type="radio" name="txTabTxDataFieldContractArgsEncodingSelector" value="b64">Base64</span>
                             </span>
+                            <button class="inlineInfoButton" onclick="
+                                document.getElementById('msgPackTabBinDataField').value = document.getElementById('txTabTxDataFieldContractArgs').value;
+                                const encodeFormat = document.querySelector('input[name=\'txTabTxDataFieldContractArgsEncodingSelector\']:checked').value;
+                                document.querySelector(`input[name=\'msgPackTabBinDataEncodingSelector\'][value=\'${encodeFormat}\']`).checked = true;
+                                msgPackDecode(document.getElementById('msgPackTabBinDataField').value, encodeFormat, 'msgPackTabJsonField');
+                                switchTab('msgPackTabBtn', 'msgPackTab');
+                            ">
+                                <!-- const decBtnOnClickCode = `document.getElementById('msgPackTabBinDataField').value = document.getElementById('${elemId}').innerHTML; document.querySelector('input[name=\\'msgPackTabBinDataEncodingSelector\\'][value=\\'${dataEncodingFormat}\\']').checked = true; msgPackDecode(document.getElementById('${elemId}').innerHTML, '${dataEncodingFormat}', 'msgPackTabJsonField'); switchTab('msgPackTabBtn', 'msgPackTab');`; -->
+                                UNPACK
+                            </button>
                             <br>
                             <label for="txTabTxDataFieldDependsOn">Depends On</label>
                             <br>
@@ -214,9 +226,9 @@
                     </div>
                 </div>
                 <div id="txTabControlPanelNodeActions">
-                    <input type="text" id="txTabControlPanelTicketInputField" placeholder="<tx ticket>" value="1220fb4a29eff4bf994803f08990d4682a65a0f607b1a9a4b715ce31db963cef012d">
-                    <button onclick="importTxFromNode(document.getElementById('txTabControlPanelTicketInputField').value, 'txTabOutputField');">GET TX DATA</button>
-                    <button onclick="viewTxReceipt(document.getElementById('txTabControlPanelTicketInputField').value, 'txTabOutputField')">GET TX REC</button>
+                    <input type="text" id="txTabControlPanelTicketInputField" placeholder="<tx ticket>" value="1220fe5375789a0af17ee44b94fb9b5dc547a80f3a79eb0f25c564ecd24cff8f6546">
+                    <button onclick="importTxFromNode(document.getElementById('txTabControlPanelTicketInputField').value, 'txTabOutputField');">GET TX</button>
+                    <button onclick="viewTxReceipt(document.getElementById('txTabControlPanelTicketInputField').value, 'txTabOutputField')">GET REC</button>
                 </div>
             </div>
             <div id="txTabOutputField">
