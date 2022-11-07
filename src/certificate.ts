@@ -59,7 +59,7 @@ function createMerkleTree(
         throw new Error(Errors.MERK_WRONG_IDXS);
     }
     const [...leaves] = dataArray;
-    const tree = new MerkleTree(leaves);
+    const tree = new MerkleTree(leaves, undefined, { complete: true });
     const resultObj: IMerkleData = {
         depth: tree.getDepth(),
         root: tree.getRoot(),
@@ -81,7 +81,7 @@ function verifyMerkleTree(
     root: Buffer,
     multiproof: Buffer[],
 ): boolean {
-    const tree = new MerkleTree([]);
+    const tree = new MerkleTree([], undefined, { complete: true });
     return tree.verifyMultiProof(
         root,
         clearIndexes,
