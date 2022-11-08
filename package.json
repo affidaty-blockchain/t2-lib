@@ -1,7 +1,7 @@
 {
     "$schema": "https://json.schemastore.org/package.json",
     "name": "@affidaty/t2-lib",
-    "version": "2.0.39",
+    "version": "2.1.0",
     "description": "Official Trinci 2 SDK JavaScript library",
     "main": "dist/cjs/index.js",
     "module": "dist/esm/index.js",
@@ -35,8 +35,8 @@
     },
     "devDependencies": {
         "@types/jest": "^29.2.2",
-        "@typescript-eslint/eslint-plugin": "^5.42.0",
-        "@typescript-eslint/parser": "^5.42.0",
+        "@typescript-eslint/eslint-plugin": "^5.42.1",
+        "@typescript-eslint/parser": "^5.42.1",
         "concurrently": "^7.5.0",
         "eslint": "^8.27.0",
         "eslint-config-airbnb-base": "^15.0.0",
@@ -46,7 +46,7 @@
         "eslint-plugin-jest": "^27.1.4",
         "eslint-plugin-json": "^3.0.0",
         "eslint-plugin-prettier": "^4.0.0",
-        "jest": "^29.2.2",
+        "jest": "^29.3.0",
         "os-browserify": "^0.3.0",
         "prettier": "^2.3.0",
         "source-map-loader": "^4.0.0",
