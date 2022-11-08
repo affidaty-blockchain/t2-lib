@@ -7,13 +7,13 @@
     <head>
         <meta charset="utf-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
-        <title>T2Lib Test Page</title>
+        <title>T2 Tools</title>
         <meta name="description" content="t2lib test page">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <link rel="stylesheet" href="style.css">
         <style>
         </style>
-        <script src="../../dist/browser/t2lib.min.js" async defer></script>
+        <script src="./t2lib.min.js" async defer></script>
         <script src="index.js" async defer></script>
     </head>
     <body>
@@ -256,7 +256,7 @@
                     </div>
                 </div>
                 <div id="txTabControlPanelNodeActions">
-                    <input type="text" id="txTabControlPanelTicketInputField" placeholder="<tx ticket>" value="1220ca1d1643b23e4a23d10b4ef99af32ba5ba34e0f97b8d43a3b2de862806f42862">
+                    <input type="text" id="txTabControlPanelTicketInputField" placeholder="<tx ticket>" value="">
                     <button onclick="importTxFromNode(document.getElementById('txTabControlPanelTicketInputField').value, 'txTabOutputField');">GET TX</button>
                     <button onclick="viewTxReceipt(document.getElementById('txTabControlPanelTicketInputField').value, 'txTabOutputField')">GET REC</button>
                 </div>
