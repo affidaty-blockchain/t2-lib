@@ -293,9 +293,9 @@ const trinciTool = function() {
         }
     }
     importAccount = (listContainerId, accIdFieldElemId, pubKeyFieldElemId, pubKeyEncoding, privKeyFieldElemId, privKeyEncoding) => {
-        const accIdStr = document.getElementById(accIdFieldElemId).value;
-        const pubKeyStr = document.getElementById(pubKeyFieldElemId).value;
-        const privKeyStr = document.getElementById(privKeyFieldElemId).value;
+        const accIdStr = document.getElementById(accIdFieldElemId) ? document.getElementById(accIdFieldElemId).value : '';
+        const pubKeyStr = document.getElementById(pubKeyFieldElemId) ? document.getElementById(pubKeyFieldElemId).value : '';
+        const privKeyStr = document.getElementById(privKeyFieldElemId) ? document.getElementById(privKeyFieldElemId).value : '';
         const pubKeyBytes = decodeBinData(pubKeyStr, pubKeyEncoding);
         const privKeyBytes = decodeBinData(privKeyStr, privKeyEncoding);
         const accountToImport = new t2lib.Account();
@@ -654,27 +654,71 @@ const trinciTool = function() {
         return logMessage;
     }
 
-    updateImportedTxList = (listContainerId) => {
+    updateImportedTxList = async (listContainerId) => {
         const listContainer = document.getElementById(listContainerId);
         const ticketsList = Object.keys(window.importedTxList);
         let finalHtmlString = '';
         for (const ticket of ticketsList) {
-            const copyBtnOnClickCode = `copyTextToClipboard('${ticket}');`
-            const delBtnOnClickCode = `delFromImportedTxList('${ticket}');updateImportedTxList('${listContainerId}');`;
-            const recBtnOnClickCode = `document.getElementById('txTabControlPanelTicketInputField').value = '${ticket}'; viewTxReceipt('${ticket}', 'txTabOutputField');`;
-            const elemOnClickCode = `viewImportedTxData(
-                '${ticket}',
-                'txTabSerializedTxField',
-                document.querySelector('input[name=\\'txTabTxDataFieldContractArgsEncodingSelector\\']:checked').value,
-                document.querySelector('input[name=\\'txTabTxDataFieldSignerPubKeyEncodingSelector\\']:checked').value,
-                document.querySelector('input[name=\\'txSerializedDataEncodingSelector\\']:checked').value,
-            ); switchTab('txDataSubtabBtn', 'txDataSubtab', 'txSubtabBtn', 'txSubtab')`;
             if (window.importedTxList[ticket].hidden) {
                 continue;
             }
+            let tempTicket = ticket;
+            const copyBtnOnClickCode = `copyTextToClipboard('${tempTicket}');`
+            const delBtnOnClickCode = `delFromImportedTxList('${tempTicket}');updateImportedTxList('${listContainerId}');`;
+            const recBtnOnClickCode = `document.getElementById('txTabControlPanelTicketInputField').value = '${tempTicket}'; viewTxReceipt('${tempTicket}', 'txTabOutputField');`;
+            if (window.importedTxList[ticket].tx.typeTag === 'bulk_tx') {
+                let elemOnClickCode = `viewImportedTxData(
+                    '${tempTicket}',
+                    undefined,
+                    'txTabSerializedTxField',
+                    document.querySelector('input[name=\\'txTabTxDataFieldContractArgsEncodingSelector\\']:checked').value,
+                    document.querySelector('input[name=\\'txTabTxDataFieldSignerPubKeyEncodingSelector\\']:checked').value,
+                    document.querySelector('input[name=\\'txSerializedDataEncodingSelector\\']:checked').value,
+                ); switchTab('txDataSubtabBtn', 'txDataSubtab', 'txSubtabBtn', 'txSubtab')`;
 
-            let elemHtmlString = `<div><span class="txTicketSpan" onclick="${elemOnClickCode}">${ticket}</span><button class="inlineCopyButton" onclick="${copyBtnOnClickCode}">CPY</button><button class="inlineInfoButton" onclick="${recBtnOnClickCode}">REC</button><button class="accDelBtn" onclick="${delBtnOnClickCode}">DEL</button></div>`;
-            finalHtmlString += elemHtmlString;
+                let elemHtmlString = `<div><span class="txTicketSpan" onclick="${elemOnClickCode}">${ticket}</span><button class="inlineCopyButton" onclick="${copyBtnOnClickCode}">CPY</button><button class="inlineInfoButton" onclick="${recBtnOnClickCode}">REC</button><button class="accDelBtn" onclick="${delBtnOnClickCode}">DEL</button></div>`;
+                finalHtmlString += elemHtmlString;
+
+                const rootTicket = await window.importedTxList[ticket].tx.data.root.getTicket();
+
+                elemOnClickCode = `viewImportedTxData(
+                    '${tempTicket}',
+                    -1,
+                    'txTabSerializedTxField',
+                    document.querySelector('input[name=\\'txTabTxDataFieldContractArgsEncodingSelector\\']:checked').value,
+                    document.querySelector('input[name=\\'txTabTxDataFieldSignerPubKeyEncodingSelector\\']:checked').value,
+                    document.querySelector('input[name=\\'txSerializedDataEncodingSelector\\']:checked').value,
+                ); switchTab('txDataSubtabBtn', 'txDataSubtab', 'txSubtabBtn', 'txSubtab')`;
+                elemHtmlString = `<div><span class="txTicketSpan" onclick="${elemOnClickCode}">└ROOT(${rootTicket})</span><button class="inlineCopyButton" onclick="copyTextToClipboard('${rootTicket}');">CPY</button></div>`;
+                finalHtmlString += elemHtmlString;
+
+                for (let nodeIdx = 0; nodeIdx < window.importedTxList[ticket].tx.data.nodes.length; nodeIdx++) {
+                    const nodeTicket = await window.importedTxList[ticket].tx.data.nodes[nodeIdx].getTicket();
+                    elemOnClickCode = `viewImportedTxData(
+                        '${tempTicket}',
+                        ${nodeIdx},
+                        'txTabSerializedTxField',
+                        document.querySelector('input[name=\\'txTabTxDataFieldContractArgsEncodingSelector\\']:checked').value,
+                        document.querySelector('input[name=\\'txTabTxDataFieldSignerPubKeyEncodingSelector\\']:checked').value,
+                        document.querySelector('input[name=\\'txSerializedDataEncodingSelector\\']:checked').value,
+                    ); switchTab('txDataSubtabBtn', 'txDataSubtab', 'txSubtabBtn', 'txSubtab')`;
+    
+                    elemHtmlString = `<div><span class="txTicketSpan" onclick="${elemOnClickCode}">└NODE[${nodeIdx}](${nodeTicket})</span><button class="inlineCopyButton" onclick="copyTextToClipboard('${nodeTicket}');">CPY</button></div>`;
+                    finalHtmlString += elemHtmlString;
+                }
+            } else {
+                const elemOnClickCode = `viewImportedTxData(
+                    '${tempTicket}',
+                    undefined,
+                    'txTabSerializedTxField',
+                    document.querySelector('input[name=\\'txTabTxDataFieldContractArgsEncodingSelector\\']:checked').value,
+                    document.querySelector('input[name=\\'txTabTxDataFieldSignerPubKeyEncodingSelector\\']:checked').value,
+                    document.querySelector('input[name=\\'txSerializedDataEncodingSelector\\']:checked').value,
+                ); switchTab('txDataSubtabBtn', 'txDataSubtab', 'txSubtabBtn', 'txSubtab')`;
+
+                let elemHtmlString = `<div><span class="txTicketSpan" onclick="${elemOnClickCode}">${ticket}</span><button class="inlineCopyButton" onclick="${copyBtnOnClickCode}">CPY</button><button class="inlineInfoButton" onclick="${recBtnOnClickCode}">REC</button><button class="accDelBtn" onclick="${delBtnOnClickCode}">DEL</button></div>`;
+                finalHtmlString += elemHtmlString;
+            }
         }
         listContainer.innerHTML = finalHtmlString;
     }
@@ -693,7 +737,7 @@ const trinciTool = function() {
             return;
         }
         window.trinciClient.txData(ticket)
-            .then((tx) => {
+            .then(async (tx) => {
                 window.importedTxList[ticket] = {
                     tx,
                     hidden: false,
@@ -709,6 +753,7 @@ const trinciTool = function() {
 
     viewImportedTxData = async (
         ticket,
+        bulkMemberIdx, // -1 = root, 0...n = node idx
         serializationFieldElemId,
         argsEncoding,
         pubKeyEncoding,
@@ -717,7 +762,8 @@ const trinciTool = function() {
         if (!window.importedTxList[ticket]) {
             return;
         }
-        const tx = window.importedTxList[ticket];
+
+        let tx = window.importedTxList[ticket].tx;
         const accIdField = document.getElementById('txTabTxDataFieldAccountId');
         const nonceField = document.getElementById('txTabTxDataFieldNonce');
         const maxFuel = document.getElementById('txTabTxDataFieldMaxFuel');
@@ -728,31 +774,47 @@ const trinciTool = function() {
         const dependsOnField = document.getElementById('txTabTxDataFieldDependsOn');
         const signerPubKeyField = document.getElementById('txTabTxDataFieldSignerPubKey');
         const serializationField = document.getElementById(serializationFieldElemId);
-        const txType = tx.tx.typeTag;
+        let txType = tx.typeTag;
+
+        accIdField.value = '';
+        nonceField.value = '';
+        maxFuel.value = '';
+        networkNameField.value = '';
+        scHashField.value = '';
+        scMethodField.value = '';
+        scMethodArgsField.value = '';
+        dependsOnField.value = '';
+        signerPubKeyField.value = '';
+        serializationField.value = '';
 
         switch (txType) {
             case 'unit_tx': case 'bulk_empty_root_tx': case 'bulk_root_tx': case 'bulk_node_tx':
-                accIdField.value = tx.tx.data.accountId;;
-                nonceField.value = tx.tx.data.nonceHex;;
-                maxFuel.value = tx.tx.data.maxFuel;
-                networkNameField.value = tx.tx.data.networkName;
-                scHashField.value = tx.tx.data.smartContractHashHex;
-                scMethodField.value = tx.tx.data.smartContractMethod;
-                dependsOnField.value = tx.tx.data.dependsOnHex;
-                if (tx.tx.data.smartContractMethodArgsBytes.length > 0) {
-                    scMethodArgsField.value = encodeBinData(tx.tx.data.smartContractMethodArgsBytes, argsEncoding);
-                }
-                if (tx.tx.data.signerPublicKey.type === 'public') {
-                    signerPubKeyField.value = encodeBinData((await tx.tx.data.signerPublicKey.getSPKI()), pubKeyEncoding);
-                }
-                serializationField.value = encodeBinData((await tx.tx.toBytes()), serializationEncoding);
+                // do nothing
                 break;
             case 'bulk_tx':
-                console.log('BULK SUPPORT IS COMING SOON');
+                if (typeof bulkMemberIdx !== 'undefined') {
+                    tx = (typeof bulkMemberIdx === 'number' && bulkMemberIdx < 0) ? tx.data.root : tx.data.nodes[bulkMemberIdx];
+                    txType = tx.typeTag;
+                }
                 break;
             default:
-                console.log(`Unknown tx type: "${txType}"`);
+                throw new Error(`Unknown tx type: "${txType}"`);
                 break;
+        }
+        serializationField.value = encodeBinData((await tx.toBytes()), serializationEncoding);
+        document.querySelector(`input[name=\'txTabTxDataFieldTxTypeSelector\'][value=\'${txType}\']`).checked = true;
+        accIdField.value = tx.data.accountId;;
+        nonceField.value = tx.data.nonceHex;;
+        maxFuel.value = tx.data.maxFuel;
+        networkNameField.value = tx.data.networkName;
+        scHashField.value = tx.data.smartContractHashHex;
+        scMethodField.value = tx.data.smartContractMethod;
+        dependsOnField.value = tx.data.dependsOnHex;
+        if (tx.data.smartContractMethodArgsBytes.length > 0) {
+            scMethodArgsField.value = encodeBinData(tx.data.smartContractMethodArgsBytes, argsEncoding);
+        }
+        if (tx.data.signerPublicKey.type === 'public') {
+            signerPubKeyField.value = encodeBinData((await tx.data.signerPublicKey.getSPKI()), pubKeyEncoding);
         }
     }
 
@@ -765,7 +827,6 @@ const trinciTool = function() {
         }
         window.trinciClient.txReceipt(ticket)
             .then((txReceipt) => {
-                console.log(t2lib.binConversions.arrayBufferToBuffer(txReceipt.result.buffer).toString());
                 outputElem.innerHTML = `<pre>${JSON.stringify(txReceipt, null, 4)}</pre>`;
             })
             .catch((error) => {
