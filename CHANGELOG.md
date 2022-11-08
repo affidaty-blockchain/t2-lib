@@ -6,31 +6,62 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/).
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## [2.0.6] - 22-03-28
+## [2.1.0] - 2022-11-08
+
+### Added
+
+- Added support for AES password encryption
+- Added bridge client to connect directly to Trinci node via socket and listed for events in real time. Not available in browsers as there's no support for direct socket connections.
+- Added TransactionEvent message type.
+- general usage data signature creation/verification functions added to main export.
+- Transaction schema management
+- T2 Blockchain Tool added to repository. (`/misc/t2_bc_tool`)
+- Client.getNodeInfo() method (node version 0.2.8+)
+- elliptic curve point compression/decompression is now supported (only secp384r1 for now)
+- added IEEE P1363 => ASN.1 signature conversion function
+- Added AbortController and timeout support to t2lib.Client
+- generic Transaction class is now able to determine the exact verification logic based on transaction tag.
+- bulk root transaction schema now automatically changed to empty bulk root schema when necessary
+- added "Core" export to lib
+
+### Changed
+
+- base58 library used for conversions changed
+- default client network is now '' (empty string)
+- data requested from an account are now returned as Uint8Array
+- block index can now be passed to Client.blockData() as a hex string to fix JS number limitations for big UInt64 numbers
+
+### Fixed
+
+- certificate verification bug fixed
+- fixed fome unwanted overrides of the base class methods by child classes
+- fixed bulk receipt format
+
+## [2.0.6] - 2022-03-28
 
 ### Added
 
 - AES key management.
 
-## [2.0.5] - 22-03-18
+## [2.0.5] - 2022-03-18
 
 ### Added
 
 - Exported transactions import/export interfaces.
 
-## [2.0.4] - 22-02-02
+## [2.0.4] - 2022-02-02
 
 ### Added
 
 - Reintroduced t2lib.Utils.getSaltAndIV(); method.
 
-## [2.0.3] - 22-01-31
+## [2.0.3] - 2022-01-31
 
 ### Changed
 
 - Transaction schema members now contain actual schema hashes.
 
-## [2.0.2] - 22-01-31
+## [2.0.2] - 2022-01-31
 
 ### Changed
 
