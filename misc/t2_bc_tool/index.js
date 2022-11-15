@@ -719,6 +719,7 @@ const trinciTool = function() {
                 let elemHtmlString = `<div><span class="txTicketSpan" onclick="${elemOnClickCode}">${ticket}</span><button class="inlineCopyButton" onclick="${copyBtnOnClickCode}">CPY</button><button class="inlineInfoButton" onclick="${recBtnOnClickCode}">REC</button><button class="accDelBtn" onclick="${delBtnOnClickCode}">DEL</button></div>`;
                 finalHtmlString += elemHtmlString;
             }
+            finalHtmlString += '<hr>';
         }
         listContainer.innerHTML = finalHtmlString;
     }
@@ -826,6 +827,26 @@ const trinciTool = function() {
             return;
         }
         window.trinciClient.txReceipt(ticket)
+            .then((txReceipt) => {
+                if (!txReceipt.success) {
+                    txReceipt.result = Buffer.from(txReceipt.result).toString();
+                }
+                outputElem.innerHTML = `<pre>${JSON.stringify(txReceipt, null, 4)}</pre>`;
+            })
+            .catch((error) => {
+                console.error(error);
+                outputElem.innerHTML = error.message;
+            });
+    }
+
+    viewBulkTxReceipt = (ticket, outputElemId) => {
+        const outputElem = document.getElementById(outputElemId);
+        outputElem.innerHTML = '';
+        if (!window.trinciClient) {
+            outputElem.innerHTML = 'Connection error.';
+            return;
+        }
+        window.trinciClient.bulkTxReceipt(ticket)
             .then((txReceipt) => {
                 outputElem.innerHTML = `<pre>${JSON.stringify(txReceipt, null, 4)}</pre>`;
             })

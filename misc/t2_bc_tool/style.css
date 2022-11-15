@@ -151,9 +151,14 @@ button {
     background-color: #f1f1f1;
 }
 
-#importedTxList div:hover {
+#importedTxList .txTicketSpan:hover {
     background-color: #ddd;
     cursor: pointer;
+}
+
+#importedTxList hr {
+margin-top: 3px;
+margin-bottom: 3px;
 }
 
 .tabButton.txSubtabBtn {
