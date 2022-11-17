@@ -13,6 +13,7 @@ export const NOT_PUBLIC_EC_BYTES = 'Given bytes must encode a public EC key.';
 export const NOT_PRIVATE_EC_BYTES = 'Given bytes must encode a private EC key.';
 export const ONLY_FOR_PUBKEY = 'Function available only for public keys.';
 export const ONLY_FOR_PRIVKEY = 'Function available only for private keys.';
+export const NOT_VALID_CURVE_NAME = 'Not a valid elliptic curve name.';
 export const NOT_EC_KEY = 'Not an EC key.';
 export const IMPORT_ALG_ERROR = 'Wrong algorithm.';
 export const IMPORT_USAGES_ERROR = 'Incompatible key usages.';

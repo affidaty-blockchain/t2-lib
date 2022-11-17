@@ -1,7 +1,6 @@
+[CODE OBTAINED FROM THIS REPO](https://github.com/juanelas/bigint-mod-arith)  
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg)](CODE_OF_CONDUCT.md)
 [![JavaScript Style Guide](https://img.shields.io/badge/code_style-standard-brightgreen.svg)](https://standardjs.com)
-[![Node.js CI](https://github.com/juanelas/bigint-mod-arith/workflows/build/badge.svg)](https://github.com/juanelas/bigint-mod-arith/actions?query=workflow%3A%22build%22)
 [![Coverage Status](https://coveralls.io/repos/github/juanelas/bigint-mod-arith/badge.svg?branch=master)](https://coveralls.io/github/juanelas/bigint-mod-arith?branch=master)
 
 # bigint-mod-arith

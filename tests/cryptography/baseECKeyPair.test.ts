@@ -100,6 +100,32 @@ describe('Testing elliptic curve cryptography implementations', () => {
             await expect(baseECKeyPair.privateKey.getPKCS8())
                 .resolves.toBeInstanceOf(Uint8Array);
         });
+
+        it('testing key generation from a secret', async () => {
+            const secret1 = 'secret';
+            const kp1P384 = new BaseECKeyPair(Defaults.ECDSAP384R1KeyPairParams);
+            await kp1P384.generateFromSecret(secret1);
+            const priv1P384JWK = await kp1P384.privateKey.getJWK();
+            expect(priv1P384JWK.x).toEqual('w1gvtQwf92CMdwO4Ksv6Me5Yfd0fEc1h_Wz72ucn7g_PHC2djB4Wv-lh2yM-T7cN');
+            expect(priv1P384JWK.y).toEqual('I7v5192ITvh6yXYnw32ef9_HV6qcc2MkfLr2eZaurwSjgTygpoEhcGzcnjVza8ux');
+            const kp1P256 = new BaseECKeyPair(Defaults.ECDSAP256R1KeyPairParams);
+            await kp1P256.generateFromSecret(secret1);
+            const priv1P256JWK = await kp1P256.privateKey.getJWK();
+            expect(priv1P256JWK.x).toEqual('xE2IrGqimsZSmMUODGRTfmUioEamm99NKUHkzl6NjDs');
+            expect(priv1P256JWK.y).toEqual('sEfYOHMMaImiQsyMkH6Zw98UbTSrVnR14hjRPBN0Pgw');
+
+            const secret2 = new Uint8Array([0xff, 0x00, 0xff, 0x00]);
+            const kp2P384 = new BaseECKeyPair(Defaults.ECDSAP384R1KeyPairParams);
+            await kp2P384.generateFromSecret(secret2);
+            const priv2P384JWK = await kp2P384.privateKey.getJWK();
+            expect(priv2P384JWK.x).toEqual('8HPsDST5SPkMx8MMZusuQYRZ3smEiC8_do43l8BB7aUssm1J1n6zRhR03FDp-1jl');
+            expect(priv2P384JWK.y).toEqual('b5dgtghUMBe-miCfjGzUeSVtxJpJ5uOMNRVl2n1WlvVhDjpwzeOWxAKVXt2wO76B');
+            const kp2P256 = new BaseECKeyPair(Defaults.ECDSAP256R1KeyPairParams);
+            await kp2P256.generateFromSecret(secret2);
+            const priv2P256JWK = await kp2P256.privateKey.getJWK();
+            expect(priv2P256JWK.x).toEqual('E0t4ixJv5Sw1w56J8Ir3k0r3rgLPbu28SkcgO30Re0Q');
+            expect(priv2P256JWK.y).toEqual('6Llw1G7OZZu-Kso_-B7oj3Vcv6xztFzFjXQ7b1E_Peo');
+        });
         it('testing class exceptions', async () => {
             const customKeyPairParams: BaseTypes.IKeyPairParams = {
                 publicKey: Defaults.ECDSAP384R1KeyPairParams.publicKey,

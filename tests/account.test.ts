@@ -103,6 +103,18 @@ describe('Testing ACCOUNT CLASS implementations', () => {
         await expect(getAccountId(predefAccount.keyPair.publicKey))
             .resolves.toEqual(predefinedAccountId);
     });
+
+    it('testing account generation from a secret', async () => {
+        const secret1 = 'secret';
+        const acc1 = new Account();
+        await acc1.generateFromSecret(secret1);
+        expect(acc1.accountId).toEqual('QmTMcpWgQCpAtVTnpqkYq4BXpBqZxFUYcDrTFZuBBoF7gz');
+
+        const secret2 = new Uint8Array([0xff, 0x00, 0xff, 0x00]);
+        const acc2 = new Account();
+        await acc2.generateFromSecret(secret2);
+        expect(acc2.accountId).toEqual('QmaxcsD4tTqqnHveVuFbTHxenkDeJwnVop7Teih9EP7zR6');
+    });
     it('exceptions tests', async () => {
         const emptyPubKey = new EllipticCurve.BaseECKey(Defaults.ECDSAP384R1PubKeyParams);
         await expect(getAccountId(emptyPubKey))

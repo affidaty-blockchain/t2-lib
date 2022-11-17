@@ -76,3 +76,21 @@ export interface ITranscryptParams {
     name: TTranscryptAlgorithmValidName;
     iv?: Uint8Array;
 }
+
+export interface IEllipticCurveParams {
+    /** length in bits of the key */
+    keyLength: number
+    /** prime */
+    p: bigint,
+    /** equation parameter */
+    a: bigint,
+    /** equation parameter */
+    b: bigint,
+    /** generator point */
+    g: {
+        x: bigint,
+        y: bigint,
+    },
+    /** order */
+    n: bigint,
+}

@@ -192,4 +192,24 @@ export class Account {
                 });
         });
     }
+
+    /** Generates a new account with a new key pair from scratch. */
+    public generateFromSecret(secret: any): Promise<boolean> {
+        return new Promise((resolve, reject) => {
+            this._keyPair.generateFromSecret(secret)
+                .then(() => {
+                    getAccountId(this._keyPair.publicKey)
+                        .then((accountId: string) => {
+                            this._accountId = accountId;
+                            return resolve(true);
+                        })
+                        .catch((error: any) => {
+                            return reject(error);
+                        });
+                })
+                .catch((error: any) => {
+                    return reject(error);
+                });
+        });
+    }
 }
