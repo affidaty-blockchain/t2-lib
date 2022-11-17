@@ -6,7 +6,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/).
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## [2.2.0] - NOT PUBLISHED
+## [2.2.0] - 2022-11-17
 
 ### Added
 
@@ -14,7 +14,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Changed
 
+- "build" npm script now also updates .min.js inside `misc/t2_bc_tool` dir
+
 ### Fixed
+
+- `misc` dir added to .eslintignore
 
 ## [2.1.0] - 2022-11-08
 
