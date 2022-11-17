@@ -56,9 +56,9 @@
         "ts-node": "^10.7.0",
         "typedoc": "^0.23.20",
         "typedoc-plugin-missing-exports": "^1.0.0",
-        "typescript": "^4.8.3",
+        "typescript": "^4.9.3",
         "webpack": "^5.38.1",
-        "webpack-cli": "^4.7.0"
+        "webpack-cli": "^5.0.0"
     },
     "scripts": {
         "test": "jest",
@@ -66,7 +66,8 @@
         "build-cjs": "tsc -p tsconfig.cjs.json",
         "build-esm": "tsc -p tsconfig.esm.json",
         "build-browser": "webpack --config webpack.config.js",
-        "build": "concurrently \"npm:build-cjs\" \"npm:build-esm\" \"npm:build-browser\"",
+        "updt2tool": "cp -f dist/browser/* misc/t2_bc_tool/",
+        "build": "concurrently \"npm:build-cjs\" \"npm:build-esm\" \"npm:build-browser\" && npm run updt2tool",
         "docs": "typedoc --options typedoc.json",
         "lint": "eslint . --ext .js,.ts",
         "lint:fix": "eslint --fix . --ext .js,.ts",
