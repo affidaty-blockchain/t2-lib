@@ -665,8 +665,9 @@ const trinciTool = function() {
             let tempTicket = ticket;
             const copyBtnOnClickCode = `copyTextToClipboard('${tempTicket}');`
             const delBtnOnClickCode = `delFromImportedTxList('${tempTicket}');updateImportedTxList('${listContainerId}');`;
-            const recBtnOnClickCode = `document.getElementById('txTabControlPanelTicketInputField').value = '${tempTicket}'; viewTxReceipt('${tempTicket}', 'txTabOutputField');`;
+            let recBtnOnClickCode = `document.getElementById('txTabControlPanelTicketInputField').value = '${tempTicket}'; viewTxReceipt('${tempTicket}', 'txTabOutputField');`;
             if (window.importedTxList[ticket].tx.typeTag === 'bulk_tx') {
+                recBtnOnClickCode = `document.getElementById('txTabControlPanelTicketInputField').value = '${tempTicket}'; viewBulkTxReceipt('${tempTicket}', 'txTabOutputField');`;
                 let elemOnClickCode = `viewImportedTxData(
                     '${tempTicket}',
                     undefined,
@@ -828,10 +829,44 @@ const trinciTool = function() {
         }
         window.trinciClient.txReceipt(ticket)
             .then((txReceipt) => {
-                if (!txReceipt.success) {
-                    txReceipt.result = Buffer.from(txReceipt.result).toString();
+                let finalElemInnerHtml = '';
+                finalElemInnerHtml += '<div class="valuesList">';
+                finalElemInnerHtml += `<div class="stringValue"><span class="valueLabel">Block Idx: </span><span class="stringValueValue">${JSON.stringify(txReceipt.blockIdx)}</span></div>`;
+                finalElemInnerHtml += `<div class="stringValue"><span class="valueLabel">Tx Idx: </span><span class="stringValueValue">${JSON.stringify(txReceipt.txIdx)}</span></div>`;
+                finalElemInnerHtml += `<div class="stringValue"><span class="valueLabel">Burned fuel: </span><span class="stringValueValue">${JSON.stringify(txReceipt.burnedFuel)}</span></div>`;
+                finalElemInnerHtml += `<div class="stringValue"><span class="valueLabel">Success: </span><span class="stringValueValue">${JSON.stringify(txReceipt.success)}</span></div>`;
+                const resultBuffer = t2lib.binConversions.arrayBufferToBuffer(txReceipt.result.buffer);
+                if (txReceipt.success) {
+                    const decBtnOnClickCode = `document.getElementById('msgPackTabBinDataField').value = '${resultBuffer.toString('hex')}'; document.querySelector('input[name=\\'msgPackTabBinDataEncodingSelector\\'][value=\\'hex\\']').checked = true; msgPackDecode('${resultBuffer.toString('hex')}', 'hex', 'msgPackTabJsonField'); switchTab('msgPackTabBtn', 'msgPackTab');`;
+                    const copyBtnOnClickCode = `copyTextToClipboard('${resultBuffer.toString('hex')}');`;
+                    finalElemInnerHtml += `<div class="stringValue"><span class="valueLabel">result: </span><button class="inlineCopyButton" onclick="${copyBtnOnClickCode}">CPY</button><button class="inlineInfoButton" onclick="${decBtnOnClickCode}">UNPACK</button><span class="stringValueValue">${JSON.stringify(resultBuffer.toString('hex'))}</span></div>`;
+                } else {
+                    finalElemInnerHtml += `<div class="stringValue"><span class="valueLabel">result: </span><span class="stringValueValue">${JSON.stringify(resultBuffer.toString())}</span></div>`;
                 }
-                outputElem.innerHTML = `<pre>${JSON.stringify(txReceipt, null, 4)}</pre>`;
+
+                finalElemInnerHtml += '<br><br><hr><hr><hr><div class="stringValue"><span class="valueLabel">Events: </span>';
+                for (let i = 0; i < txReceipt.events.length; i++) {
+                    // console.log(txReceipt.events[i]);
+                    const eventKeys = Object.keys(txReceipt.events[i]);
+                    finalElemInnerHtml += `<br><hr><div class="stringValue">`;
+                    for (let j = 0; j < eventKeys.length; j++) {
+                        const eventElemKey = eventKeys[j];
+                        if (eventElemKey === 'eventData') {
+                            const eventElemValue = t2lib.binConversions.arrayBufferToBuffer(txReceipt.events[i][eventKeys[j]].buffer).toString('hex');
+                            const copyBtnOnClickCode = `copyTextToClipboard('${eventElemValue}');`;
+                            const decBtnOnClickCode = `document.getElementById('msgPackTabBinDataField').value = '${eventElemValue}'; document.querySelector('input[name=\\'msgPackTabBinDataEncodingSelector\\'][value=\\'hex\\']').checked = true; msgPackDecode('${eventElemValue}', 'hex', 'msgPackTabJsonField'); switchTab('msgPackTabBtn', 'msgPackTab');`;
+                            finalElemInnerHtml += `<div class="stringValue"><span class="valueLabel">${eventElemKey}: </span><button class="inlineCopyButton" onclick="${copyBtnOnClickCode}">CPY</button><button class="inlineInfoButton" onclick="${decBtnOnClickCode}">UNPACK</button><span class="stringValueValue">${eventElemValue}</span></div>`;
+                        } else {
+                            const eventElemValue = txReceipt.events[i][eventKeys[j]];
+                            finalElemInnerHtml += `<div class="stringValue"><span class="valueLabel">${eventElemKey}: </span><span class="stringValueValue">${eventElemValue}</span></div>`;
+                        }
+                    }
+                    finalElemInnerHtml += '</div>';
+                }
+                finalElemInnerHtml += '</div>';
+
+                finalElemInnerHtml += '</div>';
+                outputElem.innerHTML = finalElemInnerHtml;
             })
             .catch((error) => {
                 console.error(error);
@@ -848,7 +883,68 @@ const trinciTool = function() {
         }
         window.trinciClient.bulkTxReceipt(ticket)
             .then((txReceipt) => {
-                outputElem.innerHTML = `<pre>${JSON.stringify(txReceipt, null, 4)}</pre>`;
+
+                let finalElemInnerHtml = '';
+                finalElemInnerHtml += '<div class="valuesList">';
+                finalElemInnerHtml += `<div class="stringValue"><span class="valueLabel">Block Idx: </span><span class="stringValueValue">${JSON.stringify(txReceipt.blockIdx)}</span></div>`;
+                finalElemInnerHtml += `<div class="stringValue"><span class="valueLabel">Tx Idx: </span><span class="stringValueValue">${JSON.stringify(txReceipt.txIdx)}</span></div>`;
+                finalElemInnerHtml += `<div class="stringValue"><span class="valueLabel">Burned fuel: </span><span class="stringValueValue">${JSON.stringify(txReceipt.burnedFuel)}</span></div>`;
+                finalElemInnerHtml += `<div class="stringValue"><span class="valueLabel">Success: </span><span class="stringValueValue">${JSON.stringify(txReceipt.success)}</span></div>`;
+
+                if (Object.keys(txReceipt.results)[0] === '0') {
+                    if (!txReceipt.success) {
+                        finalElemInnerHtml += `<div class="stringValue"><span class="valueLabel">Root error: </span><span class="stringValueValue">${JSON.stringify(t2lib.binConversions.arrayBufferToBuffer(txReceipt.results.buffer).toString())}</span></div>`;
+                    } else {
+                        const resultElemValue = t2lib.binConversions.arrayBufferToBuffer(txReceipt.results.buffer).toString('hex');
+                        const copyBtnOnClickCode = `copyTextToClipboard('${resultElemValue}');`;
+                        const decBtnOnClickCode = `document.getElementById('msgPackTabBinDataField').value = '${resultElemValue}'; document.querySelector('input[name=\\'msgPackTabBinDataEncodingSelector\\'][value=\\'hex\\']').checked = true; msgPackDecode('${resultElemValue}', 'hex', 'msgPackTabJsonField'); switchTab('msgPackTabBtn', 'msgPackTab');`;
+                            finalElemInnerHtml += `<div class="stringValue"><span class="valueLabel">Result: </span><button class="inlineCopyButton" onclick="${copyBtnOnClickCode}">CPY</button><button class="inlineInfoButton" onclick="${decBtnOnClickCode}">UNPACK</button><span class="stringValueValue">${resultElemValue}</span></div>`;
+                    }
+                } else {
+                    // multiple results. Process each one separately
+                    finalElemInnerHtml += '<hr><hr><hr><div class="stringValue"><span class="valueLabel">Results: </span>';
+                    const ticketsList = Object.keys(txReceipt.results);
+                    for (let i = 0; i < ticketsList.length; i++) {
+                        const result = txReceipt.results[ticketsList[i]];
+                        finalElemInnerHtml += `<br><hr><div class="stringValue"><span class="valueLabel">Tx: </span><span class="stringValueValue">${JSON.stringify(ticketsList[i])}</span></div>`;
+                        finalElemInnerHtml += `<div class="stringValue"><span class="valueLabel">Success: </span><span class="stringValueValue">${JSON.stringify(txReceipt.results[ticketsList[i]].success)}</span></div>`;
+                        finalElemInnerHtml += `<div class="stringValue"><span class="valueLabel">Burned fuel: </span><span class="stringValueValue">${JSON.stringify(txReceipt.results[ticketsList[i]].burnedFuel)}</span></div>`;
+
+                        if (txReceipt.results[ticketsList[i]].success) {
+                            const resultElemValue = t2lib.binConversions.arrayBufferToBuffer(txReceipt.results[ticketsList[i]].result.buffer).toString('hex');
+                            const copyBtnOnClickCode = `copyTextToClipboard('${resultElemValue}');`;
+                            const decBtnOnClickCode = `document.getElementById('msgPackTabBinDataField').value = '${resultElemValue}'; document.querySelector('input[name=\\'msgPackTabBinDataEncodingSelector\\'][value=\\'hex\\']').checked = true; msgPackDecode('${resultElemValue}', 'hex', 'msgPackTabJsonField'); switchTab('msgPackTabBtn', 'msgPackTab');`;
+                            finalElemInnerHtml += `<div class="stringValue"><span class="valueLabel">Result: </span><button class="inlineCopyButton" onclick="${copyBtnOnClickCode}">CPY</button><button class="inlineInfoButton" onclick="${decBtnOnClickCode}">UNPACK</button><span class="stringValueValue">${resultElemValue}</span></div>`;
+                        } else {
+                            finalElemInnerHtml += `<div class="stringValue"><span class="valueLabel">Result: </span><span class="stringValueValue">${JSON.stringify(t2lib.binConversions.arrayBufferToBuffer(txReceipt.results[ticketsList[i]].result.buffer).toString())}</span></div>`;
+                        }
+                    }
+                    finalElemInnerHtml += '</div>';
+                }
+
+                finalElemInnerHtml += '<br><br><hr><hr><hr><div class="stringValue"><span class="valueLabel">Events: </span>';
+                for (let i = 0; i < txReceipt.events.length; i++) {
+                    const eventKeys = Object.keys(txReceipt.events[i]);
+                    finalElemInnerHtml += `<br><hr><div class="stringValue">`;
+                    for (let j = 0; j < eventKeys.length; j++) {
+                        const eventElemKey = eventKeys[j];
+                        if (eventElemKey === 'eventData') {
+                            const eventElemValue = t2lib.binConversions.arrayBufferToBuffer(txReceipt.events[i][eventKeys[j]].buffer).toString('hex');
+                            const copyBtnOnClickCode = `copyTextToClipboard('${eventElemValue}');`;
+                            const decBtnOnClickCode = `document.getElementById('msgPackTabBinDataField').value = '${eventElemValue}'; document.querySelector('input[name=\\'msgPackTabBinDataEncodingSelector\\'][value=\\'hex\\']').checked = true; msgPackDecode('${eventElemValue}', 'hex', 'msgPackTabJsonField'); switchTab('msgPackTabBtn', 'msgPackTab');`;
+                            finalElemInnerHtml += `<div class="stringValue"><span class="valueLabel">${eventElemKey}: </span><button class="inlineCopyButton" onclick="${copyBtnOnClickCode}">CPY</button><button class="inlineInfoButton" onclick="${decBtnOnClickCode}">UNPACK</button><span class="stringValueValue">${eventElemValue}</span></div>`;
+                        } else {
+                            const eventElemValue = txReceipt.events[i][eventKeys[j]];
+                            finalElemInnerHtml += `<div class="stringValue"><span class="valueLabel">${eventElemKey}: </span><span class="stringValueValue">${eventElemValue}</span></div>`;
+                        }
+                    }
+                    finalElemInnerHtml += '</div>';
+                }
+                finalElemInnerHtml += '</div>';
+
+                finalElemInnerHtml += '</div>';
+                outputElem.innerHTML = finalElemInnerHtml;
+
             })
             .catch((error) => {
                 console.error(error);

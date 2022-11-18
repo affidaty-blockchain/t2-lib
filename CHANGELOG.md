@@ -6,6 +6,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/).
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [2.2.1] - 2022-11-18
+
+### Fixed
+
+- some errors on Client.txReceipt() and Client.bulkTxReceipt();
+- receipts decoding in T2 BC Tool (repo/misc/t2_bc_tool)
+
 ## [2.2.0] - 2022-11-17
 
 ### Added

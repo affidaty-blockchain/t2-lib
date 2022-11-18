@@ -100,7 +100,7 @@ export interface IBulkTxReceiptData {
     success: boolean;
 
     /** Smart contract execution result. */
-    results: {
+    results: Uint8Array | {
         [key: string]: IBulkSingleResult;
     };
 
@@ -846,24 +846,34 @@ export class Client {
     bulkTxReceipt(ticket: string): Promise<IBulkTxReceiptData> {
         return new Promise((resolve, reject) => {
             this.txReceipt(ticket)
-                .then((unitReceipt: ITxReceiptData) => {
-                    const resultsTemp = bytesToObject(unitReceipt.result);
-                    const bulkReceipt: IBulkTxReceiptData = {
-                        blockIdx: unitReceipt.blockIdx,
-                        txIdx: unitReceipt.txIdx,
-                        burnedFuel: unitReceipt.burnedFuel,
-                        success: unitReceipt.success,
-                        results: {},
-                        events: unitReceipt.events,
+                .then((txReceipt: ITxReceiptData) => {
+                    const finalReceipt: IBulkTxReceiptData = {
+                        blockIdx: txReceipt.blockIdx,
+                        txIdx: txReceipt.txIdx,
+                        burnedFuel: txReceipt.burnedFuel,
+                        success: txReceipt.success,
+                        results: txReceipt.result,
+                        events: txReceipt.events,
                     };
-                    for (let i = 0; i < resultsTemp.length; i += 1) {
-                        bulkReceipt.results[resultsTemp[i][0]] = {
-                            success: resultsTemp[i][1][0] as boolean,
-                            burnedFuel: resultsTemp[i][1][2],
-                            result: new Uint8Array(resultsTemp[i][1][1]),
-                        };
+                    let resultsUnpacked: any;
+                    try {
+                        resultsUnpacked = bytesToObject(txReceipt.result);
+                    } catch (e) {
+                        resultsUnpacked = undefined;
                     }
-                    return resolve(bulkReceipt);
+                    if (typeof resultsUnpacked !== 'undefined'
+                        && Array.isArray(resultsUnpacked)
+                    ) {
+                        finalReceipt.results = {};
+                        for (let i = 0; i < resultsUnpacked.length; i += 1) {
+                            finalReceipt.results[resultsUnpacked[i][0]] = {
+                                success: resultsUnpacked[i][1][0] as boolean,
+                                burnedFuel: resultsUnpacked[i][1][2],
+                                result: new Uint8Array(resultsUnpacked[i][1][1]),
+                            };
+                        }
+                    }
+                    return resolve(finalReceipt);
                 })
                 .catch((error: any) => {
                     return reject(new Error(error));
