@@ -6,6 +6,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/).
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [2.2.2] - 2022-11-22
+
+### Fixed
+
+- fixed impossible to import keys generated using a secret;
+
 ## [2.2.1] - 2022-11-18
 
 ### Fixed
