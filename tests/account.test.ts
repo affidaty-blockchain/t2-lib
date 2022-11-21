@@ -3,9 +3,10 @@ import * as BaseTypes from '../src/cryptography/baseTypes';
 import * as Base from '../src/cryptography/base';
 import * as Defaults from '../src/cryptography/cryptoDefaults';
 import * as EllipticCurve from '../src/cryptography/baseECKey';
-import { Subtle } from '../src/cryptography/webCrypto';
+import { WebCrypto, Subtle } from '../src/cryptography/webCrypto';
 import { getAccountId, Account } from '../src/account';
 import { BaseECKeyPair } from '../src/cryptography/baseECKeyPair';
+import { ECDSAKey } from '../src/cryptography/ECDSAKey';
 
 describe('Testing ACCOUNT CLASS implementations', () => {
     const predefinedAccountId = 'QmamzDVuZqkUDwHikjHCkgJXhtgkbiVDTvTYb2aq6qfLbY';
@@ -114,7 +115,21 @@ describe('Testing ACCOUNT CLASS implementations', () => {
         const acc2 = new Account();
         await acc2.generateFromSecret(secret2);
         expect(acc2.accountId).toEqual('QmaxcsD4tTqqnHveVuFbTHxenkDeJwnVop7Teih9EP7zR6');
-    });
+
+        const max = 100;
+        for (let i = 0; i < max; i += 1) {
+            const secret = new Uint8Array(8);
+            WebCrypto.getRandomValues(secret);
+            const acc = new Account();
+            await acc.generateFromSecret(secret);
+            process.stdout.write(`${i + 1}/${max}: ${acc.accountId}`);
+            const pubKeyBytes = await acc.keyPair.publicKey.getSPKI();
+            const pubKey = new ECDSAKey('public');
+            await pubKey.importBin(pubKeyBytes);
+            expect(await pubKey.getRaw()).toEqual(await acc.keyPair.publicKey.getRaw());
+        }
+        // process.stdout.write('\n');
+    }, 100000);
     it('exceptions tests', async () => {
         const emptyPubKey = new EllipticCurve.BaseECKey(Defaults.ECDSAP384R1PubKeyParams);
         await expect(getAccountId(emptyPubKey))
