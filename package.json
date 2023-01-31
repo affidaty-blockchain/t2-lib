@@ -31,7 +31,7 @@
         "js-crypto-key-utils": "^1.0.2",
         "merkletreejs": "^0.3.0",
         "msgpack-lite": "^0.1.26",
-        "node-abort-controller": "^3.0.1",
+        "node-abort-controller": "3.0.1",
         "node-fetch": "^2.6.7"
     },
     "devDependencies": {
