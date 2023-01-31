@@ -1,16 +1,17 @@
 import { Int64BE, Uint64BE } from 'int64-buffer';
+import { objectToBytes } from './utils';
 
 import {
     base58ToBuffer,
     base64ToBuffer,
 } from './binConversions';
 
-const regexDigits = /^[0-9]*$/g;
+const regexDigits = /^[-0-9]*$/g;
 const regexHex = /^[0-9A-Fa-f]*$/g;
 const regexBase58 = /^[1-9A-HJ-NP-Za-km-z]*$/g;
 const regexBase64 = /^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{4})$/g;
 
-export const jsonParsers: {[key: string]: {[key: string]: (value: string) => any}} = {
+export const customValueProcessors: {[key: string]: {[key: string]: (value: string) => any}} = {
     bin: {
         utf8: (val: string) => {
             return Buffer.from(val, 'utf8');
@@ -73,24 +74,38 @@ export const jsonParsers: {[key: string]: {[key: string]: (value: string) => any
     },
 };
 
-function callParser(type: string, encoding: string, value: string): any {
-    if (!jsonParsers[type]) {
-        throw new Error(`Known types: ${JSON.stringify(Object.keys(jsonParsers))}. Received type: "${type}".`);
+export const customKeyProcessors: {[key: string]: (value: string) => any} = {
+    msgpack: (val: any) => {
+        return Buffer.from(objectToBytes(val));
+    },
+};
+
+function callValueProcessor(type: string, encoding: string, value: string): any {
+    if (!customValueProcessors[type]) {
+        throw new Error(`Known types: ${JSON.stringify(Object.keys(customValueProcessors))}. Received type: "${type}".`);
     }
-    if (!jsonParsers[type][encoding]) {
-        throw new Error(`Known encodings for type "${type}": ${JSON.stringify(Object.keys(jsonParsers[type]))}. Received encoding: "${encoding}".`);
+    if (!customValueProcessors[type][encoding]) {
+        throw new Error(`Known encodings for type "${type}": ${JSON.stringify(Object.keys(customValueProcessors[type]))}. Received encoding: "${encoding}".`);
     }
 
-    return jsonParsers[type][encoding](value);
+    return customValueProcessors[type][encoding](value);
 }
 
-export function parseArgs(jsonStr: string): any {
+function callKeyProcessor(processorName: string, value: any): any {
+    if (!customKeyProcessors[processorName]) {
+        throw new Error(`Known key processors: ${JSON.stringify(Object.keys(customKeyProcessors))}. Received type: "${processorName}".`);
+    }
+    return customKeyProcessors[processorName](value);
+}
+
+export function jsonParse(jsonStr: string): any {
     const delimiter = ':';
     // special strings must begin with this token
     const initToken = `$${delimiter}`; // "$:"
     return JSON.parse(
         jsonStr,
         (key, value) => {
+            let resultValue: any = value;
             if (
                 typeof value === 'string'
                 && value.length > initToken.length
@@ -109,10 +124,32 @@ export function parseArgs(jsonStr: string): any {
                 const type = value.substring(initToken.length, typeDelIdx);
                 const enc = value.substring(typeDelIdx + 1, encDelIdx);
                 const val = value.substring(encDelIdx + 1);
-
-                return callParser(type, enc, val);
+                resultValue = callValueProcessor(type, enc, val);
             }
-            return value;
+            if (
+                typeof resultValue === 'object'
+                && resultValue !== null
+                && resultValue !== undefined
+                && !Array.isArray(resultValue)
+            ) {
+                const resultKeys = Object.keys(resultValue);
+                for (let i = 0; i < resultKeys.length; i += 1) {
+                    const origKey = resultKeys[i];
+                    if (origKey.startsWith(initToken)) {
+                        const procDelIdx = origKey.indexOf(delimiter, initToken.length);
+                        if (procDelIdx <= initToken.length) {
+                            throw new Error(`Could not determine processor type for key ${origKey}.`);
+                        }
+                        const procName = origKey.substring(initToken.length, procDelIdx);
+                        const newKey = origKey.substring(
+                            initToken.length + procName.length + delimiter.length,
+                        );
+                        resultValue[newKey] = callKeyProcessor(procName, resultValue[origKey]);
+                        delete resultValue[origKey];
+                    }
+                }
+            }
+            return resultValue;
         },
     );
 }

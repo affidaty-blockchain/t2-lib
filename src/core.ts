@@ -2,8 +2,8 @@ export * as Errors from './errors';
 export * from './browser';
 export { WebCrypto, Subtle } from './cryptography/webCrypto';
 export * as binConversions from './binConversions';
-export { parseArgs, jsonParsers } from './jsonParser';
 export * as Utils from './utils';
+export { jsonParse, customKeyProcessors, customValueProcessors } from './json';
 export * as Message from './messageFormat';
 export * from './cryptography/baseTypes';
 export {
