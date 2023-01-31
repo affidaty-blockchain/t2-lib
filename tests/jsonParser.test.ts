@@ -1,5 +1,5 @@
+import { Int64BE, Uint64BE } from 'int64-buffer';
 import t2lib from '../index';
-import {Int64BE, Uint64BE} from 'int64-buffer'
 
 describe('parse', () => {
     it('standart json parse', async () => {
