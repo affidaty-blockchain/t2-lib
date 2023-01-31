@@ -128,7 +128,6 @@ describe('Testing ACCOUNT CLASS implementations', () => {
             await pubKey.importBin(pubKeyBytes);
             expect(await pubKey.getRaw()).toEqual(await acc.keyPair.publicKey.getRaw());
         }
-        // process.stdout.write('\n');
     }, 100000);
     it('exceptions tests', async () => {
         const emptyPubKey = new EllipticCurve.BaseECKey(Defaults.ECDSAP384R1PubKeyParams);
