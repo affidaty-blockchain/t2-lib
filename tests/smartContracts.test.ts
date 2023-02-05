@@ -7,6 +7,9 @@ import { AdvancedAsset } from '../src/smart_contracts/classes/AdvancedAsset';
 import { TrinciWallet } from '../src/smart_contracts/Wallet';
 import { SmartContractBase } from '../src/smart_contracts/base/smartConstractBase';
 import { Eurs } from '../src/smart_contracts/classes/Eurs';
+import { OrderBook } from '../src/smart_contracts/classes/OrderBook';
+
+const util = require('util');
 
 SmartContractLoader.INIT();
 class SimpleTrinciProvider extends TrinciProviderBase {
@@ -59,7 +62,7 @@ class SimpleTrinciProvider extends TrinciProviderBase {
             return 0;
         });
         const key = `${tmpKey[0]}:${tmpKey[1]}`;
-        console.log(tmpKey,key);
+        console.log(tmpKey, key);
         if (this.TRINCI_LAST_EXCHANGE_DB.has(key)) {
             const rate = this.TRINCI_LAST_EXCHANGE_DB.get(key)!;
             if (tmpKey[0] === token2) {
@@ -133,11 +136,12 @@ class MOCK_TRINCI_CONNECTOR {
 TrinciWallet.TRINCI = SimpleTrinciProvider;
 MOCK_TRINCI_CONNECTOR.setToken('#BTC', AdvancedAsset);
 MOCK_TRINCI_CONNECTOR.setToken('#EURS', Eurs);
+MOCK_TRINCI_CONNECTOR.setToken('#OrderBook', OrderBook);
 MOCK_TRINCI_CONNECTOR.setData('#BTC', 'init', true);
 MOCK_TRINCI_CONNECTOR.setBalance('Luca', '#BTC', 10);
 MOCK_TRINCI_CONNECTOR.setBalance('Luca', '#EURS', 10000);
+MOCK_TRINCI_CONNECTOR.setBalance('Luca', '#OrderBook', { '#EURS': 10, '#BTC': 40 });
 MOCK_TRINCI_CONNECTOR.setRate([['#BTC', 1], ['#EURS', 19245]]);
-
 
 describe('Testing SmartContract map implementations', () => {
     it('Init classes', async () => {
@@ -154,6 +158,14 @@ describe('Testing SmartContract map implementations', () => {
     it('Getting balance', async () => {
         const luca = new TrinciWallet('Luca');
         const balance = await luca.getBalancesAsNumberComparedWithToken([], '#EURS');
+        expect(balance['#BTC'].data).toBe(10);
+    });
+    it('Getting OrderBook balance', async () => {
+        const luca = new TrinciWallet('Luca');
+        const balance = await luca.getBalancesAsObject();
+
+        //  OrderBook.getOrderBookBalance(balance['#OrderBook']).then(console.log);
+
         expect(balance['#BTC'].data).toBe(10);
     });
 });
