@@ -20,6 +20,12 @@ export namespace MessageTypes {
     export const GetCoreStatsRequest = 13;
     export const GetCoreStatsResponse = 14;
     export const TransactionEvent = 15;
+    // export const GetNetworkIdRequest = 16;
+    // export const GetNetworkIdResponse = 17;
+    // export const GetSeedRequest = 18;
+    // export const GetSeedResponse = 19;
+    // export const GetP2PIdRequest = 20;
+    // export const GetP2PIdResponse = 21;
     export const Stop = 254;
     export const Packed = 255;
 }
@@ -195,9 +201,16 @@ export class TrinciMessage {
     }
 }
 
-export type TSubscribeEventType = 'transaction' | 'block' | 'request' | 'contractEvents';
+export type TSubscribeEventType = 'transaction' | 'blockCreated' | 'gossipRequest' | 'contractEvents' | 'unicastRequest' | 'block';
 
-const allEventsList: TSubscribeEventType[] = ['transaction', 'block', 'request', 'contractEvents'];
+const allEventsList: TSubscribeEventType[] = [
+    'transaction',
+    'blockCreated',
+    'gossipRequest',
+    'contractEvents',
+    'unicastRequest',
+    'block',
+];
 
 function bitFlagConversion<T>(selectedList: T[], allList: T[]): number {
     let bitFlags: number = 0;
@@ -210,6 +223,7 @@ function bitFlagConversion<T>(selectedList: T[], allList: T[]): number {
             bitFlags |= 1 << idx;
         }
     }
+    console.log(bitFlags.toString(2));
     return bitFlags;
 }
 
