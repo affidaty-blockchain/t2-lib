@@ -9,8 +9,6 @@ import { SmartContractBase } from '../src/smart_contracts/base/smartConstractBas
 import { Eurs } from '../src/smart_contracts/classes/Eurs';
 import { OrderBook } from '../src/smart_contracts/classes/OrderBook';
 
-const util = require('util');
-
 SmartContractLoader.INIT();
 class SimpleTrinciProvider extends TrinciProviderBase {
     static SC_CACHE:Map<string, string> = new Map();
@@ -62,7 +60,7 @@ class SimpleTrinciProvider extends TrinciProviderBase {
             return 0;
         });
         const key = `${tmpKey[0]}:${tmpKey[1]}`;
-        console.log(tmpKey, key);
+        // console.log(tmpKey, key);
         if (this.TRINCI_LAST_EXCHANGE_DB.has(key)) {
             const rate = this.TRINCI_LAST_EXCHANGE_DB.get(key)!;
             if (tmpKey[0] === token2) {

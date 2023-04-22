@@ -20,8 +20,8 @@ export namespace MessageTypes {
     export const GetCoreStatsRequest = 13;
     export const GetCoreStatsResponse = 14;
     export const TransactionEvent = 15;
-    // export const GetNetworkIdRequest = 16;
-    // export const GetNetworkIdResponse = 17;
+    export const GetNetworkIdRequest = 16;
+    export const GetNetworkIdResponse = 17;
     // export const GetSeedRequest = 18;
     // export const GetSeedResponse = 19;
     // export const GetP2PIdRequest = 20;
@@ -223,7 +223,6 @@ function bitFlagConversion<T>(selectedList: T[], allList: T[]): number {
             bitFlags |= 1 << idx;
         }
     }
-    console.log(bitFlags.toString(2));
     return bitFlags;
 }
 

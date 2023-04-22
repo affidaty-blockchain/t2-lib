@@ -6,6 +6,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/).
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [2.3.2] - 2022-22-04
+
+### Changed
+
+- BridgeClient autoreconnect feature fixed. use BridgeClient.setAutoReconnect() method.
+
+## [2.3.1] - 2022-18-04
+
+### Changed
+
+- BridgeClient can now subscribe separately to block_exec and block_created events
+
+## [2.3.0] - 2022-01-31
+
+### Added
+
+- custom json parser.
+
 ## [2.2.2] - 2022-11-22
 
 ### Fixed

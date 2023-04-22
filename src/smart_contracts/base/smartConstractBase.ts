@@ -1,6 +1,6 @@
 import { encode as mpEncode, decode as mpDecode } from 'msgpack-lite';
-import { TrinciWallet } from '../Wallet';
 import { Uint64BE } from 'int64-buffer';
+import { TrinciWallet } from '../Wallet';
 
 export class SmartContractBase {
     static hash_ref = new Set<string>();
