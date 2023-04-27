@@ -780,17 +780,18 @@ export class Client {
      * to get the status of the transaction.
      * @param ticket - transaction ticket as returned by Client.submitTx()
      * or Client.prepareAndSubmit() methods, or just a string.
-     * @param maxTries - Max number of requests, after which method throws
+     * @param maxTries - Max number of requests, after which method throws.
+     * 0 for unlimited. defaults to 8
      * @param sleepMs - Pause in milliseconds between requests
      * @returns - Transaction receipt
      */
     async waitForTicket(
         ticket: string,
-        maxTries: number = 8,
+        maxTries: number = 10,
         sleepMs: number = 1000,
     ): Promise<ITxReceiptData> {
         let counter = 0;
-        while (counter < maxTries) {
+        while (maxTries === 0 || counter < maxTries) {
             let receipt: any = null;
             try {
                 receipt = await this.txReceipt(ticket);
@@ -803,7 +804,9 @@ export class Client {
             if (receipt !== null) {
                 return receipt;
             }
-            counter += 1;
+            if (maxTries > 0) {
+                counter += 1;
+            }
             await sleep(sleepMs);
         }
         throw new Error(`Tx ${ticket} not executed in time`);
