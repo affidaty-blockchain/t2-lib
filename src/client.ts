@@ -9,7 +9,7 @@ import {
     Message,
     CryptoDefaults,
     Account,
-    toHex as binToHex,
+    hexEncode,
 } from '@affidaty/t2-lib-core';
 import * as Errors from './errors';
 import {
@@ -439,7 +439,7 @@ export class Client {
      * @param contract - smart contract hash
      * @param method - method of the smart contract to call
      * @param args - arguments to pass  to the smart contract
-     * @param signerKeyPair - keypair to sign the transaction
+     * @param signerPrivateKey - keypair to sign the transaction
      * @returns - Transaction class object ready to be sent
      */
     prepareTx(
@@ -481,7 +481,7 @@ export class Client {
                     this.submitTrinciMessage(msg)
                         .then((resultMessage: Message.TrinciMessage) => {
                             resultMessage.assertType(Message.MessageTypes.PutTransactionResponse);
-                            return resolve(binToHex(resultMessage.body.ticket));
+                            return resolve(hexEncode(resultMessage.body.ticket));
                         })
                         .catch((error: any) => {
                             return reject(error);
@@ -495,7 +495,7 @@ export class Client {
 
     /**
      * Sends an array of transactions.
-     * @param txToSubmit - Transaction to submit
+     * @param txList - Transactions array to submit
      * @returns - array of transaction tickets (or errors) in the same order they were given.
      */
     submitTxArray(txList: BaseTransaction[]): Promise<Array<string | Error>> {
@@ -536,7 +536,7 @@ export class Client {
      * @param contract - smart contract hash
      * @param method - method of the smart contract to call
      * @param args - arguments to pass  to the smart contract
-     * @param signerKeyPair - keypair to sign the transaction
+     * @param signerPrivateKey - keypair to sign the transaction
      * @returns - Transaction ticket.
      */
     prepareAndSubmitTx(
@@ -567,7 +567,7 @@ export class Client {
     /**
      * Concatenation of tx.sign() and Client.submitTx() methods
      * @param tx - transaction to sign and submit
-     * @param signerKeyPair - keypair to sign the transaction
+     * @param signerPrivateKey - keypair to sign the transaction
      * @returns - Transaction ticket.
      */
     signAndSubmitTx(
@@ -692,17 +692,17 @@ export class Client {
                             ),
                             idx: resultMessage.body.blockInfo[0][1],
                             txCount: resultMessage.body.blockInfo[0][2],
-                            prevHash: binToHex(resultMessage.body.blockInfo[0][3]),
-                            txsRoot: binToHex(resultMessage.body.blockInfo[0][4]),
-                            receiptsRoot: binToHex(resultMessage.body.blockInfo[0][5]),
-                            accountsRoot: binToHex(resultMessage.body.blockInfo[0][6]),
+                            prevHash: hexEncode(resultMessage.body.blockInfo[0][3]),
+                            txsRoot: hexEncode(resultMessage.body.blockInfo[0][4]),
+                            receiptsRoot: hexEncode(resultMessage.body.blockInfo[0][5]),
+                            accountsRoot: hexEncode(resultMessage.body.blockInfo[0][6]),
                         },
                         signature: new Uint8Array(resultMessage.body.blockInfo[1]),
                         tickets: [],
                     };
                     if (showTxs) {
                         for (let i = 0; i < resultMessage.body.ticketList.length; i += 1) {
-                            blockDataObj.tickets.push(binToHex(resultMessage.body.ticketList[i]));
+                            blockDataObj.tickets.push(hexEncode(resultMessage.body.ticketList[i]));
                         }
                     }
                     if (signerKeyParamsId === CryptoDefaults.EKeyParamsIds.EMPTY) {
@@ -758,12 +758,12 @@ export class Client {
                         }
                     }
                     if (resultMessage.body.accountInfo[2]) {
-                        accDataObj.contractHash = binToHex(
+                        accDataObj.contractHash = hexEncode(
                             resultMessage.body.accountInfo[2],
                         );
                     }
                     if (resultMessage.body.accountInfo[3]) {
-                        accDataObj.dataHash = binToHex(
+                        accDataObj.dataHash = hexEncode(
                             resultMessage.body.accountInfo[3],
                         );
                     }
