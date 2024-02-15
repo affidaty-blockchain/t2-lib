@@ -20,23 +20,16 @@
         "lib": "dist"
     },
     "dependencies": {
-        "@affidaty/t2-lib-core": "^2.0.0",
+        "@affidaty/t2-lib-core": "^2.6.0",
         "@types/node-fetch": "^2.0.0",
-        "alea": "^1.0.0",
-        "bigint-buffer": "^1.0.0",
-        "bs58": "^5.0.0",
         "buffer": "^6.0.0",
-        "fast-sha256": "^1.0.0",
-        "int64-buffer": "^1.0.0",
-        "js-crypto-key-utils": "^1.0.0",
-        "merkletreejs": "^0.3.0",
         "node-abort-controller": "^3.0.0",
         "node-fetch": "^2.0.0"
     },
     "devDependencies": {
         "@types/jest": "^29.0.0",
-        "@typescript-eslint/eslint-plugin": "^6.0.0",
-        "@typescript-eslint/parser": "^6.0.0",
+        "@typescript-eslint/eslint-plugin": "^7.0.0",
+        "@typescript-eslint/parser": "^7.0.0",
         "concurrently": "^8.0.0",
         "eslint": "^8.0.0",
         "eslint-config-airbnb-base": "^15.0.0",
@@ -66,11 +59,12 @@
         "build-esm": "tsc -p tsconfig.esm.json",
         "build-browser": "webpack --config webpack.config.js",
         "updt2tool": "cp -f dist/browser/* misc/t2_bc_tool/",
-        "build": "concurrently \"npm:build-cjs\" \"npm:build-esm\" \"npm:build-browser\" && npm run updt2tool",
+        "build": "concurrently \"npm:build-cjs\" \"npm:build-esm\" \"npm:build-browser\"",
         "docs": "typedoc --options typedoc.json",
         "lint": "eslint . --ext .js,.ts",
         "lint:fix": "eslint --fix . --ext .js,.ts",
-        "lint:report": "eslint . --ext .js,.ts -f json -o eslint_report.json"
+        "lint:report": "eslint . --ext .js,.ts -f json -o eslint_report.json",
+        "pre-publish": "npm i && npm run test && npm run lint && npm run build && npm run docs"
     },
     "repository": {
         "type": "git",
