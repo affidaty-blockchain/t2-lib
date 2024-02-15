@@ -1,18 +1,15 @@
 import net from 'net';
 import EventsLib from 'events';
-import * as Errors from './errors';
-import { IS_BROWSER } from './browser';
-import { removeValuefromArray } from './utils';
-import { mKeyPairParams, EKeyParamsIds } from './cryptography/cryptoDefaults';
 import {
-    TrinciMessage,
-    MessageTypes,
-    TSubscribeEventType,
-    stdTrinciMessages,
-} from './messageFormat';
+    IS_BROWSER,
+    BaseECKey,
+    Utils as CoreUtils,
+    Transaction as TransactionClass,
+    Message,
+    CryptoDefaults,
+} from '@affidaty/t2-lib-core';
+import * as Errors from './errors';
 import { SERVICE_ACCOUNT_ID as defServiceAccountID } from './systemDefaults';
-import { BaseECKey } from './cryptography/baseECKey';
-import { Transaction as TransactionClass } from './transaction/transaction';
 import {
     Client,
     IBlockData,
@@ -113,7 +110,7 @@ export class BridgeClient extends Client {
                 if (this._recBuffer.byteLength < expectedMsgSize + 4) {
                     break;
                 }
-                const msg = new TrinciMessage();
+                const msg = new Message.TrinciMessage();
                 let validMsg = true;
                 try {
                     msg.fromBytes((this._recBuffer.subarray(4, expectedMsgSize + 4)));
@@ -127,26 +124,26 @@ export class BridgeClient extends Client {
                 }
             }
         },
-        onTrinciMessage: async (msg: TrinciMessage) => {
+        onTrinciMessage: async (msg: Message.TrinciMessage) => {
             switch (msg.type) {
-                case MessageTypes.GetTransactionResponse: {
+                case Message.MessageTypes.GetTransactionResponse: {
                     const tx = new TransactionClass();
                     await tx.fromUnnamedObject(msg.body.tx);
                     this._eventEmitter.emit('transaction', (tx));
                     break;
                 }
-                case MessageTypes.GetBlockResponse: {
+                case Message.MessageTypes.GetBlockResponse: {
                     let signerKeyParamsId: string = msg.body.blockInfo[0][0][0];
                     if (msg.body.blockInfo[0][0][1].length > 0) {
                         signerKeyParamsId += `_${msg.body.blockInfo[0][0][1]}`;
                     }
-                    if (!mKeyPairParams.has(signerKeyParamsId)) {
+                    if (!CryptoDefaults.mKeyPairParams.has(signerKeyParamsId)) {
                         throw new Error(Errors.IMPORT_TYPE_ERROR);
                     }
                     const blockDataObj: IBlockData = {
                         info: {
                             signer: new BaseECKey(
-                                mKeyPairParams.get(signerKeyParamsId)!.publicKey,
+                                CryptoDefaults.mKeyPairParams.get(signerKeyParamsId)!.publicKey,
                             ),
                             idx: msg.body.blockInfo[0][1],
                             txCount: msg.body.blockInfo[0][2],
@@ -161,7 +158,7 @@ export class BridgeClient extends Client {
                     for (let i = 0; i < msg.body.ticketList.length; i += 1) {
                         blockDataObj.tickets.push(Buffer.from(msg.body.ticketList[i]).toString('hex'));
                     }
-                    if (signerKeyParamsId === EKeyParamsIds.EMPTY) {
+                    if (signerKeyParamsId === CryptoDefaults.EKeyParamsIds.EMPTY) {
                         this._eventEmitter.emit('block', (blockDataObj));
                         return;
                     }
@@ -177,7 +174,7 @@ export class BridgeClient extends Client {
                         });
                     break;
                 }
-                case MessageTypes.TransactionEvent: {
+                case Message.MessageTypes.TransactionEvent: {
                     const scEventObj: ITxEvent = {
                         eventTx: Buffer.from(msg.body.eventDataArray[0]).toString('hex'),
                         emitterAccount: msg.body.eventDataArray[1],
@@ -196,7 +193,7 @@ export class BridgeClient extends Client {
             for (let blkTktIdx = 0; blkTktIdx < blockData.tickets.length; blkTktIdx += 1) {
                 if (this._wantedTickets.indexOf(blockData.tickets[blkTktIdx]) >= 0) {
                     this._eventEmitter.emit(`receipt-${blockData.tickets[blkTktIdx]}`);
-                    this._wantedTickets = removeValuefromArray(
+                    this._wantedTickets = CoreUtils.removeValuefromArray(
                         this._wantedTickets,
                         blockData.tickets[blkTktIdx],
                     );
@@ -267,7 +264,7 @@ export class BridgeClient extends Client {
 
     on(eventName: 'data', eventHandler: (data: Buffer) => any): BridgeClient;
 
-    on(eventName: 'message', eventHandler: (message: TrinciMessage) => any): BridgeClient;
+    on(eventName: 'message', eventHandler: (message: Message.TrinciMessage) => any): BridgeClient;
 
     on(eventName: 'transaction', eventHandler: (message: TransactionClass) => any): BridgeClient;
 
@@ -296,7 +293,7 @@ export class BridgeClient extends Client {
 
     once(eventName: 'data', eventHandler: (data: Buffer) => any): BridgeClient;
 
-    once(eventName: 'message', eventHandler: (message: TrinciMessage) => any): BridgeClient;
+    once(eventName: 'message', eventHandler: (message: Message.TrinciMessage) => any): BridgeClient;
 
     once(eventName: 'transaction', eventHandler: (message: TransactionClass) => any): BridgeClient;
 
@@ -402,20 +399,20 @@ export class BridgeClient extends Client {
         });
     }
 
-    writeMessage(message: TrinciMessage): Promise<void> {
+    writeMessage(message: Message.TrinciMessage): Promise<void> {
         return this.writeBytes(message.toBytes());
     }
 
-    subscribe(connectionId: string, events: TSubscribeEventType[]): Promise<void> {
-        const message = stdTrinciMessages.subscribe(connectionId, events);
+    subscribe(connectionId: string, events: Message.TSubscribeEventType[]): Promise<void> {
+        const message = Message.stdTrinciMessages.subscribe(connectionId, events);
         if (events.indexOf('block') >= 0) {
             this._subscribedToBlocks = true;
         }
         return this.writeMessage(message);
     }
 
-    unsubscribe(connectionId: string, events: TSubscribeEventType[]): Promise<void> {
-        const message = stdTrinciMessages.unsubscribe(connectionId, events);
+    unsubscribe(connectionId: string, events: Message.TSubscribeEventType[]): Promise<void> {
+        const message = Message.stdTrinciMessages.unsubscribe(connectionId, events);
         if (events.indexOf('block') >= 0) {
             this._subscribedToBlocks = false;
         }

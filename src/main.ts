@@ -1,6 +1,6 @@
-import * as Core from './core';
+import * as Core from '@affidaty/t2-lib-core';
 
 export { Core };
-export * from './core';
+export * from '@affidaty/t2-lib-core';
 export * from './client';
 export * from './bridgeClient';

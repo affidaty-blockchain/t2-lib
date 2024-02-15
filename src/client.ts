@@ -1,10 +1,17 @@
 import fetch, { RequestInit, Response } from 'node-fetch';
-import { AbortController } from 'node-abort-controller';
+import {
+    BaseECKey,
+    Utils as CoreUtils,
+    UnitaryTransaction,
+    BaseTransaction,
+    Transaction,
+    IBaseTxUnnamedObject,
+    Message,
+    CryptoDefaults,
+    Account,
+    toHex as binToHex,
+} from '@affidaty/t2-lib-core';
 import * as Errors from './errors';
-import { MessageTypes, TrinciMessage, stdTrinciMessages } from './messageFormat';
-import { arrayBufferToString } from './binConversions';
-import { bytesToObject } from './utils';
-import { mKeyPairParams, EKeyParamsIds } from './cryptography/cryptoDefaults';
 import {
     SERVICE_ACCOUNT_ID as defServiceAccountID,
     SUBMIT_MESSAGE_PATH as submitMessaggePath,
@@ -12,22 +19,10 @@ import {
     BOOTSTRAP_DL_PATH as nodeBootstrapDlPath,
     REQ_DEF_ABORT_TIMEOUT_MS as defaultTimeoutMs,
 } from './systemDefaults';
-import { BaseECKey } from './cryptography/baseECKey';
-import { Account } from './account';
-import { BaseTransaction, IBaseTxUnnamedObject } from './transaction/baseTransaction';
-import { UnitaryTransaction } from './transaction/unitaryTransaction';
-import { Transaction } from './transaction/transaction';
-
-export { AbortController };
-
-function sleep(ms: number) {
-    return new Promise((resolve) => { setTimeout(resolve, ms); });
-}
-
-type ReqOpts = Omit<RequestInit, 'body' | 'headers' | 'method'>;
 
 type TReqMethod = 'get' | 'GET' | 'post' | 'POST';
 
+type ReqOpts = Omit<RequestInit, 'body' | 'headers' | 'method'> & { timeout?: number };
 interface IBlockchainSettings {
     acceptBroadcast: boolean;
     blockThreshold: number;
@@ -183,6 +178,10 @@ export interface IAssetsList {
     };
 }
 
+function sleep(ms: number) {
+    return new Promise((resolve) => { setTimeout(resolve, ms); });
+}
+
 /**
  * Internal function to send post and get requests using fetch() api.
  * @param method - method string
@@ -206,26 +205,33 @@ function sendRequest(
             case 'post': case 'POST': {
                 let bodylength = 0;
                 if (typeof body !== 'undefined') {
-                    bodylength = Buffer.byteLength(body!);
+                    bodylength = body.byteLength;
                 }
-                const stdHeaders = {
+                tempHeaders = {
                     'Content-Type': 'application/octet-stream',
                     'Content-Length': bodylength,
                 };
-                tempHeaders = stdHeaders;
                 break;
             }
             default:
                 throw new Error(Errors.REQUEST_UNSUPPORTED_METHOD);
         }
-        tempHeaders = { ...tempHeaders, ...customHeaders };
+
         const headers: {[key: string]: any} = {};
-        const tempEntries = Object.entries(tempHeaders);
-        for (let i = 0; i < tempEntries.length; i += 1) {
-            headers[tempEntries[i][0].toLowerCase()] = tempEntries[i][1];
+        const tempHEntries = Object.entries(tempHeaders);
+        for (let i = 0; i < tempHEntries.length; i += 1) {
+            headers[tempHEntries[i][0].toLowerCase()] = tempHEntries[i][1];
         }
 
-        // creating temp options object
+        // user-provided standard headers (if any) are used instead of generated
+        if (customHeaders) {
+            const customHEntries = Object.entries(customHeaders);
+            for (let i = 0; i < customHEntries.length; i += 1) {
+                headers[customHEntries[i][0].toLowerCase()] = customHEntries[i][1];
+            }
+        }
+
+        // creating internal options object
         const _opts = { ...options };
 
         // if no abort signal was defined in options, then create a new one
@@ -382,7 +388,7 @@ export class Client {
         return new Promise((resolve, reject) => {
             this.accountData(this.serviceAccount, ['blockchain:settings'])
                 .then((serviceAccountData: IAccountData) => {
-                    const tempObj = bytesToObject(serviceAccountData.requestedData[0]);
+                    const tempObj = CoreUtils.bytesToObject(serviceAccountData.requestedData[0]);
                     const result: IBlockchainSettings = {
                         acceptBroadcast: tempObj.accept_broadcast,
                         blockThreshold: tempObj.block_threshold,
@@ -471,11 +477,11 @@ export class Client {
             // }
             txToSubmit.toUnnamedObject()
                 .then((txObj: IBaseTxUnnamedObject) => {
-                    const msg = stdTrinciMessages.submitTransaction(true, txObj);
+                    const msg = Message.stdTrinciMessages.submitTransaction(true, txObj);
                     this.submitTrinciMessage(msg)
-                        .then((resultMessage: TrinciMessage) => {
-                            resultMessage.assertType(MessageTypes.PutTransactionResponse);
-                            return resolve(Buffer.from(resultMessage.body.ticket).toString('hex'));
+                        .then((resultMessage: Message.TrinciMessage) => {
+                            resultMessage.assertType(Message.MessageTypes.PutTransactionResponse);
+                            return resolve(binToHex(resultMessage.body.ticket));
                         })
                         .catch((error: any) => {
                             return reject(error);
@@ -593,10 +599,10 @@ export class Client {
      */
     txData(ticket: string): Promise<BaseTransaction> {
         return new Promise((resolve, reject) => {
-            const msg = stdTrinciMessages.getTransaction(ticket);
+            const msg = Message.stdTrinciMessages.getTransaction(ticket);
             this.submitTrinciMessage(msg)
-                .then((resultMessage: TrinciMessage) => {
-                    resultMessage.assertType(MessageTypes.GetTransactionResponse);
+                .then((resultMessage: Message.TrinciMessage) => {
+                    resultMessage.assertType(Message.MessageTypes.GetTransactionResponse);
                     const resultTx = new Transaction();
                     resultTx.fromUnnamedObject(resultMessage.body.tx)
                         .then(() => {
@@ -620,10 +626,10 @@ export class Client {
      */
     txReceipt(ticket: string): Promise<ITxReceiptData> {
         return new Promise((resolve, reject) => {
-            const msg = stdTrinciMessages.getReceipt(ticket);
+            const msg = Message.stdTrinciMessages.getReceipt(ticket);
             this.submitTrinciMessage(msg)
-                .then((resultMessage: TrinciMessage) => {
-                    resultMessage.assertType(MessageTypes.GetReceiptResponse);
+                .then((resultMessage: Message.TrinciMessage) => {
+                    resultMessage.assertType(Message.MessageTypes.GetReceiptResponse);
                     const txReceiptObject: ITxReceiptData = {
                         blockIdx: resultMessage.body.receipt[0],
                         txIdx: resultMessage.body.receipt[1],
@@ -662,11 +668,11 @@ export class Client {
             if (getBlockMsgArg === 'max' || getBlockMsgArg === 'MAX') {
                 getBlockMsgArg = 'ffffffffffffffff';
             }
-            const msg = stdTrinciMessages.getBlock(getBlockMsgArg, showTxs);
+            const msg = Message.stdTrinciMessages.getBlock(getBlockMsgArg, showTxs);
             this.submitTrinciMessage(msg)
-                .then((resultMessage: TrinciMessage) => {
-                    resultMessage.assertType(MessageTypes.GetBlockResponse);
-                    let signerKeyParamsId: string = EKeyParamsIds.EMPTY;
+                .then((resultMessage: Message.TrinciMessage) => {
+                    resultMessage.assertType(Message.MessageTypes.GetBlockResponse);
+                    let signerKeyParamsId: string = CryptoDefaults.EKeyParamsIds.EMPTY;
 
                     // In case of the genesis block this field will be "null" and
                     // no key should be imported
@@ -675,31 +681,31 @@ export class Client {
                         if (resultMessage.body.blockInfo[0][0][1].length > 0) {
                             signerKeyParamsId += `_${resultMessage.body.blockInfo[0][0][1]}`;
                         }
-                        if (!mKeyPairParams.has(signerKeyParamsId)) {
+                        if (!CryptoDefaults.mKeyPairParams.has(signerKeyParamsId)) {
                             return reject(new Error(Errors.IMPORT_TYPE_ERROR));
                         }
                     }
                     const blockDataObj: IBlockData = {
                         info: {
                             signer: new BaseECKey(
-                                mKeyPairParams.get(signerKeyParamsId)!.publicKey,
+                                CryptoDefaults.mKeyPairParams.get(signerKeyParamsId)!.publicKey,
                             ),
                             idx: resultMessage.body.blockInfo[0][1],
                             txCount: resultMessage.body.blockInfo[0][2],
-                            prevHash: Buffer.from(resultMessage.body.blockInfo[0][3]).toString('hex'),
-                            txsRoot: Buffer.from(resultMessage.body.blockInfo[0][4]).toString('hex'),
-                            receiptsRoot: Buffer.from(resultMessage.body.blockInfo[0][5]).toString('hex'),
-                            accountsRoot: Buffer.from(resultMessage.body.blockInfo[0][6]).toString('hex'),
+                            prevHash: binToHex(resultMessage.body.blockInfo[0][3]),
+                            txsRoot: binToHex(resultMessage.body.blockInfo[0][4]),
+                            receiptsRoot: binToHex(resultMessage.body.blockInfo[0][5]),
+                            accountsRoot: binToHex(resultMessage.body.blockInfo[0][6]),
                         },
                         signature: new Uint8Array(resultMessage.body.blockInfo[1]),
                         tickets: [],
                     };
                     if (showTxs) {
                         for (let i = 0; i < resultMessage.body.ticketList.length; i += 1) {
-                            blockDataObj.tickets.push(Buffer.from(resultMessage.body.ticketList[i]).toString('hex'));
+                            blockDataObj.tickets.push(binToHex(resultMessage.body.ticketList[i]));
                         }
                     }
-                    if (signerKeyParamsId === EKeyParamsIds.EMPTY) {
+                    if (signerKeyParamsId === CryptoDefaults.EKeyParamsIds.EMPTY) {
                         return resolve(blockDataObj);
                     }
                     blockDataObj.info.signer.setRaw(resultMessage.body.blockInfo[0][0][2])
@@ -733,10 +739,10 @@ export class Client {
             } else {
                 id = account.accountId;
             }
-            const msg = stdTrinciMessages.getAccount(id, keysArray);
+            const msg = Message.stdTrinciMessages.getAccount(id, keysArray);
             this.submitTrinciMessage(msg)
-                .then((resultMessage: TrinciMessage) => {
-                    resultMessage.assertType(MessageTypes.GetAccountResponse);
+                .then((resultMessage: Message.TrinciMessage) => {
+                    resultMessage.assertType(Message.MessageTypes.GetAccountResponse);
                     const accDataObj: IAccountData = {
                         accountId: resultMessage.body.accountInfo[0],
                         assets: {},
@@ -752,14 +758,14 @@ export class Client {
                         }
                     }
                     if (resultMessage.body.accountInfo[2]) {
-                        accDataObj.contractHash = Buffer.from(
+                        accDataObj.contractHash = binToHex(
                             resultMessage.body.accountInfo[2],
-                        ).toString('hex');
+                        );
                     }
                     if (resultMessage.body.accountInfo[3]) {
-                        accDataObj.dataHash = Buffer.from(
+                        accDataObj.dataHash = binToHex(
                             resultMessage.body.accountInfo[3],
-                        ).toString('hex');
+                        );
                     }
                     const assets = Object.keys(resultMessage.body.accountInfo[1]);
                     assets.forEach((assetName: string) => {
@@ -860,7 +866,7 @@ export class Client {
                     };
                     let resultsUnpacked: any;
                     try {
-                        resultsUnpacked = bytesToObject(txReceipt.result);
+                        resultsUnpacked = CoreUtils.bytesToObject(txReceipt.result);
                     } catch (e) {
                         resultsUnpacked = undefined;
                     }
@@ -935,7 +941,7 @@ export class Client {
         return new Promise((resolve, reject) => {
             this.accountData(this._serviceAccount, ['*'])
                 .then((accDataKeysList: IAccountData) => {
-                    let keysList: string[] = bytesToObject(
+                    let keysList: string[] = CoreUtils.bytesToObject(
                         new Uint8Array(accDataKeysList.requestedData[0]),
                     );
                     keysList = keysList.filter((value: string) => {
@@ -951,7 +957,7 @@ export class Client {
                         .then((accDataAllKeys: IAccountData) => {
                             const result: IContractsList = {};
                             accDataAllKeys.requestedData.forEach((value: Uint8Array, i: number) => {
-                                const tempObj = bytesToObject(value);
+                                const tempObj = CoreUtils.bytesToObject(value);
                                 result[keysList[i].substring(19)] = tempObj;
                             });
                             return resolve(result);
@@ -969,7 +975,7 @@ export class Client {
     /**
      * Sends a message to the blockchain in "Trinci Message" format
      */
-    submitTrinciMessage(message: TrinciMessage): Promise<TrinciMessage> {
+    submitTrinciMessage(message: Message.TrinciMessage): Promise<Message.TrinciMessage> {
         return new Promise((resolve, reject) => {
             const msgBytes = message.toBytes();
             const url = `${this.t2CoreBaseUrl}${submitMessaggePath}`;
@@ -978,9 +984,9 @@ export class Client {
                     result.arrayBuffer()
                         .then((resBuffer: ArrayBuffer) => {
                             if (result.status !== 200) {
-                                return reject(new Error(`${result.status}: ${arrayBufferToString(resBuffer)}`));
+                                return reject(new Error(`${result.status}: ${new TextDecoder().decode(resBuffer)}`));
                             }
-                            const responseMessage = new TrinciMessage();
+                            const responseMessage = new Message.TrinciMessage();
                             responseMessage.fromBytes(new Uint8Array(resBuffer));
                             return resolve(responseMessage);
                         })
@@ -1002,9 +1008,9 @@ export class Client {
                     result.arrayBuffer()
                         .then((resBuffer: ArrayBuffer) => {
                             if (result.status !== 200) {
-                                return reject(new Error(`${result.status}: ${arrayBufferToString(resBuffer)}`));
+                                return reject(new Error(`${result.status}: ${new TextDecoder().decode(resBuffer)}`));
                             }
-                            return resolve(Buffer.from(resBuffer).toString());
+                            return resolve(new TextDecoder().decode(resBuffer));
                         })
                         .catch((error: any) => {
                             return reject(error);
@@ -1024,7 +1030,7 @@ export class Client {
                     result.arrayBuffer()
                         .then((resBuffer: ArrayBuffer) => {
                             if (result.status !== 200) {
-                                return reject(new Error(`${result.status}: ${arrayBufferToString(resBuffer)}`));
+                                return reject(new Error(`${result.status}: ${new TextDecoder().decode(resBuffer)}`));
                             }
                             return resolve(new Uint8Array(resBuffer));
                         })
