@@ -4,4 +4,4 @@ export const NODE_API_PATH_COMMON = '/api/v1';
 export const SUBMIT_MESSAGE_PATH = `${NODE_API_PATH_COMMON}/message`;
 export const NODE_VISA_PATH = `${NODE_API_PATH_COMMON}/visa`;
 export const BOOTSTRAP_DL_PATH = `${NODE_API_PATH_COMMON}/bootstrap`;
-export const REQ_DEF_ABORT_TIMEOUT_MS = 5000;
+export const REQ_DEF_ABORT_TIMEOUT_MS = 30000;

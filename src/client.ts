@@ -316,7 +316,7 @@ export class Client {
      * Timeout as number of milliseconds
      */
     public set timeout(timeout: number) {
-        this._timeout = new Uint32Array([timeout])[0];
+        this._timeout = timeout;
     }
 
     /**
@@ -324,6 +324,14 @@ export class Client {
      */
     public get timeout(): number {
         return this._timeout;
+    }
+
+    /**
+     * Timeout as number of milliseconds
+     */
+    public setTimeout(timeout: number): Client {
+        this.timeout = timeout;
+        return this;
     }
 
     /**
@@ -340,6 +348,15 @@ export class Client {
      */
     public get abortController(): AbortController | undefined {
         return this._abortController;
+    }
+
+    /**
+     * Custom AbortController for aborting pending requests.
+     * If set, timeout will be completely ignored.
+     */
+    public setAbortController(customAC: AbortController | undefined): Client {
+        this.abortController = customAC;
+        return this;
     }
 
     protected getReqOpts(): ReqOpts {
@@ -362,6 +379,12 @@ export class Client {
         return this.t2CoreBaseUrl;
     }
 
+    /** Base URL to connect to (e.g. 'https://my.server.net:8000/') */
+    public setBaseUrl(newUrl: string): Client {
+        this.baseUrl = newUrl;
+        return this;
+    }
+
     /** Name of the TRINCI network */
     public set network(newNetName: string) {
         this.t2CoreNetworkName = newNetName;
@@ -370,6 +393,12 @@ export class Client {
     /** Name of the TRINCI network */
     public get network(): string {
         return this.t2CoreNetworkName;
+    }
+
+    /** Name of the TRINCI network */
+    public setNetwork(newNetName: string): Client {
+        this.network = newNetName;
+        return this;
     }
 
     /** Account ID hosting service smart contract. Set this only if your blockchain's default
@@ -382,6 +411,13 @@ export class Client {
      * service account was changed */
     public set serviceAccount(customServiceAccount: string) {
         this._serviceAccount = customServiceAccount;
+    }
+
+    /** Account ID hosting service smart contract. Set this only if your blockchain's default
+     * service account was changed */
+    public setServiceAccount(customServiceAccount: string): Client {
+        this.serviceAccount = customServiceAccount;
+        return this;
     }
 
     getBlockchainSettings(): Promise<IBlockchainSettings> {
