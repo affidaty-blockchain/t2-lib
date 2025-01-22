@@ -151,6 +151,7 @@ export class BridgeClient extends Client {
                             txsRoot: Buffer.from(msg.body.blockInfo[0][4]).toString('hex'),
                             receiptsRoot: Buffer.from(msg.body.blockInfo[0][5]).toString('hex'),
                             accountsRoot: Buffer.from(msg.body.blockInfo[0][6]).toString('hex'),
+                            timestamp: typeof msg.body.blockInfo[0][7] === 'number' ? msg.body.blockInfo[0][7] : 0,
                         },
                         signature: new Uint8Array(msg.body.blockInfo[1]),
                         tickets: [],

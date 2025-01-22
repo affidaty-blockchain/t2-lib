@@ -143,6 +143,8 @@ interface IGeneralBlockInfo {
     receiptsRoot: string,
     /** Merkle tree root of all the accounts (aka world state). */
     accountsRoot: string,
+    /** Block creation timestamp */
+    timestamp: number,
 }
 
 /** Structure returned by Client.blockData() method */
@@ -732,6 +734,7 @@ export class Client {
                             txsRoot: hexEncode(resultMessage.body.blockInfo[0][4]),
                             receiptsRoot: hexEncode(resultMessage.body.blockInfo[0][5]),
                             accountsRoot: hexEncode(resultMessage.body.blockInfo[0][6]),
+                            timestamp: typeof resultMessage.body.blockInfo[0][7] === 'number' ? resultMessage.body.blockInfo[0][7] : 0,
                         },
                         signature: new Uint8Array(resultMessage.body.blockInfo[1]),
                         tickets: [],
