@@ -679,9 +679,11 @@ export class Client {
                     if (resultMessage.body.receipt.length === 6) {
                         for (let i = 0; i < resultMessage.body.receipt[5].length; i += 1) {
                             txReceiptObject.events.push({
-                                eventTx: resultMessage.body.receipt[5][i][0].toString('hex'),
+                                eventTx: hexEncode(resultMessage.body.receipt[5][i][0]),
                                 emitterAccount: resultMessage.body.receipt[5][i][1],
-                                emitterSmartContract: resultMessage.body.receipt[5][i][2].toString('hex'),
+                                emitterSmartContract: hexEncode(
+                                    resultMessage.body.receipt[5][i][2],
+                                ),
                                 eventName: resultMessage.body.receipt[5][i][3],
                                 eventData: new Uint8Array(resultMessage.body.receipt[5][i][4]),
                             });
